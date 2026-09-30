@@ -1,0 +1,36 @@
+# ====================================================================
+# CẤU HÌNH CHUNG (không chứa thông tin nhạy cảm)
+# Các cấu hình riêng theo môi trường đặt ở application-{profile}.yml
+# Chạy môi trường dev: thêm tham số --spring.profiles.active=dev
+# ====================================================================
+
+spring:
+  application:
+    name: ecommerce
+
+  # Chọn profile mặc định khi chạy (dev = môi trường phát triển cá nhân)
+  profiles:
+    active: dev
+
+  # Cấu hình JPA chung (các giá trị cụ thể ở application-dev.yml)
+  jpa:
+    open-in-view: false    # Tắt Open Session in View — best practice để tránh lazy loading ngoài transaction
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect   # Dialect cho SQL Server
+
+  # Flyway: quản lý migration (tạo/sửa bảng CSDL)
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+# Cấu hình Swagger UI
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html    # Truy cập Swagger UI tại đường dẫn này
+  api-docs:
+    path: /v3/api-docs        # Đường dẫn lấy tài liệu API dạng JSON
+
+# Cấu hình server
+server:
+  port: 8080
