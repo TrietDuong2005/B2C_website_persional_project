@@ -33,8 +33,8 @@ public class GlobalExceptionHandler {
 
         // Trả về response lỗi 500 cho client
         ApiResponse<Object> response = ApiResponse.error(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau."
+                "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
+                HttpStatus.INTERNAL_SERVER_ERROR.value()
         );
 
         return ResponseEntity

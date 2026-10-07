@@ -27,6 +27,15 @@ public class SwaggerConfig {
                         .version("1.0.0")
                         .description("API hệ thống thương mại điện tử B2C — Spring Boot MVC + SQL Server")
                         .contact(new Contact()
-                                .name("DA_HDT Team")));
+                                .name("DA_HDT Team")))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes("bearerAuth", new io.swagger.v3.oas.models.security.SecurityScheme()
+                                .type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")
+                                .in(io.swagger.v3.oas.models.security.SecurityScheme.In.HEADER)
+                                .name("Authorization")
+                        )
+                );
     }
 }

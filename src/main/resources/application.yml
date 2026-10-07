@@ -34,3 +34,9 @@ springdoc:
 # Cấu hình server
 server:
   port: 8080
+
+# Cấu hình JWT (JSON Web Token)
+app:
+  jwt:
+    access-token-expiration: 900000     # 15 phút (milliseconds)
+    refresh-token-expiration: 604800000 # 7 ngày (milliseconds)

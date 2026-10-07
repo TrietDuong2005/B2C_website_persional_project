@@ -1,41 +1,77 @@
 package com.dahdt.ecommerce.config;
 
+import com.dahdt.ecommerce.config.security.CustomUserDetailsService;
+import com.dahdt.ecommerce.config.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * Cấu hình bảo mật cho ứng dụng.
- *
- * Hiện tại cấu hình ở mức tối thiểu (cho phép tất cả request đi qua)
- * để project có thể khởi chạy và test được.
- *
- * Sẽ được cấu hình chi tiết hơn ở giai đoạn 1 (module auth):
- * - Thêm JWT filter
- * - Cấu hình endpoint nào cần đăng nhập, endpoint nào public
- * - Cấu hình CORS cho frontend
- */
-@Configuration          // Đánh dấu đây là class cấu hình Spring
-@EnableWebSecurity      // Kích hoạt Spring Security
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Tắt CSRF vì dùng JWT (stateless), không dùng session/cookie
+                // Tắt CSRF vì dùng JWT (stateless)
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Không tạo session trên server (stateless — mỗi request tự xác thực bằng JWT)
-                .sessionManagement(session ->
+                
+                // Không tạo session trên server
+                .sessionManagement(session -> 
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Tạm thời cho phép tất cả request đi qua (chưa có JWT)
-                .authorizeHttpRequests(auth ->
-                        auth.anyRequest().permitAll());
+                
+                // Cấu hình AuthenticationProvider
+                .authenticationProvider(authenticationProvider())
+                
+                // Phân quyền request
+                .authorizeHttpRequests(auth -> auth
+                        // Các endpoint public (auth, swagger docs)
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Tất cả các request khác yêu cầu đăng nhập
+                        .anyRequest().authenticated()
+                );
+                
+        // Thêm JWT Filter vào trước UsernamePasswordAuthenticationFilter
+        http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

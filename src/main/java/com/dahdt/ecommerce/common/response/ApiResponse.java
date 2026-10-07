@@ -42,7 +42,7 @@ public class ApiResponse<T> {
      * Tạo response thành công có kèm data.
      * Ví dụ: ApiResponse.success("Lấy danh sách thành công", listProducts)
      */
-    public static <T> ApiResponse<T> success(String message, T data) {
+    public static <T> ApiResponse<T> success(T data, String message) {
         return ApiResponse.<T>builder()
                 .code(200)
                 .message(message)
@@ -66,7 +66,7 @@ public class ApiResponse<T> {
      * Tạo response lỗi với mã lỗi và thông báo tùy chỉnh.
      * Ví dụ: ApiResponse.error(404, "Không tìm thấy sản phẩm")
      */
-    public static <T> ApiResponse<T> error(int code, String message) {
+    public static <T> ApiResponse<T> error(String message, int code) {
         return ApiResponse.<T>builder()
                 .code(code)
                 .message(message)
