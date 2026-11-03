@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Màn hình Bán hàng tại quầy POS - DA_HDT')}">
+    <title>Màn hình Bán hàng POS</title>
+</head>
+<body class="bg-body-secondary">
+
+<!-- Thanh tiêu đề POS -->
+<nav class="navbar navbar-dark bg-dark px-3 shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" th:href="@{/pos}">
+            <i class="bi bi-calculator-fill text-warning me-2"></i>POS BÁN HÀNG TẠI QUẦY
+        </a>
+        <div class="text-light d-flex align-items-center gap-3">
+            <span class="badge bg-secondary"><i class="bi bi-geo-alt-fill me-1"></i>Chi nhánh: STORE-Q1 (Nguyễn Trãi)</span>
+            <span class="small text-white-50">
+                Thu ngân: <strong class="text-white" th:text="${cashierName} ?: 'Thu ngân'">Thu ngân</strong>
+                (<span sec:authentication="name">cashier@dahdt.com</span>)
+            </span>
+            <div class="vr bg-secondary"></div>
+            <a th:href="@{/}" target="_blank" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-shop me-1"></i>Xem Shop
+            </a>
+            <a th:href="@{/admin}" class="btn btn-outline-info btn-sm" sec:authorize="hasAnyRole('ADMIN', 'STORE_MANAGER')">
+                <i class="bi bi-speedometer2 me-1"></i>Admin
+            </a>
+            <form th:action="@{/logout}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <i class="bi bi-box-arrow-right me-1"></i>Đăng xuất
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-3">
+    <!-- Flash messages -->
+    <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+    <div class="row g-3">
+        <!-- Cột trái: Quét mã vạch và danh sách món -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-upc-scan fs-5"></i></span>
+                        <input type="text" class="form-control form-control-lg"
+                               placeholder="Quét mã vạch (Barcode) hoặc gõ SKU sản phẩm (VD: AT-POLO-TR-M)..." disabled>
+                        <button class="btn btn-dark" type="button" disabled>
+                            <i class="bi bi-plus-circle me-1"></i>Thêm vào hóa đơn
+                        </button>
+                    </div>
+                    <div class="form-text text-muted mt-2">
+                        <i class="bi bi-info-circle me-1"></i>Chức năng quét mã, tạo đơn POS và trừ kho trực tiếp sẽ được kích hoạt ở Ngày 8–9.
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Sản phẩm</th>
+                                <th>Màu / Size</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-basket3 display-4 d-block mb-2 text-secondary"></i>
+                                    Chưa có sản phẩm nào trong hóa đơn hiện tại.
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Thanh toán và Hóa đơn -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title fw-bold mb-0"><i class="bi bi-receipt me-2"></i>Chi tiết thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tạm tính:</span>
+                        <span class="fw-semibold">0 đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Chiết khấu / Voucher:</span>
+                        <span class="text-success fw-semibold">-0 đ</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="h5 fw-bold mb-0">TỔNG CỘNG:</span>
+                        <span class="h4 fw-bold text-danger mb-0">0 đ</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-semibold">Hình thức thanh toán (Strategy)</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="paymentMethod" id="payCash" checked disabled>
+                            <label class="btn btn-outline-secondary btn-sm" for="payCash"><i class="bi bi-cash me-1"></i>Tiền mặt</label>
+
+                            <input type="radio" class="btn-check" name="paymentMethod" id="payCard" disabled>
+                            <label class="btn btn-outline-secondary btn-sm" for="payCard"><i class="bi bi-credit-card me-1"></i>Thẻ</label>
+
+                            <input type="radio" class="btn-check" name="paymentMethod" id="payQr" disabled>
+                            <label class="btn btn-outline-secondary btn-sm" for="payQr"><i class="bi bi-qr-code me-1"></i>QR Code</label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-lg w-100 fw-bold" disabled>
+                        <i class="bi bi-check2-circle me-1"></i>Thanh toán & In hóa đơn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div th:replace="~{layout/footer :: shopFooter}"></div>
+</body>
+</html>
+

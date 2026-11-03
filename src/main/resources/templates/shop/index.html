@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Trang chủ Cửa hàng Thời trang - DA_HDT')}">
+    <title>Trang chủ Cửa hàng Thời trang</title>
+</head>
+<body>
+
+<!-- Header Navbar -->
+<div th:replace="~{layout/navbar :: shopNavbar}"></div>
+
+<main>
+    <!-- Flash messages -->
+    <div class="container mt-3">
+        <div th:replace="~{layout/flash :: flashMessages}"></div>
+    </div>
+
+    <!-- Hero Banner -->
+    <section class="bg-dark text-white py-5 text-center position-relative shadow-sm"
+             style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%);">
+        <div class="container py-4">
+            <h1 class="display-5 fw-bold mb-3">BỘ SƯU TẬP THỜI TRANG ĐA KÊNH 2026</h1>
+            <p class="lead text-white-50 mx-auto mb-4" style="max-width: 650px;">
+                Áo thun, Polo, Sơ mi, Quần Jean, Kaki, Giày Sneaker và Phụ kiện cao cấp.
+                Mua hàng trực tuyến tiện lợi hoặc ghé trải nghiệm trực tiếp tại chuỗi cửa hàng.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a th:href="@{/login}" class="btn btn-primary btn-lg px-4 fw-semibold" sec:authorize="isAnonymous()">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập trải nghiệm
+                </a>
+                <a th:href="@{/admin}" class="btn btn-warning btn-lg px-4 fw-semibold"
+                   sec:authorize="hasAnyRole('ADMIN', 'STORE_MANAGER')">
+                    <i class="bi bi-speedometer2 me-1"></i>Vào Bảng Quản trị
+                </a>
+                <a th:href="@{/pos}" class="btn btn-success btn-lg px-4 fw-semibold"
+                   sec:authorize="hasAnyRole('CASHIER', 'STORE_MANAGER', 'ADMIN')">
+                    <i class="bi bi-calculator me-1"></i>Vào Quầy Thu ngân POS
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Khối danh mục tiêu biểu (Khung mẫu) -->
+    <section class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0"><i class="bi bi-grid-fill text-primary me-2"></i>Danh mục sản phẩm</h3>
+            <span class="badge bg-secondary-subtle text-secondary-emphasis">Phiên Ngày 3B sẽ nạp dữ liệu động từ DB</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-6 col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                    <div class="display-6 text-primary mb-2"><i class="bi bi-gender-male"></i></div>
+                    <h6 class="fw-bold mb-1">Thời trang Nam</h6>
+                    <small class="text-muted">Áo thun, Polo, Sơ mi</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                    <div class="display-6 text-danger mb-2"><i class="bi bi-gender-female"></i></div>
+                    <h6 class="fw-bold mb-1">Thời trang Nữ</h6>
+                    <small class="text-muted">Váy, Áo kiểu, Quần nữ</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                    <div class="display-6 text-success mb-2"><i class="bi bi-boot"></i></div>
+                    <h6 class="fw-bold mb-1">Giày & Dép</h6>
+                    <small class="text-muted">Sneaker, Giày lười, Sandal</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                    <div class="display-6 text-warning mb-2"><i class="bi bi-watch"></i></div>
+                    <h6 class="fw-bold mb-1">Phụ kiện</h6>
+                    <small class="text-muted">Ba lô, Ví da, Thắt lưng, Nón</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sản phẩm nổi bật (Khung mẫu) -->
+    <section class="container pb-5">
+        <div class="card bg-light border-0 shadow-sm p-4 text-center rounded-3">
+            <div class="my-3">
+                <i class="bi bi-laptop display-4 text-muted"></i>
+                <h4 class="fw-bold mt-3">Giao diện Shop Trực tuyến — Phiên bản Khung mẫu (Ngày 3A)</h4>
+                <p class="text-muted mx-auto" style="max-width: 600px;">
+                    Nền tảng giao diện Thymeleaf, hệ thống 2 SecurityFilterChain, phiên đăng nhập session và layout dùng chung đã sẵn sàng.
+                    Dữ liệu sản phẩm biến thể (màu sắc, kích cỡ, ảnh, giá) sẽ được kết nối ở Ngày 3B và Ngày 5.
+                </p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<div th:replace="~{layout/footer :: shopFooter}"></div>
+
+</body>
+</html>
+

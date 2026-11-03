@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('500 - Lỗi máy chủ')}">
+    <title>500 - Lỗi máy chủ</title>
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-4">
+
+<div class="container text-center" style="max-width: 550px;">
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+        <div class="card-body">
+            <div class="display-1 text-danger fw-bold mb-2">
+                <i class="bi bi-bug"></i> 500
+            </div>
+            <h3 class="fw-bold text-dark mb-2">Đã xảy ra lỗi máy chủ</h3>
+            <p class="text-muted mb-4">
+                Hệ thống gặp sự cố trong quá trình xử lý yêu cầu của bạn. Đội ngũ phát triển đã ghi nhận và sẽ khắc phục sớm.
+            </p>
+            <a th:href="@{/}" class="btn btn-primary px-4">
+                <i class="bi bi-house-door me-1"></i>Về Trang chủ
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 Bundle JS qua CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

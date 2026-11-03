@@ -54,6 +54,18 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Thymeleaf: template engine cho giao diện server-side rendering -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf Spring Security 6: hỗ trợ sec:authorize, sec:authentication trong HTML -->
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
+
         <!-- ===== DATABASE ===== -->
 
         <!-- Microsoft SQL Server JDBC Driver: kết nối tới SQL Server -->

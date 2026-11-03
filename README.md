@@ -15,6 +15,8 @@ Website thương mại điện tử B2C (bán lẻ trực tiếp cho người ti
 - **springdoc-openapi** (Swagger UI — tài liệu API)
 - **Maven** (build tool)
 
+> ⚠️ **Lưu ý CDN & Rủi ro RSK-09**: Trong các giai đoạn phát triển ban đầu, CSS/JS giao diện (Bootstrap 5, Bootstrap Icons, AdminLTE 4) được tải qua CDN công khai. Theo kế hoạch quản lý rủi ro (RSK-09), vào **Ngày 14** trước khi đóng băng mã nguồn và demo, toàn bộ tài nguyên CDN này sẽ được tải về lưu trữ offline tại thư mục `src/main/resources/static/vendor/` để đảm bảo hệ thống hoạt động hoàn toàn độc lập khi không có Internet.
+
 ## Yêu cầu trước khi chạy
 
 1. **Java 17+** — tải tại [Adoptium](https://adoptium.net/)
