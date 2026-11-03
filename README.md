@@ -40,6 +40,17 @@ Sau khi chạy, truy cập:
 - **Swagger UI** (test API): [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 - **API Docs** (JSON): [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
+### Tài khoản dev (mẫu thử nghiệm)
+
+Dữ liệu tài khoản được tự động khởi tạo khi chạy profile `dev` qua `DevDataSeeder` (mật khẩu đã được mã hóa bằng `BCryptPasswordEncoder`):
+
+| Vai trò | Email | Mật khẩu | Chi nhánh gắn kèm | Mục đích sử dụng |
+|---|---|---|---|---|
+| **ADMIN** | `admin@dahdt.com` | `password123` | Toàn hệ thống | Quản trị chuỗi, danh mục, kho bãi toàn quốc |
+| **STORE_MANAGER** | `manager@dahdt.com` | `password123` | `STORE-Q1` (Nguyễn Trãi - Q1) | Quản lý cửa hàng, duyệt đơn, xem tồn kho chi nhánh |
+| **CASHIER** | `cashier@dahdt.com` | `password123` | `STORE-Q1` (Nguyễn Trãi - Q1) | Đăng nhập POS, quét mã bán hàng tại quầy |
+| **CUSTOMER** | `customer@dahdt.com` | `password123` | — | Đăng nhập Website Shop, mua hàng, áp voucher |
+
 ## Cấu trúc dự án
 
 Dự án tổ chức theo **module nghiệp vụ** (feature-based):
