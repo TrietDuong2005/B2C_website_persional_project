@@ -1,232 +1,287 @@
-# PROJECT BRIEF — WEBSITE THƯƠNG MẠI ĐIỆN TỬ B2C
-### Spring Boot MVC + SQL Server — Tài liệu để AI khởi tạo dự án
+# PROJECT BRIEF v2 — HỆ THỐNG BÁN LẺ CHUỖI CỬA HÀNG (WEBSITE + POS + ADMIN)
+### Spring Boot MVC + Thymeleaf + SQL Server
 
-> **Cách dùng file này:** đây là bản đặc tả (spec) đầy đủ để dán cho AI coding (Claude Code, GitHub Copilot Chat, Cursor...) trong IntelliJ, giúp AI hiểu rõ kiến trúc, quy ước và phạm vi để sinh code **đồng nhất từ đầu đến cuối dự án** — tránh tình trạng mỗi lần hỏi AI lại code theo 1 kiểu khác nhau. Đặt file này ở gốc repo, tên gợi ý: `PROJECT_BRIEF.md`.
+> **File này thay thế hoàn toàn bản v1.** Đây là "hợp đồng" giữa chủ dự án và AI: mọi AI làm việc trên repo này phải đọc file này trước, đặc biệt **mục 7, 8, 12, 13**.
 >
-> **Tài liệu đi kèm (đặt cùng thư mục `/docs` trong repo):**
-> - `thiet-ke-db-ecommerce-b2c.md` — thiết kế đầy đủ 40+ bảng CSDL theo module
-> - `tu-dien-du-lieu.md` — từ điển dữ liệu chi tiết (tên trường, kiểu dữ liệu, ràng buộc) cho nhóm bảng lõi
-> - `ecommerce_erd.puml` / `ecommerce_erd_core.puml` — sơ đồ ERD
->
-> Khi giao việc cho AI, luôn nhắc AI đọc các file trên trước khi sinh code Entity/Migration.
+> `thiet-ke-db-ecommerce-b2c.md` (thiết kế hơn 40 bảng) chỉ còn là **tài liệu tham khảo / hướng mở rộng**. Không dùng nó làm phạm vi. Phạm vi thật nằm ở mục 7 và 8 bên dưới.
 
 ---
 
-## 1. TỔNG QUAN DỰ ÁN
+## 0. THAY ĐỔI SO VỚI V1
 
-- **Loại dự án:** Website thương mại điện tử B2C (bán lẻ trực tiếp cho người tiêu dùng), ví dụ minh hoạ: shop thời trang.
-- **Vai trò người dùng:** Khách hàng (customer), Nhân viên vận hành (staff/warehouse), Quản trị viên (admin) — dùng chung bảng `users`, phân biệt qua `roles`.
-- **Phạm vi CSDL:** Bản thiết kế đầy đủ hơn 40 bảng, chia theo 13 module (xem chi tiết trong `thiet-ke-db-ecommerce-b2c.md`): User & Auth, Catalog, Pricing & Promotion, Inventory, Cart & Wishlist, Order & Payment, Shipping, Review & QnA, Return/Refund/Warranty, Loyalty, Notification & Support, CMS/Marketing, Admin/RBAC, Analytics.
-- **Mục tiêu học tập:** Người thực hiện (chủ dự án) là sinh viên mới bắt đầu lại với lập trình — **code phải rõ ràng, có comment giải thích, đặt tên nhất quán**, để có thể đọc lại và tự học được sau khi AI sinh xong, không chỉ để "chạy được".
-
----
-
-## 2. CÔNG NGHỆ SỬ DỤNG (TECH STACK)
-
-| Thành phần | Công nghệ | Ghi chú |
+| Hạng mục | v1 | v2 |
 |---|---|---|
-| Ngôn ngữ | Java 17+ (LTS) | |
-| Framework | Spring Boot 3.x | Kiến trúc MVC |
-| Build tool | Maven | dùng `pom.xml` |
-| CSDL | Microsoft SQL Server | driver `mssql-jdbc` |
-| ORM | Spring Data JPA (Hibernate) | |
-| Quản lý migration CSDL | Flyway (hoặc Liquibase) | **bắt buộc** — không dùng `ddl-auto: update` cho production, để có lịch sử thay đổi schema rõ ràng, dễ học |
-| Mapping Entity ↔ DTO | MapStruct | tránh viết converter tay dễ sai sót |
-| Validation | Jakarta Bean Validation (`@Valid`, `@NotNull`...) | |
-| Bảo mật | Spring Security + JWT | cho đăng nhập/phân quyền |
-| Tài liệu API | springdoc-openapi (Swagger UI) | để tự test API bằng giao diện web, không cần Postman ngay từ đầu |
-| Log | SLF4J + Logback (có sẵn trong Spring Boot) | |
-| Test | JUnit 5 + Mockito | |
-| Quản lý mã nguồn | Git, theo Conventional Commits (xem mục 8) | |
+| Phạm vi CSDL | hơn 40 bảng, 13 module | **24 bảng Must + 4 bảng Should/Could** |
+| Giao diện | Vue 3 tách riêng | **Thymeleaf + Bootstrap 5, một project duy nhất** |
+| Nghiệp vụ | B2C online | **Chuỗi cửa hàng + POS + website online + admin** |
+| Thuộc tính sản phẩm | EAV động (attributes/attribute_values) | **Cột `color`, `size` trực tiếp trong `product_variants`** |
+| Lộ trình | 10 giai đoạn | **14 ngày** (mục 12) |
+| Giữ nguyên | Kiến trúc phân lớp, quy ước đặt tên, `ApiResponse<T>`, Flyway, JWT cho `/api/**`, quy tắc với AI | |
 
-**Vì sao chọn các công nghệ này:** đây là bộ công nghệ phổ biến nhất trong hệ sinh thái Spring Boot hiện nay, nhiều tài liệu/tutorial tiếng Việt, dễ tìm câu trả lời khi gặp lỗi — quan trọng với người mới.
+**Đã xong:** giai đoạn 1 (auth + user), gồm migration V1–V6 (`users`, `roles`, `user_roles`, `user_profiles`, `addresses`, `auth_tokens`, `otp_verifications`). **Không sửa các migration này.**
 
 ---
 
-## 3. KIẾN TRÚC PHÂN LỚP (LAYERED ARCHITECTURE)
+## 1. TỔNG QUAN & RÀNG BUỘC
 
-Mỗi chức năng đi qua đúng 5 lớp theo thứ tự sau, **không được bỏ qua lớp hoặc gọi tắt** (ví dụ Controller không được gọi thẳng Repository):
+- **Bài toán:** chuỗi cửa hàng thời trang bán lẻ (áo, quần, giày, dép, ba lô, ví, dây nịt, nón, đồng hồ). Có 3 khu giao diện: **Shop** (website bán online), **POS** (bán tại quầy), **Admin** (quản trị chuỗi).
+- **Phục vụ 2 môn:** Phát triển phần mềm hướng đối tượng (HDT) và Quản lý dự án phần mềm (QLDA). Một sản phẩm, hai báo cáo.
+- **Ràng buộc:** 1 người, 14 ngày, khoảng 4–6 giờ hiệu quả mỗi ngày, 100% code do AI sinh. Người làm phải **đọc hiểu và bảo vệ được** code. Dự án Flutter song song có mức ưu tiên thấp hơn.
+- **Actors:**
 
-```
-Controller  →  Service (interface)  →  ServiceImpl  →  Repository  →  Database
-     ↑                                        ↓
-   DTO (request/response)              Entity (bảng CSDL)
-     ↑                                        ↓
-              Mapper (MapStruct) chuyển đổi qua lại
-```
-
-- **Controller**: chỉ nhận request, validate đầu vào, gọi Service, trả response. Không chứa logic nghiệp vụ.
-- **Service (interface) + ServiceImpl**: chứa toàn bộ logic nghiệp vụ (vd: kiểm tra tồn kho trước khi đặt hàng).
-- **Repository**: interface kế thừa `JpaRepository`, chỉ chứa truy vấn dữ liệu.
-- **Entity**: ánh xạ 1-1 với bảng CSDL (theo đúng file thiết kế CSDL).
-- **DTO**: dữ liệu ra/vào API, **không bao giờ trả thẳng Entity ra ngoài API** (tránh lộ dữ liệu nhạy cảm như `password_hash`, tránh vòng lặp JSON khi Entity có quan hệ 2 chiều).
-- **Mapper**: dùng MapStruct để chuyển Entity ↔ DTO, tránh code tay lặp lại.
-- **Exception**: dùng `@ControllerAdvice` + `@ExceptionHandler` tập trung 1 chỗ (`GlobalExceptionHandler`), không try-catch rải rác từng Controller.
+| Actor | Role trong hệ thống | Dùng khu nào |
+|---|---|---|
+| Khách hàng | `CUSTOMER` | Shop |
+| Thu ngân | `CASHIER` | POS |
+| Quản lý cửa hàng | `STORE_MANAGER` | POS, Admin (chỉ dữ liệu cửa hàng mình) |
+| Quản trị hệ thống | `ADMIN` | Admin (toàn chuỗi) |
 
 ---
 
-## 4. CẤU TRÚC THƯ MỤC (PACKAGE STRUCTURE)
+## 2. CÔNG NGHỆ
 
-Tổ chức theo **module nghiệp vụ** (feature-based), không tổ chức theo layer toàn cục — lý do: khi dự án lớn (40+ bảng), tổ chức theo layer (1 package `controller` chứa 40 file) sẽ rất khó tìm, còn tổ chức theo module giúp mở từng module độc lập, dễ học từng phần:
-
-```
-src/main/java/com/<tencongty>/ecommerce/
-│
-├── config/                    # Cấu hình chung: SecurityConfig, SwaggerConfig, CorsConfig...
-├── common/                    # Dùng chung toàn hệ thống
-│   ├── exception/              # GlobalExceptionHandler, các custom Exception
-│   ├── response/               # ApiResponse<T> - wrapper chuẩn cho mọi API
-│   └── util/                   # Hàm tiện ích chung
-│
-├── modules/
-│   ├── auth/                   # Đăng ký, đăng nhập, JWT, phân quyền
-│   │   ├── controller/
-│   │   ├── service/
-│   │   ├── repository/
-│   │   ├── entity/
-│   │   ├── dto/
-│   │   └── mapper/
-│   ├── user/                   # user_profiles, addresses
-│   ├── catalog/                # categories, brands, products, product_variants, attributes...
-│   ├── inventory/               # warehouses, inventories, purchase_orders
-│   ├── promotion/               # promotions, vouchers, flash_sales
-│   ├── cart/                    # carts, cart_items, wishlists
-│   ├── order/                   # orders, order_items, order_status_history
-│   ├── payment/                 # payments, payment_methods, refunds
-│   ├── shipping/                # shipments, shipping_carriers, shipping_zones
-│   ├── review/                  # reviews, product_questions
-│   ├── returnwarranty/          # return_requests, warranties
-│   ├── loyalty/                 # loyalty_points, membership_tiers
-│   ├── notification/            # notifications, support_tickets
-│   └── cms/                     # banners, cms_pages, blog_posts
-│
-└── EcommerceApplication.java   # Class main
-```
-
-**Quy tắc:** mỗi module là 1 lát cắt dọc đầy đủ 5 lớp — muốn hiểu chức năng "đặt hàng" hoạt động thế nào, chỉ cần mở đúng thư mục `modules/order/`, không phải nhảy qua lại nhiều package rời rạc.
+| Thành phần | Công nghệ |
+|---|---|
+| Ngôn ngữ / Framework | Java 17, Spring Boot 3.x (MVC), Maven |
+| CSDL | Microsoft SQL Server, Spring Data JPA (Hibernate) |
+| Migration | Flyway (`ddl-auto: validate`) |
+| Giao diện | **Thymeleaf** + `thymeleaf-extras-springsecurity6`, Bootstrap 5, Bootstrap Icons, Chart.js (dashboard). Admin/POS dùng 1 template có sẵn (AdminLTE hoặc Tabler). Tất cả nạp qua CDN |
+| Bảo mật | Spring Security: **2 SecurityFilterChain** (xem mục 9) |
+| Mapping / Validation | MapStruct, Jakarta Validation, Lombok |
+| Tài liệu API | springdoc-openapi (Swagger) cho `/api/**` |
+| Test | JUnit 5 + Mockito, chỉ cho phần lõi (mục 12, ngày 12) |
+| Sơ đồ | PlantUML (`docs/*.puml`) |
 
 ---
 
-## 5. QUY ƯỚC ĐẶT TÊN & CODING CONVENTION
+## 3. KIẾN TRÚC
 
-**Bắt buộc AI tuân thủ tuyệt đối các quy ước sau trên toàn bộ dự án (không được đổi cách đặt tên giữa chừng):**
+Luồng chuẩn, **không được bỏ lớp hoặc gọi tắt**:
+
+```
+Trang web:  Browser → PageController (web/) ─┐
+API/AJAX:   Client  → RestController ────────┤→ Service → Repository → Database
+                                             │      ↓
+                                             │   Entity (chứa luật nghiệp vụ của chính nó)
+```
+
+- **Service dùng chung** cho cả trang web và REST. **Chỉ tạo REST endpoint khi trang cần AJAX** (POS tìm sản phẩm, thêm vào giỏ...) hoặc để test bằng Swagger. Đừng viết 2 bộ controller cho mọi chức năng.
+- **PageController** mỏng: nhận request, gọi Service, đưa dữ liệu vào `Model`, trả tên template. Không chứa nghiệp vụ.
+- **Entity giàu hành vi (rich domain model):** luật nghiệp vụ đặt trong Entity khi nó thuộc về chính đối tượng đó (ví dụ `Inventory.deduct(qty)`, `Order.addItem(...)`, `Voucher.calculateDiscount(subtotal)`). Service điều phối, giao dịch, gọi Repository.
+- **Không trả Entity ra ngoài API**: dùng DTO + MapStruct. Với trang Thymeleaf, đưa DTO/ViewModel vào Model, tránh đưa thẳng Entity có quan hệ lazy.
+- **Exception:** `GlobalExceptionHandler` cho REST; với trang web, lỗi nghiệp vụ hiển thị qua `RedirectAttributes` (flash message) hoặc trang lỗi chung.
+
+---
+
+## 4. CẤU TRÚC THƯ MỤC
+
+```
+src/main/java/com/dahdt/ecommerce/
+├── config/                  # SecurityConfig (2 chain), SwaggerConfig, CorsConfig, WebConfig
+├── common/                  # exception/, response/ (ApiResponse), util/, BaseEntity
+└── modules/
+    ├── auth/  user/         # ĐÃ XONG (giai đoạn 1)
+    ├── catalog/             # categories, brands, products, product_variants, product_images
+    ├── store/               # stores, employees, pos_shifts
+    ├── inventory/           # inventories, inventory_transactions, stock_transfers
+    ├── cart/                # carts, cart_items
+    ├── order/               # orders, order_items, order_status_history
+    │   ├── state/           # State pattern (trạng thái đơn)
+    │   ├── factory/         # Factory (tạo đơn ONLINE / POS)
+    │   └── event/           # Spring Events (Observer)
+    ├── payment/             # payments
+    │   └── strategy/        # Strategy pattern (cách thanh toán)
+    ├── promotion/           # vouchers, voucher_usages
+    │   └── strategy/        # Strategy pattern (cách giảm giá)
+    ├── report/              # dashboard, thống kê (chỉ đọc)
+    └── review/              # reviews (Could)
+        (mỗi module có: controller/, web/, service/, repository/, entity/, dto/, mapper/)
+
+src/main/resources/
+├── db/migration/            # V1..Vn
+├── templates/
+│   ├── layout/              # fragment dùng chung (header, sidebar, footer)
+│   ├── shop/  admin/  pos/  # 3 khu giao diện
+│   └── error/
+└── static/                  # css/js tự viết (nếu có)
+
+docs/                        # tài liệu cho 2 báo cáo (*.md, *.puml)
+docs/nhat-ky/                # nhật ký theo ngày
+```
+
+**Quy ước chỗ đặt:** `controller/` = REST (`XxxController`, đường dẫn `/api/v1/...`); `web/` = trang Thymeleaf (`XxxPageController`). Các controller REST của giai đoạn 1 giữ nguyên.
+
+---
+
+## 5. QUY ƯỚC ĐẶT TÊN & CODE
 
 | Đối tượng | Quy ước | Ví dụ |
 |---|---|---|
-| Tên bảng CSDL | snake_case, số nhiều | `product_variants`, `order_items` |
-| Tên class Entity | PascalCase, số ít | `ProductVariant`, `OrderItem` |
-| Tên biến/thuộc tính Java | camelCase | `productName`, `totalAmount` |
-| Tên DTO | Hậu tố rõ mục đích | `ProductRequestDTO`, `ProductResponseDTO` |
-| Tên Controller | Hậu tố `Controller` | `ProductController` |
-| Tên Service interface | Hậu tố `Service` | `ProductService` |
-| Tên Service implement | Hậu tố `ServiceImpl` | `ProductServiceImpl` |
-| Tên Repository | Hậu tố `Repository` | `ProductRepository` |
-| Endpoint API | REST chuẩn, danh từ số nhiều, kebab-case nếu nhiều từ | `/api/v1/product-variants` |
-| HTTP method | GET (đọc), POST (tạo), PUT (sửa toàn bộ), PATCH (sửa 1 phần), DELETE (xoá) | |
-| Response trả về | Luôn bọc trong `ApiResponse<T>` gồm `code`, `message`, `data` | xem mẫu bên dưới |
+| Bảng | snake_case, số nhiều | `product_variants` |
+| Entity | PascalCase, số ít | `ProductVariant` |
+| DTO | hậu tố `RequestDTO` / `ResponseDTO` | `OrderResponseDTO` |
+| Service | interface `XxxService` + `XxxServiceImpl` | `OrderService` |
+| Repository | `XxxRepository` | `OrderRepository` |
+| REST controller | `XxxController`, `/api/v1/...` danh từ số nhiều | `/api/v1/orders` |
+| Page controller | `XxxPageController`, URL theo khu: `/shop/...`, `/admin/...`, `/pos/...` | `/admin/products` |
+| Template | `templates/<khu>/<module>/<trang>.html`, kebab-case | `admin/catalog/product-list.html` |
+| Enum | PascalCase, giá trị UPPER_SNAKE, lưu `@Enumerated(EnumType.STRING)` | `OrderStatus.PENDING` |
 
-**Mẫu response chuẩn (bắt buộc áp dụng cho mọi API):**
-```json
-{
-  "code": 200,
-  "message": "Lấy danh sách sản phẩm thành công",
-  "data": { ... }
-}
-```
-
-**Comment code:** mỗi class Service, mỗi hàm xử lý nghiệp vụ phức tạp (vd: tính phí ship, trừ tồn kho khi đặt hàng) **bắt buộc có comment tiếng Việt giải thích logic**, vì mục tiêu là để người mới đọc lại hiểu được, không chỉ để chạy đúng.
+- **Response REST** luôn bọc `ApiResponse<T>` (`code`, `message`, `data`).
+- **Comment tiếng Việt** cho: mọi Service, mọi hàm nghiệp vụ không tầm thường, mọi class pattern. Mỗi class pattern có comment đầu file nêu rõ nó là pattern nào và vì sao dùng ở đây (phục vụ báo cáo HDT).
+- **Tiền** dùng `BigDecimal` / `DECIMAL(18,2)`. **Văn bản tiếng Việt** dùng `NVARCHAR` trong SQL Server. **Thời gian** dùng `DATETIME2`.
 
 ---
 
-## 6. CẤU HÌNH KẾT NỐI SQL SERVER
+## 6. CẤU HÌNH
 
-Yêu cầu AI tạo sẵn 2 file cấu hình theo profile (để không lẫn cấu hình máy cá nhân với môi trường khác sau này):
-
-- `application.yml` (cấu hình chung, không chứa thông tin nhạy cảm)
-- `application-dev.yml` (thông tin kết nối DB thật, **thêm vào `.gitignore`**, không commit lên Git)
-
-Thông tin cần có trong `application-dev.yml`:
-```yaml
-spring:
-  datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=ecommerce_db;encrypt=true;trustServerCertificate=true
-    username: sa
-    password: <mật khẩu của bạn>
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-  jpa:
-    hibernate:
-      ddl-auto: validate   # KHÔNG dùng "update" — schema phải được tạo qua Flyway migration
-    show-sql: true         # bật để người mới nhìn thấy câu SQL thật Hibernate sinh ra, phục vụ học
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-```
-
-**Vì sao bắt buộc dùng Flyway thay vì để Hibernate tự tạo bảng (`ddl-auto: update`):** khi dự án có 40+ bảng với nhiều ràng buộc khoá ngoại phức tạp, để Hibernate tự sinh bảng dễ sai lệch so với thiết kế đã duyệt và **không có lịch sử thay đổi** — mỗi lần đổi schema, bạn viết 1 file migration mới (`V1__create_users_table.sql`, `V2__create_products_table.sql`...), giúp bạn **đọc lại được từng bước schema được xây dựng như thế nào**, rất tốt cho việc học.
+- `application.yml` (chung) + `application-dev.yml` (mật khẩu DB, **không commit**).
+- `ddl-auto: validate`, `show-sql: true` trong dev.
+- **Flyway:** mỗi thay đổi schema là **một file migration mới** (`V7__...`, `V8__...`). **Tuyệt đối không sửa migration đã chạy** (Flyway sẽ báo lỗi checksum). Nếu đã lỡ sai khi còn ở DB dev: xoá DB `ecommerce_db`, tạo lại rỗng, chạy lại.
+- Dữ liệu mẫu: seed bảng danh mục bằng migration SQL; **tài khoản người dùng** seed bằng `DevDataSeeder` (chỉ chạy ở profile `dev`, mật khẩu băm bằng `PasswordEncoder`).
 
 ---
 
-## 7. LỘ TRÌNH XÂY DỰNG (BẮT BUỘC LÀM THEO THỨ TỰ)
+## 7. PHẠM VI (MoSCoW)
 
-Không yêu cầu AI code toàn bộ 40+ bảng cùng lúc trong 1 lần — chia theo giai đoạn (mỗi giai đoạn AI sinh code xong, bạn chạy thử, hiểu rồi mới sang giai đoạn tiếp theo):
+| Mức | Nội dung |
+|---|---|
+| **Must** | Đăng nhập + phân quyền 4 role · CRUD danh mục, thương hiệu, sản phẩm, biến thể (màu/size), ảnh (URL) · cửa hàng, nhân viên · **tồn kho theo từng cửa hàng** + lịch sử kho · **Shop:** xem/lọc/tìm sản phẩm, giỏ hàng (khách đã đăng nhập), đặt hàng online (COD + thanh toán giả lập), voucher · **POS:** tìm/quét SKU, lập hóa đơn, áp voucher, thanh toán tiền mặt/thẻ/QR (giả lập), tính tiền thừa, in hóa đơn · **Admin:** quản lý đơn mọi kênh, đổi trạng thái, quản lý voucher, dashboard (doanh thu theo cửa hàng/ngày/kênh, top sản phẩm, tồn kho thấp) |
+| **Should** | Ca thu ngân (mở/đóng ca) · chuyển kho giữa cửa hàng · đơn online tự chọn cửa hàng gần nhất còn hàng + phí ship theo khoảng cách (Haversine từ lat/lng) |
+| **Could** | Đánh giá sản phẩm · tích điểm · đổi trả |
+| **Won't** (chỉ ghi "hướng phát triển" trong báo cáo) | Flash sale, CMS/blog, ticket CSKH, bảo hành, OTP/OAuth, nhập hàng từ NCC, cổng thanh toán/vận chuyển thật, giỏ hàng khách vãng lai, thuộc tính sản phẩm động (EAV) |
 
-| Giai đoạn | Module | Kết quả cần đạt |
+**Không được tự thêm tính năng, bảng hay cột ngoài danh sách này nếu chưa hỏi chủ dự án** (chống phình phạm vi).
+
+---
+
+## 8. CƠ SỞ DỮ LIỆU v2
+
+### 8.1 Đã có (V1–V6, giữ nguyên)
+`users`, `roles`, `user_roles`, `user_profiles`, `addresses`, `auth_tokens`, `otp_verifications`. Kiểm tra `addresses` đã có `latitude`, `longitude`; nếu thiếu, thêm bằng migration mới.
+
+### 8.2 Bảng mới
+
+| Mức | Bảng | Cột chính | Ghi chú |
+|---|---|---|---|
+| Must | `categories` | id, parent_id, name, slug, sort_order, is_active | cây cha–con |
+| Must | `brands` | id, name, slug, is_active | |
+| Must | `products` | id, category_id, brand_id, name, slug, description, thumbnail_url, status (ACTIVE/HIDDEN) | sản phẩm "cha" |
+| Must | `product_variants` | id, product_id, sku (unique), barcode (unique, null), color, size, price, cost_price, weight_gram, status | đơn vị thực sự bán và có tồn kho |
+| Must | `product_images` | id, product_id, variant_id (null), url, sort_order, is_thumbnail | |
+| Must | `stores` | id, code (unique), name, type (STORE/WAREHOUSE), province, district, ward, detail_address, latitude, longitude, phone, status | thay cho `warehouses` |
+| Must | `employees` | id, user_id (unique), store_id, position (MANAGER/CASHIER/STAFF), status | gắn user với cửa hàng |
+| Must | `inventories` | id, variant_id, store_id, quantity_on_hand, reorder_level, **version** | unique (variant_id, store_id); `version` cho khóa lạc quan |
+| Must | `inventory_transactions` | id, variant_id, store_id, type (IMPORT/SALE/CANCEL/TRANSFER_IN/TRANSFER_OUT/ADJUST), quantity_change (±), quantity_after, reference_type, reference_id, note, created_by, created_at | sổ cái kho, chỉ thêm, không sửa |
+| Must | `carts` | id, user_id, status | giỏ hàng cho khách đã đăng nhập |
+| Must | `cart_items` | id, cart_id, variant_id, quantity | unique (cart_id, variant_id); **giá lấy từ DB, không lưu** |
+| Must | `orders` | id, order_code (unique), **channel (ONLINE/POS)**, store_id, customer_id (null), cashier_id (null), status, subtotal, discount_total, shipping_fee, total_amount, voucher_code, ship_name, ship_phone, ship_address, ship_latitude, ship_longitude, note, placed_at, completed_at | dùng chung cho 2 kênh; thông tin giao hàng là snapshot (null với POS) |
+| Must | `order_items` | id, order_id, variant_id, product_name, sku, color, size, unit_price, quantity, line_total | snapshot tại thời điểm mua |
+| Must | `order_status_history` | id, order_id, from_status, to_status, changed_by, note, changed_at | |
+| Must | `payments` | id, order_id, method (CASH/CARD/QR/COD/EWALLET_MOCK), amount, status (PENDING/PAID/FAILED/REFUNDED), transaction_ref, cash_received, change_amount, paid_at | thay cho `payment_methods` |
+| Must | `vouchers` | id, code (unique), name, discount_type (PERCENT/FIXED), discount_value, min_order_value, max_discount_value, usage_limit, used_count, start_at, end_at, status | |
+| Must | `voucher_usages` | id, voucher_id, order_id, user_id (null), used_at | |
+| Should | `pos_shifts` | id, store_id, cashier_id, opened_at, closed_at, opening_cash, closing_cash, expected_cash, status | |
+| Should | `stock_transfers` | id, code, from_store_id, to_store_id, status (DRAFT/IN_TRANSIT/RECEIVED/CANCELLED), created_by, created_at | |
+| Should | `stock_transfer_items` | id, transfer_id, variant_id, quantity | |
+| Could | `reviews` | id, order_item_id (unique), user_id, product_id, rating (1–5), comment, status | |
+
+Tổng: **7 (đã có) + 17 Must mới = 24 bảng Must**, cộng 3 Should và 1 Could.
+
+### 8.3 Nguyên tắc
+- Khóa chính `BIGINT IDENTITY(1,1)`. Mọi bảng mới có `created_at`, `updated_at` giống `BaseEntity` hiện có (đọc `V1` và `BaseEntity` để giữ cùng phong cách).
+- Có đầy đủ `FOREIGN KEY`, `NOT NULL`, `UNIQUE`, `CHECK` cho giá trị enum, index cho cột tra cứu thường xuyên (`sku`, `order_code`, `store_id`, `placed_at`).
+- Tiếng Việt dùng `NVARCHAR`.
+
+---
+
+## 9. PHÂN QUYỀN & BẢO MẬT
+
+Hai `SecurityFilterChain` trong `SecurityConfig`:
+
+1. **Chain `/api/**`:** stateless, JWT (đã làm ở giai đoạn 1). `/api/v1/auth/**` và Swagger cho phép public.
+2. **Chain còn lại (trang web):** đăng nhập bằng form + **session**, CSRF bật, trang đăng nhập riêng.
+
+| Khu | URL | Role được vào |
 |---|---|---|
-| 1 | `auth`, `user` | Đăng ký, đăng nhập trả JWT, xem/sửa thông tin cá nhân, quản lý địa chỉ |
-| 2 | `catalog` | CRUD danh mục, thương hiệu, sản phẩm, biến thể, thuộc tính; API xem danh sách/lọc/chi tiết sản phẩm |
-| 3 | `inventory` | Quản lý kho, nhập hàng, trừ/cộng tồn kho |
-| 4 | `cart` | Thêm/sửa/xoá giỏ hàng, đồng bộ giỏ khi đăng nhập |
-| 5 | `order` | Đặt hàng từ giỏ hàng, snapshot dữ liệu, cập nhật trạng thái đơn |
-| 6 | `payment` | Tích hợp thanh toán (COD trước, sau đó thêm cổng thanh toán online) |
-| 7 | `shipping` | Tính phí ship, tạo vận đơn, tra cứu trạng thái giao hàng |
-| 8 | `review` | Đánh giá sản phẩm sau khi mua |
-| 9 | `promotion` | Voucher, khuyến mãi, flash sale |
-| 10 | Các module còn lại | `returnwarranty`, `loyalty`, `notification`, `cms`, `admin` — làm sau khi đã quen luồng chính |
+| Shop | `/`, `/shop/**` (xem), `/cart`, `/checkout`, `/account/**` | xem: ai cũng được; giỏ/đặt hàng/tài khoản: `CUSTOMER` |
+| POS | `/pos/**` | `CASHIER`, `STORE_MANAGER`, `ADMIN` |
+| Admin | `/admin/**` | `ADMIN`, `STORE_MANAGER` (quản lý chỉ thấy dữ liệu cửa hàng mình) |
 
-**Yêu cầu AI:** khi bắt đầu 1 giai đoạn mới, luôn tóm tắt lại các bảng liên quan, luồng dữ liệu đi qua các lớp như thế nào trước khi sinh code — giống cách giải thích ở tài liệu `giai-thich-db-shop-thoi-trang.md`.
+Role mới cần thêm bằng migration: `STORE_MANAGER`, `CASHIER` (đã có `CUSTOMER`, `ADMIN`).
 
 ---
 
-## 8. QUY ƯỚC GIT
+## 10. QUY TẮC NGHIỆP VỤ LÕI
 
-- Nhánh chính: `main` (chỉ merge code đã chạy được).
-- Nhánh phát triển theo module: `feature/auth`, `feature/catalog`, `feature/order`...
-- Commit message theo Conventional Commits: `feat: thêm API đăng ký tài khoản`, `fix: sửa lỗi tính sai phí ship`, `docs: cập nhật README`.
-- Mỗi giai đoạn ở mục 7 tương ứng 1 Pull Request riêng để dễ đọc lại lịch sử phát triển.
-
----
-
-## 9. YÊU CẦU KIỂM THỬ TỐI THIỂU
-
-- Mỗi Service quan trọng (đặt hàng, trừ kho, tính phí ship, áp voucher) cần có ít nhất 1 Unit Test bằng JUnit + Mockito.
-- Dùng Swagger UI (`/swagger-ui.html`) để tự test API bằng tay sau khi API được sinh ra, không cần cài Postman ngay.
+1. **Giá luôn lấy từ DB** tại thời điểm tạo đơn, không bao giờ tin giá do client gửi lên.
+2. **Trừ kho ngay khi tạo đơn** (cả ONLINE và POS), ghi một dòng `inventory_transactions`. Hủy đơn thì hoàn kho và ghi dòng `CANCEL`. Dùng `@Version` trên `inventories` (khóa lạc quan) và `@Transactional` để chống bán vượt tồn khi 2 thao tác cùng lúc.
+3. **Không đủ tồn thì chặn** (báo lỗi nghiệp vụ rõ ràng), không cho tồn kho âm.
+4. **Đơn POS:** tạo và thanh toán trong một thao tác, kết thúc ở trạng thái `COMPLETED`. Trừ kho của cửa hàng mà thu ngân đang làm.
+5. **Đơn ONLINE:** vòng đời `PENDING → CONFIRMED → PACKING → SHIPPING → COMPLETED`; có thể `CANCELLED` từ `PENDING`, `CONFIRMED`, `PACKING`. Mọi lần đổi trạng thái ghi `order_status_history`. Chuyển trạng thái sai thứ tự phải bị chặn.
+6. **Voucher:** kiểm tra còn hạn, còn lượt, đủ giá trị tối thiểu; giảm tối đa `max_discount_value`; ghi `voucher_usages` và tăng `used_count` trong cùng giao dịch với đơn hàng.
+7. **Snapshot:** `order_items` và thông tin giao hàng trong `orders` lưu giá trị tại thời điểm mua.
+8. **Tính tiền:** `total_amount = subtotal − discount_total + shipping_fee`. Mọi phép tính tiền dùng `BigDecimal`, làm tròn thống nhất.
 
 ---
 
-## 10. YÊU CẦU BỔ SUNG VỀ TÍNH MỞ RỘNG (THEO CÁC TRAO ĐỔI TRƯỚC)
+## 11. DESIGN PATTERN BẮT BUỘC (cho báo cáo HDT)
 
-- Bảng `addresses` và `warehouses` cần có sẵn cột `latitude`, `longitude` để sau này tích hợp tính phí ship theo khoảng cách địa lý (GIS) — xem lại phần trao đổi trước về Hibernate Spatial/PostGIS nếu muốn nâng cấp (lưu ý: SQL Server cũng hỗ trợ kiểu dữ liệu không gian `geography`, có thể dùng thay vì 2 cột số nếu muốn làm chuẩn hơn).
-- Mô hình sản phẩm bắt buộc theo đúng nguyên tắc SPU/SKU (`products` tách khỏi `product_variants`) và hệ thuộc tính động (`attributes`/`attribute_values`) đã thống nhất — **không để AI tự ý gộp lại thành 1 bảng phẳng có cột `color`, `size` cứng**.
-- `order_items` bắt buộc lưu snapshot (`product_name_snapshot`, `variant_attributes_snapshot`, `unit_price`) — không được chỉ lưu `variant_id` rồi join sang bảng sản phẩm để lấy giá hiện tại.
+| Pattern | Dùng ở đâu | Vị trí |
+|---|---|---|
+| **Strategy** | Cách thanh toán (`CashPayment`, `CardPayment`, `QrPayment`, `CodPayment`) và cách giảm giá (`PercentDiscount`, `FixedDiscount`) | `payment/strategy/`, `promotion/strategy/` |
+| **State** | Vòng đời đơn hàng: mỗi trạng thái là một class quyết định chuyển được sang trạng thái nào | `order/state/` |
+| **Factory** | Tạo đơn ONLINE và đơn POS với mặc định khác nhau (kênh, trạng thái đầu, có/không thông tin giao hàng) | `order/factory/` |
+| **Observer** | Spring Events: `OrderPlacedEvent` → listener trừ kho + ghi sổ kho; `OrderCancelledEvent` → listener hoàn kho. Listener chạy đồng bộ, trong cùng transaction | `order/event/` |
 
----
-
-## 11. CÂU LỆNH/PROMPT MẪU ĐỂ GIAO VIỆC CHO AI TỪNG GIAI ĐOẠN
-
-Bạn có thể copy mẫu dưới đây, chỉ đổi tên module, để giao việc rõ ràng từng giai đoạn thay vì nói chung chung "code hết cho tôi":
-
-```
-Đọc file PROJECT_BRIEF.md và docs/thiet-ke-db-ecommerce-b2c.md trước khi làm.
-Nhiệm vụ: xây dựng module "catalog" (giai đoạn 2 trong lộ trình) gồm các bảng:
-categories, brands, products, product_variants, attributes, attribute_values,
-variant_attribute_values, product_images.
-Yêu cầu: đủ 5 lớp (Entity, Repository, DTO, Mapper, Service, Controller),
-migration Flyway tương ứng, tuân thủ đúng quy ước đặt tên ở mục 5 của PROJECT_BRIEF.md.
-Sau khi xong, giải thích ngắn gọn từng file vừa tạo dùng để làm gì.
-```
+Mỗi class pattern có comment đầu file nêu pattern, vai trò, lý do dùng. Cũng cần thể hiện **đóng gói, kế thừa (`BaseEntity`), đa hình (interface Strategy/State)** trong sơ đồ lớp.
 
 ---
 
-## 12. GHI CHÚ CUỐI
+## 12. LỘ TRÌNH 14 NGÀY
 
-Tài liệu này là "hợp đồng" giữa bạn và AI trong suốt dự án — mỗi lần mở phiên làm việc mới với AI, hãy dán lại (hoặc trỏ tới) file này để AI không code lệch quy ước so với các phần đã làm trước đó.
+Mỗi ngày kết thúc bằng: **build thật thành công, app chạy được, tự test, commit**. Ngày nào không đạt thì không sang ngày sau (trừ khi dùng cut-list bên dưới).
+
+| Ngày | Làm gì | Đạt khi |
+|---|---|---|
+| 1 | Chốt phạm vi, use case, WBS + lịch, risk register, kế hoạch chất lượng (chỉ tài liệu, không code) | `docs/01..05` đã đọc và chỉnh bởi chủ dự án |
+| 2 | ERD v2, toàn bộ migration + seed, class diagram nháp | App chạy, Flyway áp dụng hết migration, dữ liệu mẫu có đủ |
+| 3 | **Lát mẫu:** Security 2 chain + layout chung + admin CRUD danh mục/thương hiệu/sản phẩm/biến thể | Đăng nhập admin, thêm 1 sản phẩm có biến thể từ giao diện |
+| 4 | Cửa hàng, nhân viên, tồn kho theo cửa hàng, sổ kho | Admin xem/chỉnh tồn từng cửa hàng, có lịch sử kho |
+| 5 | Shop: trang chủ, danh sách/lọc/tìm/chi tiết sản phẩm, giỏ hàng | Khách thêm sản phẩm vào giỏ |
+| 6 | Checkout online, thanh toán (Strategy), voucher, trừ kho (Observer) | Đặt đơn COD thành công, kho giảm đúng |
+| 7 | **Mốc kiểm tra:** so kế hoạch–thực tế, trả nợ kỹ thuật, tag `v0.5` | Báo cáo tiến độ + quyết định cắt/giữ Should |
+| 8–9 | POS: tìm/quét SKU, hóa đơn, tiền thừa, in hóa đơn (+ ca thu ngân nếu kịp) | Bán 1 đơn tại quầy, in được hóa đơn, kho trừ đúng |
+| 10 | Admin quản lý đơn mọi kênh, đổi trạng thái (State), lịch sử | Đi hết vòng đời 1 đơn online |
+| 11 | Dashboard: doanh thu theo cửa hàng/ngày/kênh, top sản phẩm, tồn kho thấp | Số liệu khớp dữ liệu mẫu |
+| 12 | **Code freeze:** test end-to-end, unit test lõi, chuẩn bị dữ liệu demo | Kịch bản demo chạy trọn vẹn |
+| 13 | Hoàn thiện 2 báo cáo (số liệu thật, ảnh chụp, sơ đồ) | Hai bản báo cáo hoàn chỉnh |
+| 14 | Dự phòng, tập demo, nộp | |
+
+**Cut-list (cắt theo thứ tự nếu trễ ở ngày 7):** (1) toàn bộ mức Should, (2) `pos_shifts`, (3) biểu đồ dashboard (chỉ giữ bảng số), (4) mức Could. **Mức Must không cắt.**
+
+---
+
+## 13. QUY TẮC BẮT BUỘC VỚI AI
+
+1. **Không giả định quy ước, phải đọc code thật.** Trước khi sửa hoặc gọi đến file dùng chung (`ApiResponse.java`, `BaseEntity`, `GlobalExceptionHandler`, `SecurityConfig`, Entity/Service đã có), mở và in nguyên văn nội dung hiện tại của file đó.
+2. **Không tự ý đổi quy ước đã có.** Thấy quy ước cũ có vấn đề thì hỏi chủ dự án trước.
+3. **Cấm báo "hoàn thành"/"build thành công" nếu chưa chạy build thật.** Sau khi sửa code: chạy `mvn clean compile` trong terminal, dán nguyên văn output, chỉ được xác nhận khi có dòng `BUILD SUCCESS`. Cấm các câu như "tôi tự tin code đúng".
+4. **Sau khi đổi model hoặc mở phiên mới:** đọc lại toàn bộ `PROJECT_BRIEF.md`, tài liệu liên quan trong `docs/` và code hiện có của module đang làm trước khi viết thêm.
+5. **Quy ước dùng chung đã chốt (không đổi):**
+   - `ApiResponse.success(T data, String message)`; `ApiResponse.success(String message)` khi không có data; `ApiResponse.error(String message, int code)`.
+   - Thứ tự `annotationProcessorPaths` trong `pom.xml`: lombok → mapstruct-processor → lombok-mapstruct-binding (binding đứng cuối).
+6. **Không sửa migration đã tồn tại.** Mọi thay đổi schema là migration mới.
+7. **Không thêm tính năng/bảng/cột ngoài mục 7–8** nếu chưa hỏi.
+8. **Mỗi lát cắt kết thúc bằng:** build thật + chạy app + tự test các luồng chính + hướng dẫn chủ dự án test thủ công từng bước. Không commit trừ khi được yêu cầu.
+9. **Không bịa số liệu thật** trong tài liệu (thời gian thực tế, kết quả test...). Phần "thực tế" để trống cho chủ dự án điền.
+10. **Sau mỗi lần sinh code:** liệt kê file đã tạo/sửa, mỗi file một dòng giải thích bằng tiếng Việt đơn giản (chủ dự án là người mới).
+
+---
+
+## 14. GIT, TÀI LIỆU, NHẬT KÝ
+
+- Nhánh làm việc: `develop`; `main` chỉ nhận code đã chạy được. Commit cuối mỗi ngày, theo Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
+- Tag: `v0.5` (ngày 7), `v1.0` (ngày 12).
+- Nhật ký: mỗi ngày một file `docs/nhat-ky/YYYY-MM-DD.md`, ghi việc dự định, việc làm được, **giờ thực tế**, vướng mắc, cách xử lý, kèm ảnh chụp. Dùng làm số liệu cho báo cáo QLDA.
+- Lưu lại các prompt đã dùng vào `docs/prompts/` (bằng chứng quy trình làm việc).
