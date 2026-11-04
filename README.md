@@ -1,8 +1,9 @@
-# E-Commerce B2C — Spring Boot MVC + SQL Server
+# Triết Store — Hệ Thống Bán Lẻ Chuỗi Cửa Hàng Giày Dép Đa Kênh (Shop + POS + Admin)
+### Spring Boot MVC + Thymeleaf + SQL Server
 
 ## Mô tả
 
-Website thương mại điện tử B2C (bán lẻ trực tiếp cho người tiêu dùng), xây dựng bằng **Spring Boot 3.x** với kiến trúc MVC phân lớp theo module nghiệp vụ. Hệ thống hỗ trợ đầy đủ các chức năng: quản lý sản phẩm, giỏ hàng, đặt hàng, thanh toán, vận chuyển, đánh giá, khuyến mãi, chăm sóc khách hàng và quản trị phân quyền.
+Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết hợp bán hàng tại quầy (POS), đặt hàng trực tuyến (Shop) và quản trị tập trung (Admin), xây dựng bằng **Spring Boot 3.x** với kiến trúc MVC phân lớp theo module nghiệp vụ. Hệ thống hỗ trợ đầy đủ các chức năng: quản lý danh mục giày dép 2 cấp, 8 thương hiệu, 30 sản phẩm mẫu (120 biến thể màu/size EU), tồn kho theo từng chi nhánh có khóa lạc quan, bán hàng POS quét mã SKU, đặt hàng online, thanh toán đa phương thức và khuyến mãi voucher.
 
 ## Tech Stack
 

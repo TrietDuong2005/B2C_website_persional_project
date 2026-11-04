@@ -5,7 +5,7 @@
 <!-- Footer dành cho Shop -->
 <footer th:fragment="shopFooter" class="bg-dark text-white py-4 mt-auto">
     <div class="container text-center">
-        <p class="mb-1 fw-bold">HỆ THỐNG BÁN LẺ CHUỖI CỬA HÀNG THỜI TRANG ĐA KÊNH — DA_HDT</p>
+        <p class="mb-1 fw-bold">HỆ THỐNG BÁN LẺ CHUỖI CỬA HÀNG GIÀY DÉP — <span th:text="${brandName}">Triết Store</span></p>
         <p class="small text-muted mb-0">Spring Boot MVC + Thymeleaf + SQL Server · Phiên bản 2.0</p>
     </div>
     <!-- Bootstrap 5 Bundle JS qua CDN -->
@@ -15,8 +15,8 @@
 
 <!-- Footer dành cho AdminLTE -->
 <footer th:fragment="adminFooter" class="app-footer">
-    <div class="float-end d-none d-sm-inline">DA_HDT Retail Chain v2.0</div>
-    <strong>Bản quyền &copy; 2026 <a th:href="@{/admin}" class="text-decoration-none">DA_HDT Project</a>.</strong> Hệ thống quản trị chuỗi bán lẻ.
+    <div class="float-end d-none d-sm-inline"><span th:text="${brandName}">Triết Store</span> Retail Chain v2.0</div>
+    <strong>Bản quyền &copy; 2026 <a th:href="@{/admin}" class="text-decoration-none"><span th:text="${brandName}">Triết Store</span></a>.</strong> Hệ thống quản trị chuỗi bán lẻ.
 
     <!-- Bootstrap 5 Bundle JS qua CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -27,4 +27,3 @@
 
 </body>
 </html>
-

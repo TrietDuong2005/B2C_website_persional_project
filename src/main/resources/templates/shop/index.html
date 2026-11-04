@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/head :: head('Trang chủ Cửa hàng Thời trang - DA_HDT')}">
-    <title>Trang chủ Cửa hàng Thời trang</title>
+<head th:replace="~{layout/head :: head('Trang chủ Cửa hàng Giày Dép - ' + ${brandName})}">
+    <title th:text="'Trang chủ Cửa hàng Giày Dép - ' + ${brandName}">Trang chủ Cửa hàng Giày Dép</title>
 </head>
 <body>
 
@@ -16,13 +16,12 @@
     </div>
 
     <!-- Hero Banner -->
-    <section class="bg-dark text-white py-5 text-center position-relative shadow-sm"
-             style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%);">
+    <section class="hero-banner-brand text-white py-5 text-center position-relative shadow-sm">
         <div class="container py-4">
-            <h1 class="display-5 fw-bold mb-3">BỘ SƯU TẬP THỜI TRANG ĐA KÊNH 2026</h1>
+            <h1 class="display-5 fw-bold mb-3">BỘ SƯU TẬP GIÀY DÉP CHÍNH HÃNG 2026</h1>
             <p class="lead text-white-50 mx-auto mb-4" style="max-width: 650px;">
-                Áo thun, Polo, Sơ mi, Quần Jean, Kaki, Giày Sneaker và Phụ kiện cao cấp.
-                Mua hàng trực tuyến tiện lợi hoặc ghé trải nghiệm trực tiếp tại chuỗi cửa hàng.
+                Sneaker, Giày da, Giày boots, Giày lười, Giày thể thao, Sandal và Dép cao cấp tại <span th:text="${brandName}">Triết Store</span>.
+                Mua sắm trực tuyến tiện lợi hoặc ghé trải nghiệm trực tiếp tại chuỗi cửa hàng.
             </p>
             <div class="d-flex justify-content-center gap-3">
                 <a th:href="@{/login}" class="btn btn-primary btn-lg px-4 fw-semibold" sec:authorize="isAnonymous()">
@@ -43,37 +42,37 @@
     <!-- Khối danh mục tiêu biểu (Khung mẫu) -->
     <section class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold mb-0"><i class="bi bi-grid-fill text-primary me-2"></i>Danh mục sản phẩm</h3>
-            <span class="badge bg-secondary-subtle text-secondary-emphasis">Phiên Ngày 3B sẽ nạp dữ liệu động từ DB</span>
+            <h3 class="fw-bold mb-0"><i class="bi bi-grid-fill text-primary me-2"></i>Danh mục giày dép</h3>
+            <span class="badge bg-secondary-subtle text-secondary-emphasis">Dữ liệu từ DB Triết Store</span>
         </div>
 
         <div class="row g-4">
             <div class="col-6 col-md-3">
                 <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
-                    <div class="display-6 text-primary mb-2"><i class="bi bi-gender-male"></i></div>
-                    <h6 class="fw-bold mb-1">Thời trang Nam</h6>
-                    <small class="text-muted">Áo thun, Polo, Sơ mi</small>
+                    <div class="display-6 text-primary mb-2"><i class="bi bi-tag-fill"></i></div>
+                    <h6 class="fw-bold mb-1">Giày Sneaker</h6>
+                    <small class="text-muted">Nike, Adidas, Converse, Vans</small>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
-                    <div class="display-6 text-danger mb-2"><i class="bi bi-gender-female"></i></div>
-                    <h6 class="fw-bold mb-1">Thời trang Nữ</h6>
-                    <small class="text-muted">Váy, Áo kiểu, Quần nữ</small>
+                    <div class="display-6 text-danger mb-2"><i class="bi bi-award-fill"></i></div>
+                    <h6 class="fw-bold mb-1">Giày Da & Boots</h6>
+                    <small class="text-muted">Oxford, Derby, Chelsea, Dr. Martens</small>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
-                    <div class="display-6 text-success mb-2"><i class="bi bi-boot"></i></div>
-                    <h6 class="fw-bold mb-1">Giày & Dép</h6>
-                    <small class="text-muted">Sneaker, Giày lười, Sandal</small>
+                    <div class="display-6 text-success mb-2"><i class="bi bi-check-circle-fill"></i></div>
+                    <h6 class="fw-bold mb-1">Giày Thể Thao & Lười</h6>
+                    <small class="text-muted">Chạy bộ, Moccasin, Biti's</small>
                 </div>
             </div>
             <div class="col-6 col-md-3">
                 <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
-                    <div class="display-6 text-warning mb-2"><i class="bi bi-watch"></i></div>
-                    <h6 class="fw-bold mb-1">Phụ kiện</h6>
-                    <small class="text-muted">Ba lô, Ví da, Thắt lưng, Nón</small>
+                    <div class="display-6 text-warning mb-2"><i class="bi bi-stars"></i></div>
+                    <h6 class="fw-bold mb-1">Sandal & Dép</h6>
+                    <small class="text-muted">Quai dán, Dép kẹp, Crocs Clog</small>
                 </div>
             </div>
         </div>

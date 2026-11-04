@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/head :: head('404 - Không tìm thấy trang')}">
-    <title>404 - Không tìm thấy trang</title>
+<head th:replace="~{layout/head :: head('404 - Không tìm thấy trang - ' + ${brandName})}">
+    <title th:text="'404 - Không tìm thấy trang - ' + ${brandName}">404 - Không tìm thấy trang</title>
 </head>
 <body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-4">
 

@@ -1,0 +1,122 @@
+/* ==========================================================================
+   THEME CSS — TRIẾT STORE (THƯƠNG HIỆU & GIAO DIỆN TẬP TRUNG)
+   Định nghĩa toàn bộ biến màu thương hiệu và ghi đè Bootstrap 5.3 + AdminLTE 4.
+   ========================================================================== */
+
+:root {
+    /* 1. Biến CSS thương hiệu chuẩn */
+    --brand-primary: #C2410C;        /* Cam cháy chủ đạo (contrast 5.2:1 với chữ trắng) */
+    --brand-primary-rgb: 194, 65, 12;
+    --brand-primary-hover: #9A3412;  /* Cam sẫm khi hover */
+    --brand-accent: #EA580C;         /* Cam sáng làm điểm nhấn */
+    --brand-dark: #1C1917;           /* Đen ấm (sidebar, navbar tối, tiêu đề) */
+    --brand-surface: #FAF9F7;        /* Nền sáng dịu mắt */
+
+    /* 2. Ghi đè biến cốt lõi của Bootstrap 5.3 */
+    --bs-primary: var(--brand-primary);
+    --bs-primary-rgb: var(--brand-primary-rgb);
+    --bs-link-color: var(--brand-primary);
+    --bs-link-hover-color: var(--brand-primary-hover);
+    --bs-body-bg: var(--brand-surface);
+}
+
+/* Nền toàn trang */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--brand-surface) !important;
+    color: var(--brand-dark);
+}
+
+main {
+    flex: 1;
+}
+
+/* Nút Bootstrap Primary */
+.btn-primary {
+    --bs-btn-bg: var(--brand-primary);
+    --bs-btn-border-color: var(--brand-primary);
+    --bs-btn-hover-bg: var(--brand-primary-hover);
+    --bs-btn-hover-border-color: var(--brand-primary-hover);
+    --bs-btn-active-bg: var(--brand-primary-hover);
+    --bs-btn-active-border-color: var(--brand-primary-hover);
+    --bs-btn-disabled-bg: var(--brand-primary);
+    --bs-btn-disabled-border-color: var(--brand-primary);
+    --bs-btn-color: #ffffff;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-active-color: #ffffff;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--brand-primary);
+    --bs-btn-border-color: var(--brand-primary);
+    --bs-btn-hover-bg: var(--brand-primary);
+    --bs-btn-hover-border-color: var(--brand-primary);
+    --bs-btn-active-bg: var(--brand-primary-hover);
+    --bs-btn-active-border-color: var(--brand-primary-hover);
+    --bs-btn-hover-color: #ffffff;
+}
+
+/* Các tiện ích Bootstrap Primary */
+.text-bg-primary {
+    background-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+}
+
+.bg-primary {
+    background-color: var(--brand-primary) !important;
+}
+
+.text-primary {
+    color: var(--brand-primary) !important;
+}
+
+.border-primary {
+    border-color: var(--brand-primary) !important;
+}
+
+/* Ghi đè Navbar tối và Sidebar tối của Bootstrap / AdminLTE bằng --brand-dark */
+.bg-dark,
+.navbar-dark.bg-dark,
+.app-sidebar[data-bs-theme="dark"],
+.sidebar-dark-primary {
+    background-color: var(--brand-dark) !important;
+}
+
+/* AdminLTE 4 Sidebar brand header */
+.app-sidebar .sidebar-brand {
+    background-color: var(--brand-dark) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* AdminLTE 4 Sidebar link active */
+.app-sidebar .nav-link.active {
+    background-color: var(--brand-primary) !important;
+    color: #ffffff !important;
+}
+
+.app-sidebar .nav-link:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Phân trang (Pagination) */
+.pagination {
+    --bs-pagination-active-bg: var(--brand-primary);
+    --bs-pagination-active-border-color: var(--brand-primary);
+    --bs-pagination-color: var(--brand-primary);
+    --bs-pagination-hover-color: var(--brand-primary-hover);
+}
+
+/* Form controls focus */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brand-accent);
+    box-shadow: 0 0 0 0.25rem rgba(var(--brand-primary-rgb), 0.25);
+}
+
+/* Hero banner dùng màu thương hiệu */
+.hero-banner-brand {
+    background: linear-gradient(135deg, var(--brand-dark) 0%, #292524 100%) !important;
+}
+

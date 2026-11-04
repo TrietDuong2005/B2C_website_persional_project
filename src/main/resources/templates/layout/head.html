@@ -3,29 +3,24 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} ?: 'DA_HDT Fashion Store'">DA_HDT Fashion Store</title>
+    <title th:text="${title} ?: ${brandName}">Triết Store</title>
+    <!-- Favicon thương hiệu -->
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
     <!-- Bootstrap 5 CSS qua CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Bootstrap Icons qua CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-color: #f8f9fa;
-        }
-        main {
-            flex: 1;
-        }
-    </style>
+    <!-- Theme CSS thương hiệu nạp sau Bootstrap -->
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
 </head>
 
 <head th:fragment="adminHead(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} ?: 'Admin Management - DA_HDT'">Admin Management</title>
+    <title th:text="${title} ?: ('Quản trị - ' + ${brandName})">Triết Store</title>
+    <!-- Favicon thương hiệu -->
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
     <!-- Bootstrap 5 CSS qua CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -33,6 +28,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- AdminLTE 4 CSS qua CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0-beta3/dist/css/adminlte.min.css">
+    <!-- Theme CSS thương hiệu nạp sau AdminLTE -->
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
 </head>
 </html>
-

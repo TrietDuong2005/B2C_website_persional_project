@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/head :: head('500 - Lỗi máy chủ')}">
-    <title>500 - Lỗi máy chủ</title>
+<head th:replace="~{layout/head :: head('500 - Lỗi máy chủ - ' + ${brandName})}">
+    <title th:text="'500 - Lỗi máy chủ - ' + ${brandName}">500 - Lỗi máy chủ</title>
 </head>
 <body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-4">
 

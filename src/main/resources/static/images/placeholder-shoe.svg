@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#F3F4F6"/>
+  <g transform="translate(60, 110)">
+    <!-- Sole / Đế giày -->
+    <path d="M 20 180 C 40 180, 240 180, 260 170 C 275 162, 280 150, 275 142 C 260 140, 240 145, 210 145 C 170 145, 120 140, 70 145 C 40 148, 20 155, 15 168 C 12 176, 15 180, 20 180 Z" fill="#9CA3AF"/>
+    <!-- Thân giày -->
+    <path d="M 30 155 C 40 130, 80 80, 120 70 C 135 66, 150 75, 155 90 C 160 105, 180 120, 215 125 C 245 130, 265 138, 270 145 C 265 147, 230 144, 200 144 C 150 144, 100 142, 50 146 C 35 147, 28 152, 30 155 Z" fill="#6B7280"/>
+    <!-- Cổ giày / Lưỡi gà -->
+    <path d="M 120 70 C 105 75, 95 95, 90 120 C 110 115, 130 110, 145 105 C 145 90, 135 75, 120 70 Z" fill="#4B5563"/>
+    <!-- Dây giày cách điệu -->
+    <line x1="125" y1="95" x2="150" y2="105" stroke="#E5E7EB" stroke-width="3" stroke-linecap="round"/>
+    <line x1="140" y1="108" x2="165" y2="118" stroke="#E5E7EB" stroke-width="3" stroke-linecap="round"/>
+    <line x1="155" y1="120" x2="180" y2="128" stroke="#E5E7EB" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="200" y="325" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#9CA3AF" text-anchor="middle" letter-spacing="1">TRIẾT STORE SHOES</text>
+</svg>
+

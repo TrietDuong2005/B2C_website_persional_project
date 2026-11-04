@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/head :: adminHead('Bảng điều khiển Quản trị - DA_HDT')}">
-    <title>Bảng điều khiển Quản trị</title>
+<head th:replace="~{layout/head :: adminHead('Bảng điều khiển Quản trị - ' + ${brandName})}">
+    <title th:text="'Bảng điều khiển Quản trị - ' + ${brandName}">Bảng điều khiển Quản trị</title>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 <div class="app-wrapper">

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/head :: head('403 - Không có quyền truy cập')}">
-    <title>403 - Không có quyền truy cập</title>
+<head th:replace="~{layout/head :: head('403 - Không có quyền truy cập - ' + ${brandName})}">
+    <title th:text="'403 - Không có quyền truy cập - ' + ${brandName}">403 - Không có quyền truy cập</title>
 </head>
 <body class="bg-light d-flex align-items-center justify-content-center min-vh-100 py-4">
 

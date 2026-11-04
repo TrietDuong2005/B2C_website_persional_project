@@ -35,8 +35,10 @@ springdoc:
 server:
   port: 8080
 
-# Cấu hình JWT (JSON Web Token)
+# Cấu hình thương hiệu và bảo mật
 app:
+  brand:
+    name: "Triết Store"
   jwt:
     access-token-expiration: 900000     # 15 phút (milliseconds)
     refresh-token-expiration: 604800000 # 7 ngày (milliseconds)

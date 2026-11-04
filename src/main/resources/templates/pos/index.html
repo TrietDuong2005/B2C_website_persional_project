@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/head :: head('Màn hình Bán hàng tại quầy POS - DA_HDT')}">
-    <title>Màn hình Bán hàng POS</title>
+<head th:replace="~{layout/head :: head('Màn hình Bán hàng tại quầy POS - ' + ${brandName})}">
+    <title th:text="'Màn hình Bán hàng tại quầy POS - ' + ${brandName}">Màn hình Bán hàng POS</title>
 </head>
 <body class="bg-body-secondary">
 
@@ -10,7 +10,7 @@
 <nav class="navbar navbar-dark bg-dark px-3 shadow-sm">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" th:href="@{/pos}">
-            <i class="bi bi-calculator-fill text-warning me-2"></i>POS BÁN HÀNG TẠI QUẦY
+            <i class="bi bi-shop text-warning me-2"></i><span th:text="${brandName} + ' POS'">Triết Store POS</span>
         </a>
         <div class="text-light d-flex align-items-center gap-3">
             <span class="badge bg-secondary"><i class="bi bi-geo-alt-fill me-1"></i>Chi nhánh: STORE-Q1 (Nguyễn Trãi)</span>

@@ -7,7 +7,7 @@
 <aside th:fragment="adminSidebar" class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
     <div class="sidebar-brand">
         <a th:href="@{/admin}" class="brand-link text-decoration-none">
-            <span class="brand-text fw-bold text-light"><i class="bi bi-shield-lock-fill text-warning me-2"></i>DA_HDT ADMIN</span>
+            <span class="brand-text fw-bold text-light"><i class="bi bi-shop text-warning me-2"></i><span th:text="${brandName} + ' ADMIN'">Triết Store ADMIN</span></span>
         </a>
     </div>
 
