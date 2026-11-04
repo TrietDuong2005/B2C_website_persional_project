@@ -1,0 +1,58 @@
+@startgantt
+title Tiến độ Thực hiện Dự án Hệ thống Bán lẻ Chuỗi Cửa hàng Thời trang (14 Ngày)
+language vi
+Project starts 2026-11-03
+
+' Định dạng giao diện
+skinparam ganttBarFontSize 11
+skinparam ganttMilestoneFontSize 12
+
+-- Giai đoạn 1: Khởi động & Nền tảng kiến trúc --
+[1.0 Đặc tả & Kế hoạch (docs/)] as [D1] lasts 1 days and starts 2026-11-03
+[M1: Chốt bộ tài liệu docs/] happens at 2026-11-03
+[2.0 CSDL, Migration & Seed] as [D2] lasts 1 days and starts after [D1]'s end
+[M2: Xong CSDL & Migration] happens at 2026-11-04
+[3.0 Security 2 Chain & Catalog] as [D3] lasts 1 days and starts after [D2]'s end
+[4.0 Cửa hàng & Quản lý Kho] as [D4] lasts 1 days and starts after [D3]'s end
+
+-- Giai đoạn 2: Bán hàng Trực tuyến (Shop Online) --
+[5.0 Shop: Trưng bày & Giỏ hàng] as [D5] lasts 1 days and starts after [D4]'s end
+[6.0 Checkout, Voucher & Trừ kho] as [D6] lasts 1 days and starts after [D5]'s end
+[M3: Xong Shop Online & COD] happens at 2026-11-08
+
+-- Giai đoạn 3: Đánh giá Giữa kỳ & Điểm bán POS --
+[7.0 Đánh giá Giữa kỳ & Tag v0.5] as [D7] lasts 1 days and starts after [D6]'s end
+[M4: Mốc kiểm soát Ngày 7 (v0.5)] happens at 2026-11-09
+[8.0 POS: Giao diện & Tra SKU] as [D8] lasts 1 days and starts after [D7]'s end
+[9.0 POS: Thanh toán & In hóa đơn] as [D9] lasts 1 days and starts after [D8]'s end
+[M5: Xong POS & In hóa đơn] happens at 2026-11-11
+
+-- Giai đoạn 4: Quản trị Đa kênh & Kiểm thử --
+[10.0 Quản trị Đơn hàng & State] as [D10] lasts 1 days and starts after [D9]'s end
+[11.0 Dashboard & Phân tích] as [D11] lasts 1 days and starts after [D10]'s end
+[12.0 Đóng băng mã nguồn & Test] as [D12] lasts 1 days and starts after [D11]'s end
+[M6: Code Freeze (Tag v1.0)] happens at 2026-11-14
+
+-- Giai đoạn 5: Hoàn thiện Báo cáo & Bàn giao --
+[13.0 Soạn 2 Báo cáo HDT & QLDA] as [D13] lasts 1 days and starts after [D12]'s end
+[14.0 Diễn tập Demo & Đóng gói] as [D14] lasts 1 days and starts after [D13]'s end
+[M7: Nộp bài chính thức (Giả định)] happens at 2026-11-17
+
+' Đường găng đánh dấu màu nổi bật
+[D1] is colored in #E67E22
+[D2] is colored in #E74C3C
+[D3] is colored in #E74C3C
+[D4] is colored in #E74C3C
+[D5] is colored in #3498DB
+[D6] is colored in #E74C3C
+[D7] is colored in #F39C12
+[D8] is colored in #2ECC71
+[D9] is colored in #E74C3C
+[D10] is colored in #E74C3C
+[D11] is colored in #9B59B6
+[D12] is colored in #E74C3C
+[D13] is colored in #E74C3C
+[D14] is colored in #E74C3C
+
+@endgantt
+

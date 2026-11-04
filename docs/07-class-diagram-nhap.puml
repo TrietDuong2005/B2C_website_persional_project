@@ -1,0 +1,262 @@
+@startuml class-diagram-domain-v2
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2C3E50
+    BorderColor #34495E
+}
+
+title SƠ ĐỒ LỚP MIỀN NGHIỆP VỤ (DOMAIN MODEL) VÀ 4 MẪU THIẾT KẾ (DESIGN PATTERNS)\n(Hệ thống Bán lẻ Chuỗi Cửa hàng Thời trang v2)
+
+' ==============================================================================
+' BASE ENTITY
+' ==============================================================================
+abstract class BaseEntity {
+    - createdAt : LocalDateTime
+    - updatedAt : LocalDateTime
+    # onCreate() : void
+    # onUpdate() : void
+}
+
+' ==============================================================================
+' CORE DOMAIN ENTITIES
+' ==============================================================================
+package "Domain Entities (Mô hình miền giàu nghiệp vụ)" #F8F9F9 {
+
+    class Product extends BaseEntity {
+        - id : Long
+        - name : String
+        - slug : String
+        - description : String
+        - thumbnailUrl : String
+        - status : String
+        + addVariant(ProductVariant variant) : void
+        + activate() : void
+        + hide() : void
+    }
+
+    class ProductVariant extends BaseEntity {
+        - id : Long
+        - sku : String
+        - barcode : String
+        - color : String
+        - size : String
+        - price : BigDecimal
+        - costPrice : BigDecimal
+        - weightGram : Integer
+        - status : String
+        + updatePrice(BigDecimal newPrice) : void
+        + isAvailable() : boolean
+    }
+
+    class Store extends BaseEntity {
+        - id : Long
+        - code : String
+        - name : String
+        - type : String
+        - detailAddress : String
+        - latitude : BigDecimal
+        - longitude : BigDecimal
+        - status : String
+        + isWarehouse() : boolean
+        + calculateDistanceTo(BigDecimal targetLat, BigDecimal targetLng) : double
+    }
+
+    class Employee extends BaseEntity {
+        - id : Long
+        - position : String
+        - status : String
+        + canManageStore() : boolean
+        + isCashier() : boolean
+    }
+
+    class Inventory extends BaseEntity {
+        - id : Long
+        - quantityOnHand : Integer
+        - reorderLevel : Integer
+        - version : Long
+        + deduct(int quantity) : void
+        + restore(int quantity) : void
+        + canFulfill(int quantity) : boolean
+        + isLowStock() : boolean
+    }
+
+    class Order extends BaseEntity {
+        - id : Long
+        - orderCode : String
+        - channel : String
+        - status : String
+        - subtotal : BigDecimal
+        - discountTotal : BigDecimal
+        - shippingFee : BigDecimal
+        - totalAmount : BigDecimal
+        - voucherCode : String
+        - shipName : String
+        - shipPhone : String
+        - shipAddress : String
+        - placedAt : LocalDateTime
+        - completedAt : LocalDateTime
+        + addItem(ProductVariant variant, int qty) : void
+        + applyVoucher(Voucher voucher, DiscountStrategy strategy) : void
+        + calculateTotals() : void
+        + changeState(OrderState newState) : void
+    }
+
+    class OrderItem extends BaseEntity {
+        - id : Long
+        - productName : String
+        - sku : String
+        - color : String
+        - size : String
+        - unitPrice : BigDecimal
+        - quantity : Integer
+        - lineTotal : BigDecimal
+        + calculateLineTotal() : BigDecimal
+    }
+
+    class Payment extends BaseEntity {
+        - id : Long
+        - method : String
+        - amount : BigDecimal
+        - status : String
+        - transactionRef : String
+        - cashReceived : BigDecimal
+        - changeAmount : BigDecimal
+        - paidAt : LocalDateTime
+        + markAsPaid(String ref) : void
+        + calculateChange() : BigDecimal
+    }
+
+    class Voucher extends BaseEntity {
+        - id : Long
+        - code : String
+        - name : String
+        - discountType : String
+        - discountValue : BigDecimal
+        - minOrderValue : BigDecimal
+        - maxDiscountValue : BigDecimal
+        - usageLimit : Integer
+        - usedCount : Integer
+        - startAt : LocalDateTime
+        - endAt : LocalDateTime
+        - status : String
+        + isValid(BigDecimal subtotal) : boolean
+        + incrementUsage() : void
+    }
+}
+
+' ==============================================================================
+' 1. STRATEGY PATTERN (THANH TOÁN & GIẢM GIÁ)
+' ==============================================================================
+package "Pattern 1: Strategy (Thanh toán & Giảm giá)" #E8F8F5 {
+    interface PaymentStrategy {
+        + pay(Order order, Payment payment) : PaymentResult
+    }
+    class CashPaymentStrategy implements PaymentStrategy {
+        + pay(Order order, Payment payment) : PaymentResult
+    }
+    class CardPaymentStrategy implements PaymentStrategy {
+        + pay(Order order, Payment payment) : PaymentResult
+    }
+    class QrPaymentStrategy implements PaymentStrategy {
+        + pay(Order order, Payment payment) : PaymentResult
+    }
+    class CodPaymentStrategy implements PaymentStrategy {
+        + pay(Order order, Payment payment) : PaymentResult
+    }
+
+    interface DiscountStrategy {
+        + calculateDiscount(Voucher voucher, BigDecimal subtotal) : BigDecimal
+    }
+    class PercentDiscountStrategy implements DiscountStrategy {
+        + calculateDiscount(Voucher voucher, BigDecimal subtotal) : BigDecimal
+    }
+    class FixedDiscountStrategy implements DiscountStrategy {
+        + calculateDiscount(Voucher voucher, BigDecimal subtotal) : BigDecimal
+    }
+}
+
+' ==============================================================================
+' 2. STATE PATTERN (VÒNG ĐỜI ĐƠN HÀNG)
+' ==============================================================================
+package "Pattern 2: State (Vòng đời đơn hàng)" #FEF9E7 {
+    interface OrderState {
+        + confirm(Order context) : void
+        + pack(Order context) : void
+        + ship(Order context) : void
+        + complete(Order context) : void
+        + cancel(Order context, String reason) : void
+        + getStatusName() : String
+    }
+    class PendingState implements OrderState
+    class ConfirmedState implements OrderState
+    class PackingState implements OrderState
+    class ShippingState implements OrderState
+    class CompletedState implements OrderState
+    class CancelledState implements OrderState
+}
+
+' ==============================================================================
+' 3. FACTORY PATTERN (KHỞI TẠO ĐƠN ONLINE & POS)
+' ==============================================================================
+package "Pattern 3: Factory (Khởi tạo đơn hàng)" #EBF5FB {
+    abstract class OrderFactory {
+        + {abstract} createOrder(CreateOrderRequest req) : Order
+    }
+    class OnlineOrderFactory extends OrderFactory {
+        + createOrder(CreateOrderRequest req) : Order
+    }
+    class PosOrderFactory extends OrderFactory {
+        + createOrder(CreateOrderRequest req) : Order
+    }
+}
+
+' ==============================================================================
+' 4. OBSERVER PATTERN (SPRING EVENTS)
+' ==============================================================================
+package "Pattern 4: Observer (Spring Events xử lý kho)" #F4ECF7 {
+    class OrderPlacedEvent {
+        - orderId : Long
+        - storeId : Long
+        - items : List<OrderItemSnapshot>
+        + getOrderId() : Long
+    }
+    class OrderCancelledEvent {
+        - orderId : Long
+        - storeId : Long
+        - items : List<OrderItemSnapshot>
+        + getOrderId() : Long
+    }
+    class InventoryEventListener {
+        + onOrderPlaced(OrderPlacedEvent event) : void
+        + onOrderCancelled(OrderCancelledEvent event) : void
+    }
+}
+
+' ==============================================================================
+' CÁC QUAN HỆ KẾT HỢP VÀ HỢP THÀNH (AGGREGATION / COMPOSITION)
+' ==============================================================================
+Product "1" *-- "many" ProductVariant : Composition
+ProductVariant "1" -- "many" Inventory : Aggregation
+Store "1" -- "many" Inventory : Aggregation
+Store "1" -- "many" Employee : Aggregation
+Order "1" *-- "many" OrderItem : Composition
+Order "1" -- "many" Payment : Association
+Order "many" ..> "1" Voucher : Uses
+Inventory "many" ..> "1" Store : Managed by
+
+' Quan hệ với các Pattern
+Order o-- OrderState : "quản lý trạng thái bằng"
+Order ..> DiscountStrategy : "tính giảm giá qua"
+Payment ..> PaymentStrategy : "thực thi qua"
+OrderFactory ..> Order : "khởi tạo"
+Order ..> OrderPlacedEvent : "bắn sự kiện"
+Order ..> OrderCancelledEvent : "bắn sự kiện"
+InventoryEventListener ..> OrderPlacedEvent : "lắng nghe"
+InventoryEventListener ..> OrderCancelledEvent : "lắng nghe"
+InventoryEventListener ..> Inventory : "cập nhật tồn kho"
+
+@enduml
+

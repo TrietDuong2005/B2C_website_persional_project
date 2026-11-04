@@ -1,0 +1,479 @@
+@startuml erd-v2
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor white
+    ArrowColor #2C3E50
+    BorderColor #34495E
+}
+
+title SƠ ĐỒ THỰC THỂ LIÊN KẾT (ERD v2) — HỆ THỐNG BÁN LẺ CHUỖI CỬA HÀNG\n(24 Bảng Must Have + 3 Bảng Should Have + 1 Bảng Could Have)
+
+' ==============================================================================
+' MODULE 1: AUTH & USER (7 BẢNG MUST - ĐÃ XONG V1-V6)
+' ==============================================================================
+package "1. Phân hệ Người dùng & Xác thực (V1–V6)" #EBF5FB {
+    entity "users [MUST]" as users {
+        * id : BIGINT <<PK>>
+        --
+        * email : NVARCHAR(255) <<UQ>>
+        phone : NVARCHAR(20) <<UQ>>
+        * password_hash : NVARCHAR(255)
+        * status : NVARCHAR(20)
+        email_verified_at : DATETIME2
+        phone_verified_at : DATETIME2
+        * is_deleted : BIT
+        deleted_at : DATETIME2
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "roles [MUST]" as roles {
+        * id : BIGINT <<PK>>
+        --
+        * code : NVARCHAR(50) <<UQ>>
+        * name : NVARCHAR(100)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "user_roles [MUST]" as user_roles {
+        * user_id : BIGINT <<PK, FK>>
+        * role_id : BIGINT <<PK, FK>>
+    }
+
+    entity "user_profiles [MUST]" as user_profiles {
+        * id : BIGINT <<PK>>
+        --
+        * user_id : BIGINT <<FK, UQ>>
+        full_name : NVARCHAR(255)
+        avatar_url : NVARCHAR(500)
+        gender : NVARCHAR(10)
+        date_of_birth : DATE
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "addresses [MUST]" as addresses {
+        * id : BIGINT <<PK>>
+        --
+        * user_id : BIGINT <<FK>>
+        * recipient_name : NVARCHAR(255)
+        * phone : NVARCHAR(20)
+        * province : NVARCHAR(100)
+        * district : NVARCHAR(100)
+        * ward : NVARCHAR(100)
+        * detail_address : NVARCHAR(500)
+        * is_default : BIT
+        * type : NVARCHAR(20)
+        latitude : DECIMAL(10,7)
+        longitude : DECIMAL(10,7)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "auth_tokens [MUST]" as auth_tokens {
+        * id : BIGINT <<PK>>
+        --
+        * user_id : BIGINT <<FK>>
+        * token_hash : NVARCHAR(500)
+        device_info : NVARCHAR(500)
+        * expires_at : DATETIME2
+        revoked_at : DATETIME2
+        * created_at : DATETIME2
+    }
+
+    entity "otp_verifications [MUST]" as otp_verifications {
+        * id : BIGINT <<PK>>
+        --
+        * user_id : BIGINT <<FK>>
+        * code_hash : NVARCHAR(255)
+        * purpose : NVARCHAR(30)
+        * expires_at : DATETIME2
+        * created_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 2: CATALOG (5 BẢNG MUST)
+' ==============================================================================
+package "2. Phân hệ Danh mục & Sản phẩm" #E8F8F5 {
+    entity "categories [MUST]" as categories {
+        * id : BIGINT <<PK>>
+        --
+        parent_id : BIGINT <<FK>>
+        * name : NVARCHAR(100)
+        * slug : NVARCHAR(150) <<UQ>>
+        * sort_order : INT
+        * is_active : BIT
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "brands [MUST]" as brands {
+        * id : BIGINT <<PK>>
+        --
+        * name : NVARCHAR(100)
+        * slug : NVARCHAR(150) <<UQ>>
+        * is_active : BIT
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "products [MUST]" as products {
+        * id : BIGINT <<PK>>
+        --
+        * category_id : BIGINT <<FK>>
+        brand_id : BIGINT <<FK>>
+        * name : NVARCHAR(255)
+        * slug : NVARCHAR(300) <<UQ>>
+        description : NVARCHAR(MAX)
+        thumbnail_url : NVARCHAR(500)
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "product_variants [MUST]" as product_variants {
+        * id : BIGINT <<PK>>
+        --
+        * product_id : BIGINT <<FK>>
+        * sku : NVARCHAR(100) <<UQ>>
+        barcode : NVARCHAR(100) <<UQ>>
+        * color : NVARCHAR(50)
+        * size : NVARCHAR(50)
+        * price : DECIMAL(18,2)
+        * cost_price : DECIMAL(18,2)
+        * weight_gram : INT
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "product_images [MUST]" as product_images {
+        * id : BIGINT <<PK>>
+        --
+        * product_id : BIGINT <<FK>>
+        variant_id : BIGINT <<FK>>
+        * url : NVARCHAR(500)
+        * sort_order : INT
+        * is_thumbnail : BIT
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 3: STORES & EMPLOYEES (2 BẢNG MUST + 1 BẢNG SHOULD)
+' ==============================================================================
+package "3. Phân hệ Cửa hàng & Nhân viên" #FEF9E7 {
+    entity "stores [MUST]" as stores {
+        * id : BIGINT <<PK>>
+        --
+        * code : NVARCHAR(50) <<UQ>>
+        * name : NVARCHAR(255)
+        * type : NVARCHAR(20)
+        * province : NVARCHAR(100)
+        * district : NVARCHAR(100)
+        * ward : NVARCHAR(100)
+        * detail_address : NVARCHAR(500)
+        latitude : DECIMAL(10,7)
+        longitude : DECIMAL(10,7)
+        phone : NVARCHAR(20)
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "employees [MUST]" as employees {
+        * id : BIGINT <<PK>>
+        --
+        * user_id : BIGINT <<FK, UQ>>
+        * store_id : BIGINT <<FK>>
+        * position : NVARCHAR(20)
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "pos_shifts [SHOULD]" as pos_shifts {
+        * id : BIGINT <<PK>>
+        --
+        * store_id : BIGINT <<FK>>
+        * cashier_id : BIGINT <<FK>>
+        * opened_at : DATETIME2
+        closed_at : DATETIME2
+        * opening_cash : DECIMAL(18,2)
+        closing_cash : DECIMAL(18,2)
+        expected_cash : DECIMAL(18,2)
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 4: INVENTORY & STOCK TRANSFER (2 BẢNG MUST + 2 BẢNG SHOULD)
+' ==============================================================================
+package "4. Phân hệ Tồn kho & Luân chuyển" #F4ECF7 {
+    entity "inventories [MUST]" as inventories {
+        * id : BIGINT <<PK>>
+        --
+        * variant_id : BIGINT <<FK>>
+        * store_id : BIGINT <<FK>>
+        * quantity_on_hand : INT
+        * reorder_level : INT
+        * version : BIGINT
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "inventory_transactions [MUST]" as inventory_transactions {
+        * id : BIGINT <<PK>>
+        --
+        * variant_id : BIGINT <<FK>>
+        * store_id : BIGINT <<FK>>
+        * type : NVARCHAR(30)
+        * quantity_change : INT
+        * quantity_after : INT
+        reference_type : NVARCHAR(50)
+        reference_id : BIGINT
+        note : NVARCHAR(500)
+        created_by : BIGINT <<FK>>
+        * created_at : DATETIME2
+    }
+
+    entity "stock_transfers [SHOULD]" as stock_transfers {
+        * id : BIGINT <<PK>>
+        --
+        * code : NVARCHAR(50) <<UQ>>
+        * from_store_id : BIGINT <<FK>>
+        * to_store_id : BIGINT <<FK>>
+        * status : NVARCHAR(20)
+        note : NVARCHAR(500)
+        created_by : BIGINT <<FK>>
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "stock_transfer_items [SHOULD]" as stock_transfer_items {
+        * id : BIGINT <<PK>>
+        --
+        * transfer_id : BIGINT <<FK>>
+        * variant_id : BIGINT <<FK>>
+        * quantity : INT
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 5: CART (2 BẢNG MUST)
+' ==============================================================================
+package "5. Phân hệ Giỏ hàng Online" #FDEDEC {
+    entity "carts [MUST]" as carts {
+        * id : BIGINT <<PK>>
+        --
+        * user_id : BIGINT <<FK>>
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "cart_items [MUST]" as cart_items {
+        * id : BIGINT <<PK>>
+        --
+        * cart_id : BIGINT <<FK>>
+        * variant_id : BIGINT <<FK>>
+        * quantity : INT
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 6: ORDER (3 BẢNG MUST)
+' ==============================================================================
+package "6. Phân hệ Đơn hàng Đa kênh" #EAEDED {
+    entity "orders [MUST]" as orders {
+        * id : BIGINT <<PK>>
+        --
+        * order_code : NVARCHAR(50) <<UQ>>
+        * channel : NVARCHAR(20)
+        * store_id : BIGINT <<FK>>
+        customer_id : BIGINT <<FK>>
+        cashier_id : BIGINT <<FK>>
+        * status : NVARCHAR(30)
+        * subtotal : DECIMAL(18,2)
+        * discount_total : DECIMAL(18,2)
+        * shipping_fee : DECIMAL(18,2)
+        * total_amount : DECIMAL(18,2)
+        voucher_code : NVARCHAR(50)
+        ship_name : NVARCHAR(255)
+        ship_phone : NVARCHAR(20)
+        ship_address : NVARCHAR(500)
+        ship_latitude : DECIMAL(10,7)
+        ship_longitude : DECIMAL(10,7)
+        note : NVARCHAR(500)
+        * placed_at : DATETIME2
+        completed_at : DATETIME2
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "order_items [MUST]" as order_items {
+        * id : BIGINT <<PK>>
+        --
+        * order_id : BIGINT <<FK>>
+        variant_id : BIGINT <<FK>>
+        * product_name : NVARCHAR(255)
+        * sku : NVARCHAR(100)
+        * color : NVARCHAR(50)
+        * size : NVARCHAR(50)
+        * unit_price : DECIMAL(18,2)
+        * quantity : INT
+        * line_total : DECIMAL(18,2)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "order_status_history [MUST]" as order_status_history {
+        * id : BIGINT <<PK>>
+        --
+        * order_id : BIGINT <<FK>>
+        from_status : NVARCHAR(30)
+        * to_status : NVARCHAR(30)
+        changed_by : BIGINT <<FK>>
+        note : NVARCHAR(500)
+        * changed_at : DATETIME2
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 7: PAYMENT & PROMOTION (3 BẢNG MUST)
+' ==============================================================================
+package "7. Phân hệ Thanh toán & Khuyến mãi" #F9EBEA {
+    entity "payments [MUST]" as payments {
+        * id : BIGINT <<PK>>
+        --
+        * order_id : BIGINT <<FK>>
+        * method : NVARCHAR(30)
+        * amount : DECIMAL(18,2)
+        * status : NVARCHAR(20)
+        transaction_ref : NVARCHAR(100)
+        cash_received : DECIMAL(18,2)
+        change_amount : DECIMAL(18,2)
+        paid_at : DATETIME2
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "vouchers [MUST]" as vouchers {
+        * id : BIGINT <<PK>>
+        --
+        * code : NVARCHAR(50) <<UQ>>
+        * name : NVARCHAR(255)
+        * discount_type : NVARCHAR(20)
+        * discount_value : DECIMAL(18,2)
+        * min_order_value : DECIMAL(18,2)
+        max_discount_value : DECIMAL(18,2)
+        usage_limit : INT
+        * used_count : INT
+        * start_at : DATETIME2
+        * end_at : DATETIME2
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+
+    entity "voucher_usages [MUST]" as voucher_usages {
+        * id : BIGINT <<PK>>
+        --
+        * voucher_id : BIGINT <<FK>>
+        * order_id : BIGINT <<FK>>
+        user_id : BIGINT <<FK>>
+        * used_at : DATETIME2
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' MODULE 8: REVIEW (1 BẢNG COULD)
+' ==============================================================================
+package "8. Phân hệ Đánh giá (Could Have)" #EAECEE {
+    entity "reviews [COULD]" as reviews {
+        * id : BIGINT <<PK>>
+        --
+        * order_item_id : BIGINT <<FK, UQ>>
+        * user_id : BIGINT <<FK>>
+        * product_id : BIGINT <<FK>>
+        * rating : INT
+        comment : NVARCHAR(1000)
+        * status : NVARCHAR(20)
+        * created_at : DATETIME2
+        * updated_at : DATETIME2
+    }
+}
+
+' ==============================================================================
+' CÁC MỐI QUAN HỆ (RELATIONSHIPS)
+' ==============================================================================
+users ||--o{ user_roles
+roles ||--o{ user_roles
+users ||--|| user_profiles
+users ||--o{ addresses
+users ||--o{ auth_tokens
+users ||--o{ otp_verifications
+
+categories ||--o{ categories : "parent_id"
+categories ||--o{ products
+brands ||--o{ products
+products ||--|{ product_variants
+products ||--o{ product_images
+product_variants ||--o{ product_images
+
+stores ||--o{ employees
+users ||--|| employees
+stores ||--o{ pos_shifts
+users ||--o{ pos_shifts
+
+product_variants ||--o{ inventories
+stores ||--o{ inventories
+
+product_variants ||--o{ inventory_transactions
+stores ||--o{ inventory_transactions
+users ||--o{ inventory_transactions
+
+stores ||--o{ stock_transfers : "from"
+stores ||--o{ stock_transfers : "to"
+users ||--o{ stock_transfers
+stock_transfers ||--|{ stock_transfer_items
+product_variants ||--o{ stock_transfer_items
+
+users ||--o{ carts
+carts ||--o{ cart_items
+product_variants ||--o{ cart_items
+
+stores ||--o{ orders
+users ||--o{ orders : "customer"
+users ||--o{ orders : "cashier"
+orders ||--|{ order_items
+product_variants ||--o{ order_items
+orders ||--o{ order_status_history
+users ||--o{ order_status_history
+orders ||--o{ payments
+
+vouchers ||--o{ voucher_usages
+orders ||--o{ voucher_usages
+users ||--o{ voucher_usages
+
+order_items ||--|| reviews
+users ||--o{ reviews
+products ||--o{ reviews
+
+@enduml
+

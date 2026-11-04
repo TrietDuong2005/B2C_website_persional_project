@@ -1,0 +1,154 @@
+@startuml erd-v2-core
+!theme plain
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam class {
+    BackgroundColor white
+    ArrowColor #1B4F72
+    BorderColor #2874A6
+}
+
+title SƠ ĐỒ THỰC THỂ CỐT LÕI (CORE ERD) — LUỒNG BÁN HÀNG ĐA KÊNH\n(10 Bảng Must Have chính phục vụ Bán hàng Online & POS)
+
+entity "users" as users {
+    * id : BIGINT <<PK>>
+    --
+    * email : NVARCHAR(255) <<UQ>>
+    phone : NVARCHAR(20)
+    * password_hash : NVARCHAR(255)
+    * status : NVARCHAR(20)
+}
+
+entity "stores" as stores {
+    * id : BIGINT <<PK>>
+    --
+    * code : NVARCHAR(50) <<UQ>>
+    * name : NVARCHAR(255)
+    * type : NVARCHAR(20)
+    * detail_address : NVARCHAR(500)
+    latitude : DECIMAL(10,7)
+    longitude : DECIMAL(10,7)
+    * status : NVARCHAR(20)
+}
+
+entity "employees" as employees {
+    * id : BIGINT <<PK>>
+    --
+    * user_id : BIGINT <<FK, UQ>>
+    * store_id : BIGINT <<FK>>
+    * position : NVARCHAR(20)
+    * status : NVARCHAR(20)
+}
+
+entity "products" as products {
+    * id : BIGINT <<PK>>
+    --
+    * name : NVARCHAR(255)
+    * slug : NVARCHAR(300) <<UQ>>
+    thumbnail_url : NVARCHAR(500)
+    * status : NVARCHAR(20)
+}
+
+entity "product_variants" as product_variants {
+    * id : BIGINT <<PK>>
+    --
+    * product_id : BIGINT <<FK>>
+    * sku : NVARCHAR(100) <<UQ>>
+    barcode : NVARCHAR(100)
+    * color : NVARCHAR(50)
+    * size : NVARCHAR(50)
+    * price : DECIMAL(18,2)
+    * cost_price : DECIMAL(18,2)
+    * status : NVARCHAR(20)
+}
+
+entity "inventories" as inventories {
+    * id : BIGINT <<PK>>
+    --
+    * variant_id : BIGINT <<FK>>
+    * store_id : BIGINT <<FK>>
+    * quantity_on_hand : INT
+    * reorder_level : INT
+    * version : BIGINT
+}
+
+entity "orders" as orders {
+    * id : BIGINT <<PK>>
+    --
+    * order_code : NVARCHAR(50) <<UQ>>
+    * channel : NVARCHAR(20)
+    * store_id : BIGINT <<FK>>
+    customer_id : BIGINT <<FK>>
+    cashier_id : BIGINT <<FK>>
+    * status : NVARCHAR(30)
+    * subtotal : DECIMAL(18,2)
+    * discount_total : DECIMAL(18,2)
+    * shipping_fee : DECIMAL(18,2)
+    * total_amount : DECIMAL(18,2)
+    voucher_code : NVARCHAR(50)
+    * placed_at : DATETIME2
+}
+
+entity "order_items" as order_items {
+    * id : BIGINT <<PK>>
+    --
+    * order_id : BIGINT <<FK>>
+    variant_id : BIGINT <<FK>>
+    * product_name : NVARCHAR(255)
+    * sku : NVARCHAR(100)
+    * color : NVARCHAR(50)
+    * size : NVARCHAR(50)
+    * unit_price : DECIMAL(18,2)
+    * quantity : INT
+    * line_total : DECIMAL(18,2)
+}
+
+entity "payments" as payments {
+    * id : BIGINT <<PK>>
+    --
+    * order_id : BIGINT <<FK>>
+    * method : NVARCHAR(30)
+    * amount : DECIMAL(18,2)
+    * status : NVARCHAR(20)
+    cash_received : DECIMAL(18,2)
+    change_amount : DECIMAL(18,2)
+    paid_at : DATETIME2
+}
+
+entity "vouchers" as vouchers {
+    * id : BIGINT <<PK>>
+    --
+    * code : NVARCHAR(50) <<UQ>>
+    * name : NVARCHAR(255)
+    * discount_type : NVARCHAR(20)
+    * discount_value : DECIMAL(18,2)
+    * min_order_value : DECIMAL(18,2)
+    max_discount_value : DECIMAL(18,2)
+    * used_count : INT
+    * status : NVARCHAR(20)
+}
+
+' ==============================================================================
+' LIÊN KẾT GIỮA CÁC THỰC THỂ CỐT LÕI
+' ==============================================================================
+users ||--|| employees : "hồ sơ nhân viên"
+stores ||--o{ employees : "nhân sự tại chi nhánh"
+
+products ||--|{ product_variants : "gồm các SKU biến thể"
+
+product_variants ||--o{ inventories : "tồn kho theo chi nhánh"
+stores ||--o{ inventories : "quản lý kho"
+
+stores ||--o{ orders : "xuất bán / xử lý đơn"
+users ||--o{ orders : "khách đặt (Online)"
+users ||--o{ orders : "thu ngân lập đơn (POS)"
+
+orders ||--|{ order_items : "chi tiết dòng sản phẩm"
+product_variants ||--o{ order_items : "tham chiếu gốc"
+
+orders ||--o{ payments : "thanh toán hóa đơn"
+
+orders ..> vouchers : "áp dụng mã giảm giá"
+
+@enduml
+

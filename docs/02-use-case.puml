@@ -1,0 +1,105 @@
+@startuml
+title Sơ đồ Use Case Tổng quát - Hệ thống Bán lẻ Chuỗi Cửa hàng Thời trang
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+
+actor "Khách hàng\n(CUSTOMER)" as Customer #LightSkyBlue
+actor "Thu ngân\n(CASHIER)" as Cashier #LightGreen
+actor "Quản lý cửa hàng\n(STORE_MANAGER)" as StoreManager #LightYellow
+actor "Quản trị viên\n(ADMIN)" as Admin #LightCoral
+
+' Quan hệ thừa kế actor
+Cashier <|-- StoreManager
+StoreManager <|-- Admin
+
+rectangle "Phân hệ Khách hàng (Shop Online)" {
+    usecase "UC-01: Đăng ký / Đăng nhập" as UC01
+    usecase "UC-02: Xem & Tìm kiếm sản phẩm" as UC02
+    usecase "UC-03: Xem chi tiết biến thể (Màu/Size)" as UC03
+    usecase "UC-04: Quản lý giỏ hàng" as UC04
+    usecase "UC-05: Đặt hàng trực tuyến (Checkout)" as UC05
+    usecase "UC-06: Áp dụng mã giảm giá" as UC06
+    usecase "UC-07: Xem lịch sử đơn cá nhân" as UC07
+    usecase "UC-08: Quản lý sổ địa chỉ" as UC08
+    usecase "UC-09: Đánh giá sản phẩm (Could)" as UC09
+}
+
+rectangle "Phân hệ Bán hàng tại quầy (POS)" {
+    usecase "UC-10: Đăng nhập POS" as UC10
+    usecase "UC-11: Tra cứu / Quét mã SKU/Barcode" as UC11
+    usecase "UC-12: Lập hóa đơn & Bán hàng tại quầy" as UC12
+    usecase "UC-13: Áp dụng voucher tại quầy" as UC13
+    usecase "UC-14: Thanh toán đa hình thức & Tính tiền thừa" as UC14
+    usecase "UC-15: In hóa đơn thanh toán" as UC15
+    usecase "UC-16: Mở ca & Đóng ca thu ngân (Should)" as UC16
+}
+
+rectangle "Phân hệ Quản lý Kho & Cửa hàng" {
+    usecase "UC-17: Tra cứu tồn kho chi nhánh" as UC17
+    usecase "UC-18: Điều chỉnh tồn & Xem sổ cái kho" as UC18
+    usecase "UC-19: Xử lý đơn online của cửa hàng" as UC19
+    usecase "UC-20: Yêu cầu chuyển kho nội bộ (Should)" as UC20
+    usecase "UC-21: Xem báo cáo ca/chi nhánh" as UC21
+}
+
+rectangle "Phân hệ Quản trị Hệ thống (Admin Toàn chuỗi)" {
+    usecase "UC-22: Quản lý Danh mục (Cây cha-con)" as UC22
+    usecase "UC-23: Quản lý Thương hiệu" as UC23
+    usecase "UC-24: Quản lý Sản phẩm & Biến thể SKU" as UC24
+    usecase "UC-25: Quản lý Cửa hàng & Nhân viên" as UC25
+    usecase "UC-26: Quản lý Tồn kho toàn chuỗi" as UC26
+    usecase "UC-27: Quản lý & Đổi trạng thái đơn toàn kênh" as UC27
+    usecase "UC-28: Quản lý Mã giảm giá (Vouchers)" as UC28
+    usecase "UC-29: Xem Dashboard thống kê tổng quan" as UC29
+    usecase "UC-30: Phân bổ đơn hàng theo khoảng cách (Should)" as UC30
+}
+
+' Liên kết Khách hàng
+Customer --> UC01
+Customer --> UC02
+Customer --> UC03
+Customer --> UC04
+Customer --> UC05
+Customer --> UC07
+Customer --> UC08
+Customer --> UC09
+
+' Quan hệ include / extend trong Shop
+UC05 ..> UC06 : <<include>>
+UC05 ..> UC04 : <<include>>
+
+' Liên kết Thu ngân
+Cashier --> UC10
+Cashier --> UC11
+Cashier --> UC12
+Cashier --> UC16
+
+' Quan hệ include trong POS
+UC12 ..> UC11 : <<include>>
+UC12 ..> UC13 : <<include>>
+UC12 ..> UC14 : <<include>>
+UC12 ..> UC15 : <<include>>
+
+' Liên kết Quản lý cửa hàng
+StoreManager --> UC17
+StoreManager --> UC18
+StoreManager --> UC19
+StoreManager --> UC20
+StoreManager --> UC21
+
+' Liên kết Quản trị viên
+Admin --> UC22
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+Admin --> UC26
+Admin --> UC27
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+
+@enduml
+
