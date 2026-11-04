@@ -1,12 +1,13 @@
--- V28: Dữ liệu mẫu các cửa hàng và kho tổng tại TP.HCM
--- Gồm 1 kho tổng (Tân Bình) và 3 cửa hàng bán lẻ (Quận 1, Quận 3, Bình Thạnh)
+-- V28: Dữ liệu mẫu các cửa hàng bán lẻ và kho tổng thương hiệu Triết Store tại TP.HCM
+-- Gồm 1 kho tổng (Tân Bình) và 3 chi nhánh bán lẻ (Quận 1, Quận 3, Bình Thạnh)
 -- Kèm tọa độ GPS thật để phục vụ tính khoảng cách theo công thức Haversine
+-- Giữ nguyên toàn bộ mã chi nhánh (code: STORE-Q1, WH-TONG...), địa chỉ, tọa độ GPS
 
 INSERT INTO stores (code, name, type, province, district, ward, detail_address, latitude, longitude, phone, status, created_at, updated_at)
 VALUES 
 (
     'WH-TONG', 
-    N'Kho Tổng Tân Bình', 
+    N'Kho tổng Triết Store', 
     'WAREHOUSE', 
     N'Thành phố Hồ Chí Minh', 
     N'Quận Tân Bình', 
@@ -21,7 +22,7 @@ VALUES
 ),
 (
     'STORE-Q1', 
-    N'Chi nhánh Nguyễn Trãi - Quận 1', 
+    N'Triết Store - Quận 1', 
     'STORE', 
     N'Thành phố Hồ Chí Minh', 
     N'Quận 1', 
@@ -36,7 +37,7 @@ VALUES
 ),
 (
     'STORE-Q3', 
-    N'Chi nhánh Cách Mạng Tháng 8 - Quận 3', 
+    N'Triết Store - Quận 3', 
     'STORE', 
     N'Thành phố Hồ Chí Minh', 
     N'Quận 3', 
@@ -51,7 +52,7 @@ VALUES
 ),
 (
     'STORE-BT', 
-    N'Chi nhánh Điện Biên Phủ - Bình Thạnh', 
+    N'Triết Store - Bình Thạnh', 
     'STORE', 
     N'Thành phố Hồ Chí Minh', 
     N'Quận Bình Thạnh', 
@@ -64,4 +65,3 @@ VALUES
     GETDATE(), 
     GETDATE()
 );
-

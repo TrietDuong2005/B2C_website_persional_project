@@ -1,5 +1,8 @@
--- V30: Dữ liệu 3 voucher mẫu kiểm thử
--- 1 voucher giảm theo %, 1 voucher giảm số tiền cố định, 1 voucher đã hết hạn
+-- ==============================================================================
+-- V30: Dữ liệu mẫu 3 voucher khuyến mãi kiểm thử cho chuỗi cửa hàng Triết Store
+-- Gồm: 1 voucher giảm %, 1 voucher giảm số tiền cố định, 1 voucher đã hết hạn để test
+-- Giữ nguyên toàn bộ mã hiệu (HELLOSUMMER, GIAM50K, EXPIRED2025) và các thông số giảm giá
+-- ==============================================================================
 
 INSERT INTO vouchers (code, name, discount_type, discount_value, min_order_value, max_discount_value, usage_limit, used_count, start_at, end_at, status, created_at, updated_at)
 VALUES
@@ -48,4 +51,3 @@ VALUES
     GETDATE(),
     GETDATE()
 );
-
