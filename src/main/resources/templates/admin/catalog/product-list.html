@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/head :: adminHead('Quản lý Sản phẩm - DA_HDT')}">
-    <title>Quản lý Sản phẩm</title>
+<head th:replace="~{layout/head :: adminHead('Quản lý Sản phẩm - ' + ${brandName})}">
+    <title th:text="'Quản lý Sản phẩm - ' + ${brandName}">Quản lý Sản phẩm</title>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 <div class="app-wrapper">

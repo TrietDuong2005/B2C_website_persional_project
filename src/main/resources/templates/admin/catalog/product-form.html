@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout/head :: adminHead(${isEdit} ? 'Sửa Sản phẩm - DA_HDT' : 'Thêm Sản phẩm Mới - DA_HDT')}">
-    <title>Sản phẩm</title>
+<head th:replace="~{layout/head :: adminHead((${isEdit} ? 'Sửa Sản phẩm - ' : 'Thêm Sản phẩm Mới - ') + ${brandName})}">
+    <title th:text="(${isEdit} ? 'Sửa Sản phẩm - ' : 'Thêm Sản phẩm Mới - ') + ${brandName}">Sản phẩm</title>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 <div class="app-wrapper">
