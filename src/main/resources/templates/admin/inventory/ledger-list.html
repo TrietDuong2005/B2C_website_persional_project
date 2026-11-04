@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: adminHead('Sổ cái giao dịch kho - ' + ${brandName})}">
+    <title th:text="'Sổ cái giao dịch kho - ' + ${brandName}">Sổ cái giao dịch kho</title>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+
+    <!-- Header / Navbar -->
+    <div th:replace="~{layout/navbar :: adminNavbar}"></div>
+
+    <!-- Sidebar -->
+    <div th:replace="~{layout/sidebar :: adminSidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="app-main p-4">
+        <!-- Content Header -->
+        <div class="app-content-header mb-4">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-sm-6">
+                        <h3 class="mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i>Sổ cái Giao dịch Kho (Audit Log)</h3>
+                    </div>
+                    <div class="col-sm-6 text-sm-end">
+                        <a th:href="@{/admin/inventory(storeId=${selectedStoreId})}" class="btn btn-outline-primary me-2">
+                            <i class="bi bi-boxes me-1"></i>Quay lại Quản lý Tồn kho
+                        </a>
+                        <a th:href="@{/admin/inventory/ledger}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="container-fluid">
+                <!-- Flash Messages -->
+                <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+                <!-- Thẻ bộ lọc & tìm kiếm sổ kho -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body p-3">
+                        <form th:action="@{/admin/inventory/ledger}" method="get" class="row g-3 align-items-end">
+                            <!-- Lọc Cửa hàng (chỉ cho ADMIN chọn, STORE_MANAGER bị cố định) -->
+                            <div class="col-md-3" th:if="${isAdmin}">
+                                <label class="form-label small fw-semibold">Chi nhánh / Kho</label>
+                                <select name="storeId" class="form-select">
+                                    <option value="">-- Toàn bộ hệ thống --</option>
+                                    <option th:each="st : ${stores}" th:value="${st.id}"
+                                            th:text="${st.name} + ' (' + ${st.code} + ')'"
+                                            th:selected="${selectedStoreId != null and selectedStoreId == st.id}">
+                                        Triết Store - Quận 1
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-3" th:unless="${isAdmin}">
+                                <input type="hidden" name="storeId" th:value="${selectedStoreId}"/>
+                                <label class="form-label small fw-semibold">Chi nhánh công tác</label>
+                                <input type="text" class="form-control" th:value="'Chi nhánh của bạn (Mã: ' + ${selectedStoreId} + ')'" disabled/>
+                            </div>
+
+                            <!-- Lọc SKU / Sản phẩm -->
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Mã SKU / Tên</label>
+                                <input type="text" name="sku" class="form-control" th:value="${sku}"
+                                       placeholder="Tìm SKU hoặc tên..."/>
+                            </div>
+
+                            <!-- Lọc Loại nghiệp vụ -->
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Loại nghiệp vụ</label>
+                                <select name="type" class="form-select">
+                                    <option value="">-- Tất cả loại --</option>
+                                    <option th:each="t : ${types}" th:value="${t}"
+                                            th:text="${t}"
+                                            th:selected="${selectedType != null and selectedType == t}">
+                                        IMPORT
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Khoảng ngày: Từ ngày -->
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Từ ngày</label>
+                                <input type="date" name="fromDate" class="form-control" th:value="${fromDate}"/>
+                            </div>
+
+                            <!-- Khoảng ngày: Đến ngày -->
+                            <div class="col-md-2">
+                                <label class="form-label small fw-semibold">Đến ngày</label>
+                                <input type="date" name="toDate" class="form-control" th:value="${toDate}"/>
+                            </div>
+
+                            <!-- Nút Lọc và Reset -->
+                            <div class="col-md-1 d-flex gap-1">
+                                <button type="submit" class="btn btn-primary w-100" title="Áp dụng bộ lọc">
+                                    <i class="bi bi-funnel"></i>
+                                </button>
+                                <a th:href="@{/admin/inventory/ledger}" class="btn btn-outline-secondary" title="Đặt lại bộ lọc">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bảng Sổ cái giao dịch kho -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold text-muted text-uppercase">
+                            <i class="bi bi-clock-history me-1"></i>Nhật ký biến động kho (Chỉ ghi nhận / Không cho phép sửa xóa)
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>Thời điểm</th>
+                                    <th>Chi nhánh</th>
+                                    <th class="text-center">Loại giao dịch</th>
+                                    <th>Sản phẩm & Biến thể</th>
+                                    <th class="text-center">Biến động</th>
+                                    <th class="text-center">Tồn sau giao dịch</th>
+                                    <th>Chứng từ</th>
+                                    <th>Lý do / Ghi chú</th>
+                                    <th>Người thực hiện</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${ledgerPage.empty}">
+                                    <td colspan="9" class="text-center py-4 text-muted">
+                                        <i class="bi bi-journal-x fs-2 d-block mb-2"></i>Chưa phát sinh giao dịch kho nào thỏa mãn điều kiện lọc.
+                                    </td>
+                                </tr>
+                                <tr th:each="tx : ${ledgerPage.content}">
+                                    <td class="text-nowrap">
+                                        <small class="fw-semibold text-dark" th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm:ss')}">04/11/2026 14:30:00</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border font-monospace" th:text="${tx.storeCode}">STORE-Q1</span>
+                                        <div class="small text-muted" th:text="${tx.storeName}">Triết Store - Quận 1</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span th:class="${tx.typeBadgeClass}" th:text="${tx.typeLabel}">Nhập kho</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark font-monospace" th:text="${tx.sku}">NK-AF1-BLK-40</div>
+                                        <div class="small" th:text="${tx.productName}">Nike Air Force 1 '07</div>
+                                        <div class="small text-muted">
+                                            Màu: <span th:text="${tx.color}">Đen</span> | Size: <span th:text="${tx.size}">40</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="fs-6 fw-bold"
+                                              th:classappend="${tx.quantityChange > 0} ? 'text-success' : 'text-danger'"
+                                              th:text="(${tx.quantityChange > 0} ? '+' : '') + ${tx.quantityChange}">
+                                            +10
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis font-monospace fw-bold fs-6"
+                                              th:text="${tx.quantityAfter}">
+                                            25
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-muted border font-monospace" th:text="${tx.referenceType} ?: 'MANUAL'">MANUAL</span>
+                                        <span class="small font-monospace text-muted d-block" th:if="${tx.referenceId != null}" th:text="'#' + ${tx.referenceId}">#102</span>
+                                    </td>
+                                    <td>
+                                        <span class="small" th:text="${tx.note} ?: '—'">Nhập kho bổ sung</span>
+                                    </td>
+                                    <td>
+                                        <span class="small fw-semibold" th:text="${tx.createdByName}">Quản trị viên</span>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Phân trang -->
+                    <div class="card-footer bg-white d-flex align-items-center justify-content-between py-3" th:if="${ledgerPage.totalPages > 1}">
+                        <div class="text-muted small">
+                            Hiển thị trang <strong th:text="${ledgerPage.number + 1}">1</strong> / <strong th:text="${ledgerPage.totalPages}">5</strong>
+                            (Tổng <span th:text="${ledgerPage.totalElements}">20</span> bản ghi sổ kho)
+                        </div>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" th:classappend="${ledgerPage.first} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/inventory/ledger(storeId=${selectedStoreId}, sku=${sku}, type=${selectedType}, fromDate=${fromDate}, toDate=${toDate}, page=${ledgerPage.number - 1})}">&laquo;</a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(0, ledgerPage.totalPages - 1)}"
+                                th:classappend="${i == ledgerPage.number} ? 'active'">
+                                <a class="page-link" th:href="@{/admin/inventory/ledger(storeId=${selectedStoreId}, sku=${sku}, type=${selectedType}, fromDate=${fromDate}, toDate=${toDate}, page=${i})}"
+                                   th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${ledgerPage.last} ? 'disabled'">
+                                <a class="page-link" th:href="@{/admin/inventory/ledger(storeId=${selectedStoreId}, sku=${sku}, type=${selectedType}, fromDate=${fromDate}, toDate=${toDate}, page=${ledgerPage.number + 1})}">&raquo;</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: adminFooter}"></div>
+</div>
+</body>
+</html>
+
