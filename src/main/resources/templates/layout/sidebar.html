@@ -15,33 +15,36 @@
         <nav class="mt-2">
             <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="menu" data-accordion="false">
                 <li class="nav-item">
-                    <a th:href="@{/admin}" class="nav-link active">
+                    <a th:href="@{/admin}" class="nav-link">
                         <i class="nav-icon bi bi-speedometer2"></i>
                         <p>Dashboard Tổng quan</p>
                     </a>
                 </li>
 
-                <li class="nav-header text-uppercase text-muted small mt-2">Nghiệp vụ Chuỗi</li>
+                <li class="nav-header text-uppercase text-muted small mt-2">Quản lý Catalog</li>
 
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a th:href="@{/admin/categories}" class="nav-link">
                         <i class="nav-icon bi bi-tags"></i>
-                        <p>
-                            Quản lý Danh mục
-                            <span class="badge text-bg-info ms-auto">Ngày 3B</span>
-                        </p>
+                        <p>Danh mục sản phẩm</p>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="nav-icon bi bi-box-seam"></i>
-                        <p>
-                            Quản lý Sản phẩm
-                            <span class="badge text-bg-info ms-auto">Ngày 3B</span>
-                        </p>
+                    <a th:href="@{/admin/brands}" class="nav-link">
+                        <i class="nav-icon bi bi-award"></i>
+                        <p>Thương hiệu</p>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a th:href="@{/admin/products}" class="nav-link">
+                        <i class="nav-icon bi bi-box-seam"></i>
+                        <p>Sản phẩm & Biến thể</p>
+                    </a>
+                </li>
+
+                <li class="nav-header text-uppercase text-muted small mt-2">Nghiệp vụ Chuỗi</li>
 
                 <li class="nav-item">
                     <a href="#" class="nav-link">
@@ -105,4 +108,3 @@
 
 </body>
 </html>
-

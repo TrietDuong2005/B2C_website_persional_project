@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: adminHead(${isEdit} ? 'Sửa Sản phẩm - DA_HDT' : 'Thêm Sản phẩm Mới - DA_HDT')}">
+    <title>Sản phẩm</title>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+
+    <!-- Header / Navbar -->
+    <div th:replace="~{layout/navbar :: adminNavbar}"></div>
+
+    <!-- Sidebar -->
+    <div th:replace="~{layout/sidebar :: adminSidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="app-main p-4">
+        <!-- Content Header -->
+        <div class="app-content-header mb-4">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-sm-6">
+                        <h3 class="mb-0 fw-bold">
+                            <i class="bi" th:classappend="${isEdit} ? 'bi-pencil-square text-warning' : 'bi-plus-circle text-primary'"></i>
+                            <span th:text="${isEdit} ? 'Chỉnh sửa Thông tin Sản phẩm' : 'Thêm Sản phẩm Mới'">Thêm Sản phẩm</span>
+                        </h3>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-end mb-0">
+                            <li class="breadcrumb-item"><a th:href="@{/admin}">Admin</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/admin/products}">Sản phẩm</a></li>
+                            <li class="breadcrumb-item active" th:text="${isEdit} ? 'Chỉnh sửa' : 'Tạo mới'">Tạo mới</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="container-fluid">
+                <!-- Flash Messages -->
+                <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+                <div class="row justify-content-center">
+                    <div class="col-lg-9">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-info-circle me-2"></i>Thông tin cơ bản của mẫu sản phẩm</h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <form th:action="@{/admin/products/save}" th:object="${productForm}" method="post">
+                                    <input type="hidden" th:field="*{id}"/>
+
+                                    <div class="row g-3">
+                                        <!-- Tên sản phẩm -->
+                                        <div class="col-12">
+                                            <label for="name" class="form-label fw-semibold">Tên sản phẩm mẫu <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control form-control-lg" id="name" th:field="*{name}"
+                                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                                   placeholder="Ví dụ: Áo thun nam Cotton Compact Coolmate"/>
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Lỗi tên</div>
+                                            <div class="form-text">Slug URL sẽ được hệ thống tự động sinh từ tên sản phẩm này.</div>
+                                        </div>
+
+                                        <!-- Danh mục sản phẩm -->
+                                        <div class="col-md-6">
+                                            <label for="categoryId" class="form-label fw-semibold">Danh mục trực thuộc <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="categoryId" th:field="*{categoryId}"
+                                                    th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid' : ''">
+                                                <option value="">-- Chọn danh mục --</option>
+                                                <option th:each="cat : ${categories}" th:value="${cat.id}"
+                                                        th:text="${cat.name} + (${cat.parentName != null} ? ' (Con của: ' + ${cat.parentName} + ')' : ' [Gốc]')">
+                                                    Áo thun nam
+                                                </option>
+                                            </select>
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}">Lỗi danh mục</div>
+                                        </div>
+
+                                        <!-- Thương hiệu -->
+                                        <div class="col-md-6">
+                                            <label for="brandId" class="form-label fw-semibold">Thương hiệu</label>
+                                            <select class="form-select" id="brandId" th:field="*{brandId}">
+                                                <option value="">-- Không có / Chưa xác định --</option>
+                                                <option th:each="b : ${brands}" th:value="${b.id}" th:text="${b.name}">
+                                                    Coolmate
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Thumbnail URL -->
+                                        <div class="col-12">
+                                            <label for="thumbnailUrl" class="form-label fw-semibold">URL Ảnh đại diện (Thumbnail)</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                                <input type="text" class="form-control" id="thumbnailUrl" th:field="*{thumbnailUrl}"
+                                                       th:classappend="${#fields.hasErrors('thumbnailUrl')} ? 'is-invalid' : ''"
+                                                       placeholder="https://example.com/images/ao-thun.jpg"/>
+                                            </div>
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('thumbnailUrl')}" th:errors="*{thumbnailUrl}">Lỗi URL ảnh</div>
+                                            <div class="form-text">Nhập URL trực tiếp của hình ảnh đại diện (Placehold, Unsplash, CDN...).</div>
+                                        </div>
+
+                                        <!-- Trạng thái -->
+                                        <div class="col-md-6">
+                                            <label for="status" class="form-label fw-semibold">Trạng thái kinh doanh</label>
+                                            <select class="form-select" id="status" th:field="*{status}">
+                                                <option value="ACTIVE">ACTIVE — Đang bày bán công khai</option>
+                                                <option value="HIDDEN">HIDDEN — Tạm ẩn khỏi cửa hàng</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Mô tả sản phẩm -->
+                                        <div class="col-12">
+                                            <label for="description" class="form-label fw-semibold">Mô tả chi tiết sản phẩm</label>
+                                            <textarea class="form-control" id="description" th:field="*{description}" rows="5"
+                                                      placeholder="Nhập thông tin chất liệu vải, kiểu dáng phom áo, hướng dẫn bảo quản..."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4"/>
+
+                                    <div class="d-flex justify-content-between">
+                                        <a th:href="@{/admin/products}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-1"></i>Quay lại danh sách
+                                        </a>
+                                        <button type="submit" class="btn btn-primary px-4">
+                                            <i class="bi bi-check2-circle me-1"></i>
+                                            <span th:text="${isEdit} ? 'Lưu cập nhật' : 'Tiếp tục tạo biến thể'">Lưu</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: adminFooter}"></div>
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: adminHead('Quản lý Thương hiệu - DA_HDT')}">
+    <title>Quản lý Thương hiệu</title>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+
+    <!-- Header / Navbar -->
+    <div th:replace="~{layout/navbar :: adminNavbar}"></div>
+
+    <!-- Sidebar -->
+    <div th:replace="~{layout/sidebar :: adminSidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="app-main p-4">
+        <!-- Content Header -->
+        <div class="app-content-header mb-4">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-sm-6">
+                        <h3 class="mb-0 fw-bold"><i class="bi bi-award me-2"></i>Quản lý Thương hiệu Sản phẩm</h3>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-end mb-0">
+                            <li class="breadcrumb-item"><a th:href="@{/admin}">Admin</a></li>
+                            <li class="breadcrumb-item active">Thương hiệu</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="container-fluid">
+                <!-- Flash Messages -->
+                <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+                <div class="row g-4">
+                    <!-- Cột trái: Danh sách Thương hiệu -->
+                    <div class="col-lg-7">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white py-3">
+                                <!-- Khung tìm kiếm -->
+                                <form th:action="@{/admin/brands}" method="get" class="row g-2">
+                                    <div class="col-sm-9">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                                            <input type="text" name="keyword" class="form-control" th:value="${keyword}"
+                                                   placeholder="Tìm theo tên thương hiệu..."/>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3 d-flex gap-1">
+                                        <button type="submit" class="btn btn-primary w-100">Tìm</button>
+                                        <a th:if="${keyword != null and !keyword.isBlank()}" th:href="@{/admin/brands}" class="btn btn-outline-secondary">X</a>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Tên thương hiệu</th>
+                                            <th>Slug</th>
+                                            <th class="text-center">Sản phẩm</th>
+                                            <th class="text-center">Trạng thái</th>
+                                            <th class="text-end">Thao tác</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:if="${brandPage.content.isEmpty()}">
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                                Chưa có thương hiệu nào phù hợp.
+                                            </td>
+                                        </tr>
+                                        <tr th:each="b : ${brandPage.content}">
+                                            <td class="text-muted small" th:text="${b.id}">1</td>
+                                            <td class="fw-bold text-dark" th:text="${b.name}">Coolmate</td>
+                                            <td><code class="small" th:text="${b.slug}">coolmate</code></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" th:text="${b.productCount}">0</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span th:if="${b.isActive}" class="badge bg-success">Hoạt động</span>
+                                                <span th:unless="${b.isActive}" class="badge bg-secondary">Đã ẩn</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a th:href="@{/admin/brands(editId=${b.id}, keyword=${keyword}, page=${brandPage.number})}" class="btn btn-outline-primary" title="Sửa">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <form th:action="@{/admin/brands/{id}/toggle-status(id=${b.id})}" method="post" class="d-inline">
+                                                        <button type="submit" class="btn btn-outline-warning" title="Bật/Tắt hiển thị">
+                                                            <i class="bi" th:classappend="${b.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form th:action="@{/admin/brands/{id}/delete(id=${b.id})}" method="post" class="d-inline"
+                                                          onsubmit="return confirm('Bạn có chắc muốn ẩn thương hiệu này?');">
+                                                        <button type="submit" class="btn btn-outline-danger" title="Ẩn thương hiệu">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Phân trang -->
+                            <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${brandPage.totalPages > 1}">
+                                <div class="small text-muted">
+                                    Trang <span th:text="${brandPage.number + 1}">1</span> / <span th:text="${brandPage.totalPages}">1</span>
+                                    (Tổng: <span th:text="${brandPage.totalElements}">0</span> thương hiệu)
+                                </div>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item" th:classappend="${brandPage.first} ? 'disabled' : ''">
+                                        <a class="page-link" th:href="@{/admin/brands(page=${brandPage.number - 1}, keyword=${keyword})}">«</a>
+                                    </li>
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, brandPage.totalPages - 1)}"
+                                        th:classappend="${i == brandPage.number} ? 'active' : ''">
+                                        <a class="page-link" th:href="@{/admin/brands(page=${i}, keyword=${keyword})}" th:text="${i + 1}">1</a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${brandPage.last} ? 'disabled' : ''">
+                                        <a class="page-link" th:href="@{/admin/brands(page=${brandPage.number + 1}, keyword=${keyword})}">»</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cột phải: Form Thêm mới / Cập nhật Thương hiệu -->
+                    <div class="col-lg-5">
+                        <div class="card shadow-sm border-0 sticky-top" style="top: 1rem;">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0 fw-bold" th:classappend="${isEdit} ? 'text-warning' : 'text-primary'">
+                                    <i class="bi" th:classappend="${isEdit} ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+                                    <span th:text="${isEdit} ? 'Chỉnh sửa Thương hiệu' : 'Thêm mới Thương hiệu'">Thêm Thương hiệu</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form th:action="@{/admin/brands/save}" th:object="${brandForm}" method="post">
+                                    <input type="hidden" th:field="*{id}"/>
+                                    <input type="hidden" name="keyword" th:value="${keyword}"/>
+                                    <input type="hidden" name="page" th:value="${brandPage.number}"/>
+
+                                    <!-- Tên thương hiệu -->
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label fw-semibold">Tên thương hiệu <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="name" th:field="*{name}"
+                                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                               placeholder="Ví dụ: Routine, Coolmate, Biti's..."/>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Lỗi tên</div>
+                                    </div>
+
+                                    <!-- Trạng thái -->
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="isActive" th:field="*{isActive}"/>
+                                            <label class="form-check-label fw-semibold" for="isActive">Kích hoạt hợp tác</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Nút bấm -->
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-save me-1"></i>
+                                            <span th:text="${isEdit} ? 'Cập nhật thương hiệu' : 'Thêm thương hiệu'">Lưu</span>
+                                        </button>
+                                        <a th:if="${isEdit}" th:href="@{/admin/brands}" class="btn btn-outline-secondary">
+                                            Hủy chỉnh sửa
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: adminFooter}"></div>
+</div>
+
+</body>
+</html>
+

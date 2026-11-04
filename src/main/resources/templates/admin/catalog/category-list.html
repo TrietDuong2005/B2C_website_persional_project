@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: adminHead('Quản lý Danh mục - DA_HDT')}">
+    <title>Quản lý Danh mục</title>
+</head>
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+<div class="app-wrapper">
+
+    <!-- Header / Navbar -->
+    <div th:replace="~{layout/navbar :: adminNavbar}"></div>
+
+    <!-- Sidebar -->
+    <div th:replace="~{layout/sidebar :: adminSidebar}"></div>
+
+    <!-- Main Content -->
+    <main class="app-main p-4">
+        <!-- Content Header -->
+        <div class="app-content-header mb-4">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-sm-6">
+                        <h3 class="mb-0 fw-bold"><i class="bi bi-tags me-2"></i>Quản lý Danh mục Sản phẩm</h3>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-end mb-0">
+                            <li class="breadcrumb-item"><a th:href="@{/admin}">Admin</a></li>
+                            <li class="breadcrumb-item active">Danh mục</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-content">
+            <div class="container-fluid">
+                <!-- Flash Messages -->
+                <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+                <div class="row g-4">
+                    <!-- Cột trái: Cấu trúc Cây và Bảng Danh mục -->
+                    <div class="col-lg-7">
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-diagram-3 me-2"></i>Cây danh mục phân cấp cha - con</h5>
+                                <span class="badge bg-secondary" th:text="${allCategories.size()} + ' danh mục'">0</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Tên danh mục</th>
+                                            <th>Slug</th>
+                                            <th class="text-center">Thứ tự</th>
+                                            <th class="text-center">Sản phẩm</th>
+                                            <th class="text-center">Trạng thái</th>
+                                            <th class="text-end">Thao tác</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <th:block th:each="root : ${categoryTree}">
+                                            <!-- Dòng danh mục gốc -->
+                                            <tr class="table-group-divider fw-bold bg-light">
+                                                <td>
+                                                    <i class="bi bi-folder2-open text-warning me-1"></i>
+                                                    <span th:text="${root.name}">Danh mục cha</span>
+                                                </td>
+                                                <td><code class="small" th:text="${root.slug}">slug</code></td>
+                                                <td class="text-center" th:text="${root.sortOrder}">0</td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle" th:text="${root.productCount}">0</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span th:if="${root.isActive}" class="badge bg-success">Hoạt động</span>
+                                                    <span th:unless="${root.isActive}" class="badge bg-secondary">Đã ẩn</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a th:href="@{/admin/categories(editId=${root.id})}" class="btn btn-outline-primary" title="Sửa">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form th:action="@{/admin/categories/{id}/toggle-status(id=${root.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-outline-warning" title="Bật/Tắt hiển thị">
+                                                                <i class="bi" th:classappend="${root.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                                            </button>
+                                                        </form>
+                                                        <form th:action="@{/admin/categories/{id}/delete(id=${root.id})}" method="post" class="d-inline"
+                                                              onsubmit="return confirm('Bạn có chắc chắn muốn ẩn danh mục này?');">
+                                                            <button type="submit" class="btn btn-outline-danger" title="Ẩn danh mục">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Các danh mục con trực thuộc -->
+                                            <tr th:each="child : ${root.children}">
+                                                <td class="ps-4">
+                                                    <i class="bi bi-arrow-return-right text-muted me-2"></i>
+                                                    <span th:text="${child.name}">Danh mục con</span>
+                                                </td>
+                                                <td><code class="small text-muted" th:text="${child.slug}">slug-con</code></td>
+                                                <td class="text-center" th:text="${child.sortOrder}">0</td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-dark border" th:text="${child.productCount}">0</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span th:if="${child.isActive}" class="badge bg-success">Hoạt động</span>
+                                                    <span th:unless="${child.isActive}" class="badge bg-secondary">Đã ẩn</span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a th:href="@{/admin/categories(editId=${child.id})}" class="btn btn-outline-primary" title="Sửa">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form th:action="@{/admin/categories/{id}/toggle-status(id=${child.id})}" method="post" class="d-inline">
+                                                            <button type="submit" class="btn btn-outline-warning" title="Bật/Tắt hiển thị">
+                                                                <i class="bi" th:classappend="${child.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
+                                                            </button>
+                                                        </form>
+                                                        <form th:action="@{/admin/categories/{id}/delete(id=${child.id})}" method="post" class="d-inline"
+                                                              onsubmit="return confirm('Bạn có chắc muốn ẩn danh mục con này?');">
+                                                            <button type="submit" class="btn btn-outline-danger" title="Ẩn danh mục">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </th:block>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cột phải: Form Thêm mới / Cập nhật Danh mục -->
+                    <div class="col-lg-5">
+                        <div class="card shadow-sm border-0 sticky-top" style="top: 1rem;">
+                            <div class="card-header bg-white py-3">
+                                <h5 class="mb-0 fw-bold" th:classappend="${isEdit} ? 'text-warning' : 'text-primary'">
+                                    <i class="bi" th:classappend="${isEdit} ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+                                    <span th:text="${isEdit} ? 'Chỉnh sửa Danh mục' : 'Thêm mới Danh mục'">Thêm Danh mục</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form th:action="@{/admin/categories/save}" th:object="${categoryForm}" method="post">
+                                    <input type="hidden" th:field="*{id}"/>
+
+                                    <!-- Tên danh mục -->
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label fw-semibold">Tên danh mục <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="name" th:field="*{name}"
+                                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                                               placeholder="Ví dụ: Áo sơ mi, Quần tây..."/>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Lỗi tên</div>
+                                    </div>
+
+                                    <!-- Danh mục cha -->
+                                    <div class="mb-3">
+                                        <label for="parentId" class="form-label fw-semibold">Danh mục cha</label>
+                                        <select class="form-select" id="parentId" th:field="*{parentId}">
+                                            <option value="">-- Là danh mục gốc (không có cha) --</option>
+                                            <option th:each="cat : ${activeCategories}"
+                                                    th:if="${categoryForm.id == null or cat.id != categoryForm.id}"
+                                                    th:value="${cat.id}"
+                                                    th:text="${cat.name} + (${cat.parentName != null} ? ' (Con của: ' + ${cat.parentName} + ')' : ' [Gốc]')">
+                                                Thời trang nam
+                                            </option>
+                                        </select>
+                                        <div class="form-text">Chọn danh mục cha để tạo phân cấp cây. Để trống nếu là danh mục gốc.</div>
+                                    </div>
+
+                                    <!-- Thứ tự hiển thị -->
+                                    <div class="mb-3">
+                                        <label for="sortOrder" class="form-label fw-semibold">Thứ tự hiển thị <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="sortOrder" th:field="*{sortOrder}"
+                                               th:classappend="${#fields.hasErrors('sortOrder')} ? 'is-invalid' : ''" min="0"/>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('sortOrder')}" th:errors="*{sortOrder}">Lỗi thứ tự</div>
+                                        <div class="form-text">Số nhỏ hơn sẽ được ưu tiên hiển thị trước.</div>
+                                    </div>
+
+                                    <!-- Trạng thái -->
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="isActive" th:field="*{isActive}"/>
+                                            <label class="form-check-label fw-semibold" for="isActive">Kích hoạt hiển thị</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Nút bấm -->
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-save me-1"></i>
+                                            <span th:text="${isEdit} ? 'Cập nhật danh mục' : 'Thêm danh mục'">Lưu</span>
+                                        </button>
+                                        <a th:if="${isEdit}" th:href="@{/admin/categories}" class="btn btn-outline-secondary">
+                                            Hủy chỉnh sửa
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: adminFooter}"></div>
+</div>
+
+</body>
+</html>
+
