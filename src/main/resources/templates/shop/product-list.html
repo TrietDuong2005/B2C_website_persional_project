@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/head :: head('Danh sách sản phẩm - ' + ${brandName})}">
+    <title th:text="'Danh sách sản phẩm - ' + ${brandName}">Triết Store</title>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Header Navbar -->
+<div th:replace="~{layout/shop-navbar :: navbar}"></div>
+
+<main class="flex-grow-1 py-4">
+    <div class="container">
+        <!-- Flash messages -->
+        <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Sản phẩm</li>
+                <li th:if="${filter.category != null and !filter.category.isBlank()}" class="breadcrumb-item active"
+                    th:text="${filter.category}">Danh mục</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            <!-- CỘT BỘ LỌC (SIDEBAR FILTER) -->
+            <div class="col-12 col-lg-3">
+                <div class="card border-0 shadow-sm rounded-3 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0"><i class="bi bi-funnel text-primary me-2"></i>Bộ lọc tìm kiếm</h6>
+                        <a th:href="@{/shop/products}" class="text-decoration-none small text-muted">Xoá bộ lọc</a>
+                    </div>
+
+                    <form th:action="@{/shop/products}" method="get" id="filterForm">
+                        <!-- Giữ lại sắp xếp khi submit lọc -->
+                        <input type="hidden" name="sort" th:value="${filter.sort}">
+
+                        <!-- 1. Từ khóa -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Từ khóa</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" name="keyword" th:value="${filter.keyword}"
+                                       placeholder="Tên giày hoặc hãng...">
+                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- 2. Danh mục -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Danh mục</label>
+                            <div class="list-group list-group-flush small">
+                                <a th:href="@{/shop/products(keyword=${filter.keyword}, sort=${filter.sort})}"
+                                   class="list-group-item list-group-item-action px-1 py-1 border-0"
+                                   th:classappend="${filter.category == null or filter.category.isBlank()} ? 'fw-bold text-primary' : 'text-muted'">
+                                    Tất cả danh mục
+                                </a>
+                                <th:block th:each="cat : ${filterData.categories}">
+                                    <a th:href="@{/shop/products(category=${cat.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
+                                       class="list-group-item list-group-item-action px-1 py-1 border-0 fw-semibold"
+                                       th:classappend="${filter.category == cat.slug} ? 'text-primary' : ''"
+                                       th:text="${cat.name}">Giày</a>
+                                    <!-- Danh mục con -->
+                                    <div class="ps-3 mb-1" th:if="${cat.children != null and !cat.children.isEmpty()}">
+                                        <a th:each="child : ${cat.children}"
+                                           th:href="@{/shop/products(category=${child.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
+                                           class="d-block py-1 text-decoration-none small"
+                                           th:classappend="${filter.category == child.slug} ? 'fw-bold text-primary' : 'text-muted'"
+                                           th:text="${child.name}">Sneaker</a>
+                                    </div>
+                                </th:block>
+                            </div>
+                            <!-- Ẩn category input nếu đã chọn qua link -->
+                            <input type="hidden" name="category" th:value="${filter.category}" th:if="${filter.category != null and !filter.category.isBlank()}">
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- 3. Thương hiệu (nhiều lựa chọn) -->
+                        <div class="mb-3" th:if="${filterData.brands != null and !filterData.brands.isEmpty()}">
+                            <label class="form-label small fw-semibold">Thương hiệu</label>
+                            <div class="d-flex flex-column gap-1" style="max-height: 180px; overflow-y: auto;">
+                                <div class="form-check small" th:each="b : ${filterData.brands}">
+                                    <input class="form-check-input" type="checkbox" name="brand" th:value="${b.slug}"
+                                           th:id="'brand_' + ${b.slug}"
+                                           th:checked="${selectedBrands != null and selectedBrands.contains(b.slug)}">
+                                    <label class="form-check-label" th:for="'brand_' + ${b.slug}" th:text="${b.name}">Nike</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- 4. Khoảng giá -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Khoảng giá (VNĐ)</label>
+                            <div class="row g-1 align-items-center">
+                                <div class="col">
+                                    <input type="number" step="10000" class="form-control form-control-sm" name="minPrice"
+                                           th:value="${filter.minPrice}" placeholder="Từ">
+                                </div>
+                                <div class="col-auto text-muted">-</div>
+                                <div class="col">
+                                    <input type="number" step="10000" class="form-control form-control-sm" name="maxPrice"
+                                           th:value="${filter.maxPrice}" placeholder="Đến">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- 5. Kích cỡ Size -->
+                        <div class="mb-3" th:if="${filterData.sizes != null and !filterData.sizes.isEmpty()}">
+                            <label class="form-label small fw-semibold">Kích cỡ (Size)</label>
+                            <select class="form-select form-select-sm" name="size">
+                                <option value="">-- Tất cả size --</option>
+                                <option th:each="s : ${filterData.sizes}" th:value="${s}" th:text="${s}"
+                                        th:selected="${filter.size == s}">42</option>
+                            </select>
+                        </div>
+
+                        <!-- 6. Màu sắc -->
+                        <div class="mb-3" th:if="${filterData.colors != null and !filterData.colors.isEmpty()}">
+                            <label class="form-label small fw-semibold">Màu sắc</label>
+                            <select class="form-select form-select-sm" name="color">
+                                <option value="">-- Tất cả màu --</option>
+                                <option th:each="c : ${filterData.colors}" th:value="${c}" th:text="${c}"
+                                        th:selected="${filter.color == c}">Đen</option>
+                            </select>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- 7. Tình trạng còn hàng -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="inStockOnly" value="true" id="inStockOnly"
+                                   th:checked="${filter.inStockOnly == true}">
+                            <label class="form-check-label small fw-semibold" for="inStockOnly">Chỉ xem hàng còn</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm">
+                            <i class="bi bi-funnel-fill me-1"></i>Áp dụng bộ lọc
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CỘT LƯỚI SẢN PHẨM & PHÂN TRANG -->
+            <div class="col-12 col-lg-9">
+                <!-- Thanh điều khiển sắp xếp & tổng số lượng -->
+                <div class="card border-0 shadow-sm rounded-3 p-3 mb-4">
+                    <div class="row align-items-center g-2">
+                        <div class="col-12 col-sm-6">
+                            <span class="text-muted small">
+                                Tìm thấy <strong class="text-dark" th:text="${productPage.totalElements}">0</strong> sản phẩm
+                            </span>
+                        </div>
+                        <div class="col-12 col-sm-6 d-flex justify-content-sm-end align-items-center gap-2">
+                            <label class="small text-muted text-nowrap mb-0" for="sortSelect">Sắp xếp:</label>
+                            <select class="form-select form-select-sm w-auto" id="sortSelect"
+                                    onchange="document.querySelector('#filterForm input[name=sort]').value = this.value; document.getElementById('filterForm').submit();">
+                                <option value="latest" th:selected="${filter.sort == 'latest' or filter.sort == null}">Mới nhất</option>
+                                <option value="price_asc" th:selected="${filter.sort == 'price_asc'}">Giá tăng dần</option>
+                                <option value="price_desc" th:selected="${filter.sort == 'price_desc'}">Giá giảm dần</option>
+                                <option value="name_asc" th:selected="${filter.sort == 'name_asc'}">Tên A-Z</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lưới sản phẩm (12 sản phẩm) -->
+                <div class="row g-3" th:if="${!productPage.content.isEmpty()}">
+                    <div th:each="product : ${productPage.content}" class="col-6 col-md-4">
+                        <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden position-relative product-card">
+                            <!-- Ảnh sản phẩm -->
+                            <a th:href="@{/shop/products/{slug}(slug=${product.slug})}" class="text-decoration-none bg-white d-flex align-items-center justify-content-center p-3" style="height: 190px;">
+                                <img th:src="@{${product.thumbnailUrl}}" th:alt="${product.name}" class="img-fluid" style="max-height: 170px; object-fit: contain;">
+                            </a>
+
+                            <div class="card-body d-flex flex-column p-3">
+                                <!-- Thương hiệu -->
+                                <div class="small text-muted mb-1" th:text="${product.brandName}">Thương hiệu</div>
+
+                                <!-- Tên sản phẩm -->
+                                <h6 class="card-title fw-bold mb-2 text-truncate-2" style="height: 2.5rem; line-height: 1.25rem;">
+                                    <a th:href="@{/shop/products/{slug}(slug=${product.slug})}" class="text-decoration-none text-dark" th:text="${product.name}">
+                                        Tên sản phẩm
+                                    </a>
+                                </h6>
+
+                                <!-- Giá và Tình trạng kho -->
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-baseline mb-2">
+                                        <span class="small text-muted">Từ:</span>
+                                        <span class="fw-bold text-primary fs-6" th:text="${@money.format(product.minPrice)}">1.290.000 đ</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span th:if="${product.inStock}" class="badge bg-success-subtle text-success border border-success-subtle">
+                                            <i class="bi bi-check2 me-1"></i>Còn hàng
+                                        </span>
+                                        <span th:unless="${product.inStock}" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                            <i class="bi bi-x-circle me-1"></i>Hết hàng
+                                        </span>
+
+                                        <a th:href="@{/shop/products/{slug}(slug=${product.slug})}" class="btn btn-sm btn-outline-primary px-2">
+                                            Chi tiết
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thông báo khi không có sản phẩm nào -->
+                <div th:if="${productPage.content.isEmpty()}" class="card border-0 shadow-sm rounded-3 p-5 text-center bg-white my-3">
+                    <div class="display-4 text-muted mb-3"><i class="bi bi-search"></i></div>
+                    <h5 class="fw-bold text-dark mb-2">Không tìm thấy sản phẩm nào phù hợp</h5>
+                    <p class="text-muted small mb-4">Hãy thử điều chỉnh lại bộ lọc, xóa bớt điều kiện hoặc nhập từ khóa tìm kiếm khác.</p>
+                    <div>
+                        <a th:href="@{/shop/products}" class="btn btn-outline-primary btn-sm px-3">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>Xóa bộ lọc để xem tất cả
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Phân trang 12 sản phẩm (giữ nguyên toàn bộ query params) -->
+                <nav th:if="${productPage.totalPages > 1}" class="mt-4" aria-label="Phân trang sản phẩm">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        <!-- Trang trước -->
+                        <li class="page-item" th:classappend="${productPage.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/shop/products(page=${productPage.number - 1}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Các trang -->
+                        <li th:each="pageNum : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+                            class="page-item" th:classappend="${pageNum == productPage.number} ? 'active'">
+                            <a class="page-link" th:text="${pageNum + 1}"
+                               th:href="@{/shop/products(page=${pageNum}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
+                                1
+                            </a>
+                        </li>
+
+                        <!-- Trang sau -->
+                        <li class="page-item" th:classappend="${productPage.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/shop/products(page=${productPage.number + 1}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<div th:replace="~{layout/shop-footer :: footer}"></div>
+
+</body>
+</html>
+

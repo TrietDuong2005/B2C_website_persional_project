@@ -1,101 +1,154 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/head :: head('Trang chủ Cửa hàng Giày Dép - ' + ${brandName})}">
-    <title th:text="'Trang chủ Cửa hàng Giày Dép - ' + ${brandName}">Trang chủ Cửa hàng Giày Dép</title>
+<head th:replace="~{layout/head :: head('Trang chủ - ' + ${brandName})}">
+    <title th:text="'Trang chủ - ' + ${brandName}">Triết Store</title>
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
 
 <!-- Header Navbar -->
-<div th:replace="~{layout/navbar :: shopNavbar}"></div>
+<div th:replace="~{layout/shop-navbar :: navbar}"></div>
 
-<main>
+<main class="flex-grow-1">
     <!-- Flash messages -->
     <div class="container mt-3">
         <div th:replace="~{layout/flash :: flashMessages}"></div>
     </div>
 
-    <!-- Hero Banner -->
-    <section class="hero-banner-brand text-white py-5 text-center position-relative shadow-sm">
+    <!-- Hero Banner tĩnh -->
+    <section class="hero-banner-brand text-white py-5 text-center position-relative shadow-sm mb-4">
         <div class="container py-4">
-            <h1 class="display-5 fw-bold mb-3">BỘ SƯU TẬP GIÀY DÉP CHÍNH HÃNG 2026</h1>
-            <p class="lead text-white-50 mx-auto mb-4" style="max-width: 650px;">
-                Sneaker, Giày da, Giày boots, Giày lười, Giày thể thao, Sandal và Dép cao cấp tại <span th:text="${brandName}">Triết Store</span>.
-                Mua sắm trực tuyến tiện lợi hoặc ghé trải nghiệm trực tiếp tại chuỗi cửa hàng.
+            <span class="badge text-bg-primary px-3 py-2 rounded-pill text-uppercase fw-semibold mb-3">
+                Bộ sưu tập Giày Dép 2026
+            </span>
+            <h1 class="display-5 fw-bold mb-3">
+                CHUỖI BÁN LẺ GIÀY DÉP <span th:text="${brandName}">Triết Store</span>
+            </h1>
+            <p class="lead text-white-50 mx-auto mb-4" style="max-width: 680px;">
+                Trải nghiệm những mẫu Sneaker năng động, Giày da lịch lãm, Giày boots cá tính và Sandal thoáng mát.
+                Đặt hàng trực tuyến giao tận nơi hoặc ghé trải nghiệm trực tiếp tại chi nhánh gần nhất.
             </p>
-            <div class="d-flex justify-content-center gap-3">
-                <a th:href="@{/login}" class="btn btn-primary btn-lg px-4 fw-semibold" sec:authorize="isAnonymous()">
-                    <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập trải nghiệm
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a th:href="@{/shop/products}" class="btn btn-primary btn-lg px-4 fw-semibold shadow-sm">
+                    <i class="bi bi-bag-check me-2"></i>Mua sắm ngay
                 </a>
-                <a th:href="@{/admin}" class="btn btn-warning btn-lg px-4 fw-semibold"
-                   sec:authorize="hasAnyRole('ADMIN', 'STORE_MANAGER')">
-                    <i class="bi bi-speedometer2 me-1"></i>Vào Bảng Quản trị
-                </a>
-                <a th:href="@{/pos}" class="btn btn-success btn-lg px-4 fw-semibold"
-                   sec:authorize="hasAnyRole('CASHIER', 'STORE_MANAGER', 'ADMIN')">
-                    <i class="bi bi-calculator me-1"></i>Vào Quầy Thu ngân POS
+                <a th:href="@{/login}" class="btn btn-outline-light btn-lg px-4 fw-semibold" sec:authorize="isAnonymous()">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
                 </a>
             </div>
         </div>
     </section>
 
-    <!-- Khối danh mục tiêu biểu (Khung mẫu) -->
-    <section class="container py-5">
+    <!-- Danh mục chính -->
+    <section class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold mb-0"><i class="bi bi-grid-fill text-primary me-2"></i>Danh mục giày dép</h3>
-            <span class="badge bg-secondary-subtle text-secondary-emphasis">Dữ liệu từ DB Triết Store</span>
+            <div>
+                <h3 class="fw-bold mb-1"><i class="bi bi-grid-fill text-primary me-2"></i>Danh mục nổi bật</h3>
+                <p class="text-muted small mb-0">Khám phá các dòng sản phẩm giày dép đa dạng</p>
+            </div>
+            <a th:href="@{/shop/products}" class="btn btn-sm btn-outline-primary">
+                Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+            </a>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-3">
             <div class="col-6 col-md-3">
-                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                <a th:href="@{/shop/products(category='sneaker')}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none rounded-3 text-reset hover-shadow transition">
                     <div class="display-6 text-primary mb-2"><i class="bi bi-tag-fill"></i></div>
-                    <h6 class="fw-bold mb-1">Giày Sneaker</h6>
+                    <h6 class="fw-bold mb-1">Sneaker</h6>
                     <small class="text-muted">Nike, Adidas, Converse, Vans</small>
-                </div>
+                </a>
             </div>
             <div class="col-6 col-md-3">
-                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                <a th:href="@{/shop/products(category='giay-da')}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none rounded-3 text-reset hover-shadow transition">
                     <div class="display-6 text-danger mb-2"><i class="bi bi-award-fill"></i></div>
                     <h6 class="fw-bold mb-1">Giày Da & Boots</h6>
                     <small class="text-muted">Oxford, Derby, Chelsea, Dr. Martens</small>
-                </div>
+                </a>
             </div>
             <div class="col-6 col-md-3">
-                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                <a th:href="@{/shop/products(category='giay-the-thao')}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none rounded-3 text-reset hover-shadow transition">
                     <div class="display-6 text-success mb-2"><i class="bi bi-check-circle-fill"></i></div>
                     <h6 class="fw-bold mb-1">Giày Thể Thao & Lười</h6>
                     <small class="text-muted">Chạy bộ, Moccasin, Biti's</small>
-                </div>
+                </a>
             </div>
             <div class="col-6 col-md-3">
-                <div class="card h-100 border-0 shadow-sm text-center p-3 rounded-3">
+                <a th:href="@{/shop/products(category='sandal')}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none rounded-3 text-reset hover-shadow transition">
                     <div class="display-6 text-warning mb-2"><i class="bi bi-stars"></i></div>
                     <h6 class="fw-bold mb-1">Sandal & Dép</h6>
-                    <small class="text-muted">Quai dán, Dép kẹp, Crocs Clog</small>
-                </div>
+                    <small class="text-muted">Quai dán, Dép kẹp, Crocs</small>
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- Sản phẩm nổi bật (Khung mẫu) -->
-    <section class="container pb-5">
-        <div class="card bg-light border-0 shadow-sm p-4 text-center rounded-3">
-            <div class="my-3">
-                <i class="bi bi-laptop display-4 text-muted"></i>
-                <h4 class="fw-bold mt-3">Giao diện Shop Trực tuyến — Phiên bản Khung mẫu (Ngày 3A)</h4>
-                <p class="text-muted mx-auto" style="max-width: 600px;">
-                    Nền tảng giao diện Thymeleaf, hệ thống 2 SecurityFilterChain, phiên đăng nhập session và layout dùng chung đã sẵn sàng.
-                    Dữ liệu sản phẩm biến thể (màu sắc, kích cỡ, ảnh, giá) sẽ được kết nối ở Ngày 3B và Ngày 5.
-                </p>
+    <!-- 8 Sản phẩm mới nhất -->
+    <section class="container py-4 mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-1"><i class="bi bi-stars text-primary me-2"></i>Sản phẩm mới nhất</h3>
+                <p class="text-muted small mb-0">Những mẫu giày dép vừa cập bến kho hàng</p>
             </div>
+            <a th:href="@{/shop/products(sort='latest')}" class="btn btn-sm btn-outline-primary">
+                Xem thêm <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <!-- Lưới 8 sản phẩm -->
+        <div class="row g-4" th:if="${latestProducts != null and !latestProducts.isEmpty()}">
+            <div th:each="product : ${latestProducts}" class="col-6 col-md-4 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-3 overflow-hidden position-relative product-card">
+                    <!-- Ảnh sản phẩm -->
+                    <a th:href="@{/shop/products/{slug}(slug=${product.slug})}" class="text-decoration-none bg-white d-flex align-items-center justify-content-center p-3" style="height: 200px;">
+                        <img th:src="@{${product.thumbnailUrl}}" th:alt="${product.name}" class="img-fluid" style="max-height: 180px; object-fit: contain;">
+                    </a>
+
+                    <div class="card-body d-flex flex-column p-3">
+                        <!-- Thương hiệu -->
+                        <div class="small text-muted mb-1" th:text="${product.brandName}">Nike</div>
+
+                        <!-- Tên sản phẩm -->
+                        <h6 class="card-title fw-bold mb-2 text-truncate-2" style="height: 2.5rem; line-height: 1.25rem;">
+                            <a th:href="@{/shop/products/{slug}(slug=${product.slug})}" class="text-decoration-none text-dark" th:text="${product.name}">
+                                Tên sản phẩm giày
+                            </a>
+                        </h6>
+
+                        <!-- Giá và Tình trạng kho -->
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-baseline mb-2">
+                                <span class="small text-muted">Từ:</span>
+                                <span class="fw-bold text-primary fs-6" th:text="${@money.format(product.minPrice)}">1.290.000 đ</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span th:if="${product.inStock}" class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="bi bi-check2 me-1"></i>Còn hàng
+                                </span>
+                                <span th:unless="${product.inStock}" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                    <i class="bi bi-x-circle me-1"></i>Hết hàng
+                                </span>
+
+                                <a th:href="@{/shop/products/{slug}(slug=${product.slug})}" class="btn btn-sm btn-outline-primary px-2">
+                                    Chi tiết
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trường hợp chưa có sản phẩm -->
+        <div th:if="${latestProducts == null or latestProducts.isEmpty()}" class="card bg-light border-0 shadow-sm p-4 text-center rounded-3">
+            <p class="text-muted mb-0">Hiện chưa có sản phẩm nào được bày bán.</p>
         </div>
     </section>
 </main>
 
 <!-- Footer -->
-<div th:replace="~{layout/footer :: shopFooter}"></div>
+<div th:replace="~{layout/shop-footer :: footer}"></div>
 
 </body>
 </html>
-

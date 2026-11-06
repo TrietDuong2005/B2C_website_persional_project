@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,6 +37,12 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
             "JOIN FETCH i.store s " +
             "WHERE i.id = :id")
     Optional<Inventory> findByIdWithDetails(@Param("id") Long id);
+
+    /**
+     * Lấy danh sách tồn kho của nhiều biến thể tại một chi nhánh cụ thể (tránh N+1 khi hiển thị Shop/Cart).
+     */
+    @Query("SELECT i FROM Inventory i WHERE i.store.id = :storeId AND i.variant.id IN :variantIds")
+    List<Inventory> findByStoreIdAndVariantIdIn(@Param("storeId") Long storeId, @Param("variantIds") Collection<Long> variantIds);
 
     /**
      * Tìm kiếm và lọc danh sách tồn kho theo chi nhánh:

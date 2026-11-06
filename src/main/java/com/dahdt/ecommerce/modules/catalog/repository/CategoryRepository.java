@@ -53,6 +53,12 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findRootCategoriesWithChildren();
 
     /**
+     * Lấy danh mục gốc đang hoạt động kèm nạp trước các danh mục con để hiển thị menu Shop.
+     */
+    @Query("SELECT DISTINCT c FROM Category c LEFT JOIN FETCH c.children ch WHERE c.parent IS NULL AND c.isActive = true ORDER BY c.sortOrder ASC, c.name ASC")
+    List<Category> findActiveRootCategoriesWithChildren();
+
+    /**
      * Lấy danh sách danh mục đang kích hoạt (phục vụ combobox chọn danh mục cha hoặc danh mục sản phẩm).
      */
     List<Category> findByIsActiveTrueOrderBySortOrderAscNameAsc();

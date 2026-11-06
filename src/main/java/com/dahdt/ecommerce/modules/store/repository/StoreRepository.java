@@ -31,6 +31,9 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     /** Lấy danh sách tất cả các cửa hàng đang hoạt động, sắp xếp theo tên */
     List<Store> findByStatusOrderByNameAsc(StoreStatus status);
 
+    /** Tìm kho đầu tiên đang hoạt động theo loại (ưu tiên ID nhỏ nhất) làm nguồn cung ứng online */
+    Optional<Store> findFirstByTypeAndStatusOrderByIdAsc(StoreType type, StoreStatus status);
+
     /**
      * Tìm kiếm và lọc danh sách chi nhánh với bộ lọc đa điều kiện:
      * - keyword: tìm kiếm theo tên, mã code, số điện thoại hoặc địa chỉ

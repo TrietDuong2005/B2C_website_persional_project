@@ -5,6 +5,7 @@ import com.dahdt.ecommerce.modules.catalog.entity.ProductStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,12 +16,18 @@ import java.util.Optional;
  * Repository thao tác dữ liệu bảng products (sản phẩm cha).
  */
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     /**
      * Tìm sản phẩm theo slug URL.
      */
     Optional<Product> findBySlug(String slug);
+
+    /**
+     * Tìm sản phẩm theo slug kèm nạp sẵn danh mục và thương hiệu (tránh N+1 và Lazy).
+     */
+    @Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.brand b WHERE p.slug = :slug")
+    Optional<Product> findBySlugWithCategoryAndBrand(@Param("slug") String slug);
 
     /**
      * Kiểm tra slug đã tồn tại hay chưa.

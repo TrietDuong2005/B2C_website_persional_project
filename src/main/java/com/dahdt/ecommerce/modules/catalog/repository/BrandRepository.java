@@ -53,6 +53,12 @@ public interface BrandRepository extends JpaRepository<Brand, Long> {
     List<Brand> findByIsActiveTrueOrderByNameAsc();
 
     /**
+     * Lấy danh sách các thương hiệu đang hoạt động và có ít nhất 1 sản phẩm đang ACTIVE (cho bộ lọc Shop).
+     */
+    @Query("SELECT DISTINCT b FROM Brand b JOIN Product p ON p.brand = b WHERE b.isActive = true AND p.status = com.dahdt.ecommerce.modules.catalog.entity.ProductStatus.ACTIVE ORDER BY b.name ASC")
+    List<Brand> findActiveBrandsWithActiveProducts();
+
+    /**
      * Tìm kiếm thương hiệu theo từ khóa có phân trang.
      */
     @Query("SELECT b FROM Brand b WHERE (:keyword IS NULL OR LOWER(b.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) ORDER BY b.name ASC")

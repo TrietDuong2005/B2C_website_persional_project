@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!-- Navbar khu vực Shop (Khách hàng) -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <div class="container">
+        <!-- Logo thương hiệu -->
+        <a class="navbar-brand fw-bold d-flex align-items-center" th:href="@{/}">
+            <i class="bi bi-shop text-primary me-2 fs-4"></i>
+            <span th:text="${brandName}">Triết Store</span>
+        </a>
+
+        <!-- Nút toggle cho điện thoại (responsive) -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#shopNavbarContent"
+                aria-controls="shopNavbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="shopNavbarContent">
+            <!-- Menu điều hướng chính & Danh mục 2 cấp -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-lg-center">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/}"><i class="bi bi-house-door me-1"></i>Trang chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/shop/products}"><i class="bi bi-grid me-1"></i>Tất cả sản phẩm</a>
+                </li>
+
+                <!-- Danh mục 2 gốc (Giày, Dép) và các con -->
+                <li th:each="cat : ${shopCategories}" class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       th:text="${cat.name}">Giày</a>
+                    <ul class="dropdown-menu shadow-sm">
+                        <li>
+                            <a class="dropdown-item fw-semibold" th:href="@{/shop/products(category=${cat.slug})}"
+                               th:text="'Tất cả ' + ${cat.name}">Tất cả Giày</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li th:each="child : ${cat.children}">
+                            <a class="dropdown-item" th:href="@{/shop/products(category=${child.slug})}"
+                               th:text="${child.name}">Sneaker</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+            <!-- Ô tìm kiếm sản phẩm -->
+            <form th:action="@{/shop/products}" method="get" class="d-flex my-2 my-lg-0 me-lg-3 flex-grow-1" style="max-width: 320px;">
+                <div class="input-group input-group-sm w-100">
+                    <input class="form-control" type="search" name="keyword" th:value="${param.keyword}"
+                           placeholder="Tìm giày, thương hiệu..." aria-label="Tìm kiếm">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Biểu tượng giỏ hàng & Đăng nhập / Tài khoản -->
+            <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                <!-- Biểu tượng giỏ kèm số lượng -->
+                <a th:href="@{/cart}" class="btn btn-outline-light btn-sm position-relative px-2 py-1" title="Giỏ hàng">
+                    <i class="bi bi-cart3 fs-6"></i>
+                    <span class="d-lg-none ms-1">Giỏ hàng</span>
+                    <span th:if="${cartItemCount > 0}"
+                          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
+                          th:text="${cartItemCount}">
+                        0
+                    </span>
+                </a>
+
+                <!-- Khi chưa đăng nhập -->
+                <div sec:authorize="isAnonymous()">
+                    <a th:href="@{/login}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                    </a>
+                </div>
+
+                <!-- Khi đã đăng nhập -->
+                <div sec:authorize="isAuthenticated()" class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle d-flex align-items-center gap-1"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle"></i>
+                        <span sec:authentication="name" class="d-inline-block text-truncate" style="max-width: 140px;">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li>
+                            <h6 class="dropdown-header">
+                                Vai trò: <span class="badge bg-primary" sec:authentication="principal.authorities">CUSTOMER</span>
+                            </h6>
+                        </li>
+                        <li sec:authorize="hasRole('CUSTOMER')">
+                            <a class="dropdown-item" th:href="@{/cart}">
+                                <i class="bi bi-cart3 me-2"></i>Giỏ hàng của tôi
+                                <span th:if="${cartItemCount > 0}" class="badge bg-primary ms-1" th:text="${cartItemCount}">0</span>
+                            </a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'STORE_MANAGER')">
+                            <a class="dropdown-item" th:href="@{/admin}"><i class="bi bi-speedometer2 me-2"></i>Khu Quản trị</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('CASHIER', 'STORE_MANAGER', 'ADMIN')">
+                            <a class="dropdown-item" th:href="@{/pos}"><i class="bi bi-calculator me-2"></i>Bán hàng POS</a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="px-2">
+                                <button type="submit" class="btn btn-danger btn-sm w-100">
+                                    <i class="bi bi-box-arrow-right me-1"></i>Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>
+

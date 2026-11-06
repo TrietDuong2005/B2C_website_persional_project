@@ -25,6 +25,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import java.util.Set;
 
@@ -78,20 +81,32 @@ public class SecurityConfig {
 
     /**
      * Handler chuyển hướng người dùng sau khi đăng nhập form thành công:
-     * - ADMIN / STORE_MANAGER -> /admin
+     * - ADMIN / STORE_MANAGER -> /admin (hoặc URL admin đang truy cập trước đó)
      * - CASHIER -> /pos
-     * - CUSTOMER (hoặc khác) -> /
+     * - CUSTOMER: quay lại trang đang xem trước đó (SavedRequest), nếu không có thì về "/"
      */
     @Bean
     public AuthenticationSuccessHandler roleBasedAuthenticationSuccessHandler() {
+        RequestCache requestCache = new HttpSessionRequestCache();
         return (request, response, authentication) -> {
             Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
+            SavedRequest savedRequest = requestCache.getRequest(request, response);
+
             if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_STORE_MANAGER")) {
-                response.sendRedirect("/admin");
+                if (savedRequest != null && savedRequest.getRedirectUrl() != null && savedRequest.getRedirectUrl().contains("/admin")) {
+                    response.sendRedirect(savedRequest.getRedirectUrl());
+                } else {
+                    response.sendRedirect("/admin");
+                }
             } else if (roles.contains("ROLE_CASHIER")) {
                 response.sendRedirect("/pos");
             } else {
-                response.sendRedirect("/");
+                // Khách hàng cá nhân (CUSTOMER) quay lại trang đang xem trước đó nếu có, nếu không về "/"
+                if (savedRequest != null && savedRequest.getRedirectUrl() != null && !savedRequest.getRedirectUrl().isBlank()) {
+                    response.sendRedirect(savedRequest.getRedirectUrl());
+                } else {
+                    response.sendRedirect("/");
+                }
             }
         };
     }

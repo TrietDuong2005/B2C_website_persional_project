@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Giỏ hàng của tôi - ' + ${brandName})}">
+    <title th:text="'Giỏ hàng của tôi - ' + ${brandName}">Giỏ hàng</title>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Header Navbar -->
+<div th:replace="~{layout/shop-navbar :: navbar}"></div>
+
+<main class="flex-grow-1 py-4">
+    <div class="container">
+        <!-- Flash messages -->
+        <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/shop/products}" class="text-decoration-none">Sản phẩm</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Giỏ hàng của tôi</li>
+            </ol>
+        </nav>
+
+        <h3 class="fw-bold mb-4">
+            <i class="bi bi-cart3 text-primary me-2"></i>Giỏ hàng của bạn
+            <span class="text-muted fs-6 fw-normal" th:if="${cart != null and !cart.isEmpty}"
+                  th:text="'(' + ${cart.totalQuantity} + ' đôi giày)'">(0 đôi giày)</span>
+        </h3>
+
+        <!-- BẢNG GIỎ HÀNG KHI CÓ HÀNG -->
+        <div class="row g-4" th:if="${cart != null and !cart.isEmpty}">
+            <!-- Cột danh sách món hàng -->
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light text-uppercase small text-muted">
+                                <tr>
+                                    <th scope="col" style="min-width: 260px;">Sản phẩm</th>
+                                    <th scope="col" class="text-center" style="width: 140px;">Đơn giá</th>
+                                    <th scope="col" class="text-center" style="width: 150px;">Số lượng</th>
+                                    <th scope="col" class="text-end" style="width: 140px;">Thành tiền</th>
+                                    <th scope="col" class="text-center" style="width: 60px;">Xoá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="item : ${cart.items}"
+                                    th:classappend="${item.outOfStock or item.stockExceeded or item.unavailable} ? 'table-warning' : ''">
+                                    <!-- Cột thông tin sản phẩm -->
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <a th:href="@{/shop/products/{slug}(slug=${item.productSlug})}" class="text-decoration-none flex-shrink-0">
+                                                <img th:src="@{${item.imageUrl}}" th:alt="${item.productName}"
+                                                     class="rounded-3 border p-1 bg-white" style="width: 64px; height: 64px; object-fit: contain;">
+                                            </a>
+                                            <div class="flex-grow-1">
+                                                <a th:href="@{/shop/products/{slug}(slug=${item.productSlug})}"
+                                                   class="text-decoration-none text-dark fw-semibold small d-block mb-1 text-truncate" style="max-width: 220px;"
+                                                   th:text="${item.productName}">Tên giày</a>
+                                                <div class="small text-muted">
+                                                    Màu: <span class="fw-semibold text-dark" th:text="${item.color}">Đen</span> ·
+                                                    Size: <span class="fw-semibold text-dark" th:text="${item.size}">42</span>
+                                                </div>
+                                                <div class="small text-muted">
+                                                    SKU: <span th:text="${item.sku}">SKU-123</span>
+                                                </div>
+
+                                                <!-- Cảnh báo từng dòng -->
+                                                <div th:if="${item.warningMessage != null}" class="alert alert-danger py-1 px-2 small mt-2 mb-0 d-inline-block">
+                                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                    <span th:text="${item.warningMessage}">Cảnh báo</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Đơn giá hiện tại lấy từ DB -->
+                                    <td class="text-center fw-semibold text-dark small" th:text="${@money.format(item.unitPrice)}">
+                                        1.290.000 đ
+                                    </td>
+
+                                    <!-- Sửa số lượng (Form POST có CSRF) -->
+                                    <td class="text-center">
+                                        <form th:action="@{/cart/update}" method="post" class="d-flex align-items-center justify-content-center gap-1">
+                                            <input type="hidden" name="itemId" th:value="${item.id}">
+                                            <input type="number" name="quantity" th:value="${item.quantity}"
+                                                   min="1" max="10" class="form-control form-control-sm text-center" style="width: 60px;"
+                                                   onchange="this.form.submit()">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm px-2" title="Cập nhật">
+                                                <i class="bi bi-check2"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+
+                                    <!-- Thành tiền dòng -->
+                                    <td class="text-end fw-bold text-primary small" th:text="${@money.format(item.lineTotal)}">
+                                        1.290.000 đ
+                                    </td>
+
+                                    <!-- Xoá dòng (Form POST có CSRF) -->
+                                    <td class="text-center">
+                                        <form th:action="@{/cart/remove}" method="post">
+                                            <input type="hidden" name="itemId" th:value="${item.id}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm border-0"
+                                                    title="Xoá món này" onclick="return confirm('Bạn có chắc muốn xoá sản phẩm này khỏi giỏ?');">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <a th:href="@{/shop/products}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i>Tiếp tục mua hàng
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cột Tóm tắt giỏ hàng & Thanh toán -->
+            <div class="col-12 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-3 p-4 sticky-top" style="top: 80px;">
+                    <h5 class="fw-bold mb-3">Tóm tắt đơn hàng</h5>
+
+                    <div class="d-flex justify-content-between mb-2 small text-muted">
+                        <span>Tổng số lượng:</span>
+                        <span class="fw-semibold text-dark" th:text="${cart.totalQuantity} + ' đôi'">0 đôi</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="fw-semibold">Tạm tính tiền hàng:</span>
+                        <span class="fw-bold text-primary fs-5" th:text="${@money.format(cart.subtotal)}">0 đ</span>
+                    </div>
+
+                    <!-- Cảnh báo có vấn đề ở dòng sản phẩm -->
+                    <div th:if="${cart.hasProblem}" class="alert alert-danger small mb-3">
+                        <i class="bi bi-exclamation-octagon-fill me-1"></i>
+                        Giỏ hàng của bạn đang có sản phẩm bị hết hàng hoặc vượt quá số lượng tồn trong kho. Vui lòng xoá hoặc giảm số lượng để tiếp tục.
+                    </div>
+
+                    <!-- Nút Thanh toán (hiển thị nhưng vô hiệu kèm chú thích) -->
+                    <button type="button" class="btn btn-primary btn-lg w-100 fw-semibold disabled shadow-sm"
+                            disabled title="Có ở bước đặt hàng">
+                        <i class="bi bi-credit-card me-2"></i>Thanh toán
+                    </button>
+                    <small class="text-muted text-center d-block mt-2">
+                        <i class="bi bi-info-circle me-1"></i>Tính năng Thanh toán sẽ có ở bước Đặt hàng (Ngày 6)
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- GIỎ HÀNG TRỐNG -->
+        <div th:if="${cart == null or cart.isEmpty}" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+            <div class="display-3 text-muted mb-3"><i class="bi bi-cart-x"></i></div>
+            <h4 class="fw-bold text-dark mb-2">Giỏ hàng của bạn đang trống</h4>
+            <p class="text-muted small mb-4">Hãy khám phá các mẫu giày dép thời trang chính hãng tại <span th:text="${brandName}">Triết Store</span>.</p>
+            <div>
+                <a th:href="@{/shop/products}" class="btn btn-primary px-4 shadow-sm">
+                    <i class="bi bi-bag-check me-2"></i>Khám phá sản phẩm ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<div th:replace="~{layout/shop-footer :: footer}"></div>
+
+</body>
+</html>
+
