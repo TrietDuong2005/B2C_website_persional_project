@@ -46,5 +46,28 @@ public class ShopProductFilterDTO {
     /** Tiêu chí sắp xếp: latest (mới nhất), price_asc (giá tăng), price_desc (giá giảm), name_asc (tên A-Z) */
     @Builder.Default
     private String sort = "latest";
+
+    /**
+     * Đếm tổng số lượng tiêu chí lọc đang được áp dụng (không tính tiêu chí sắp xếp sort).
+     */
+    public int getActiveFilterCount() {
+        int count = 0;
+        if (keyword != null && !keyword.isBlank()) count++;
+        if (category != null && !category.isBlank()) count++;
+        if (brands != null && !brands.isEmpty()) count += brands.size();
+        if (minPrice != null) count++;
+        if (maxPrice != null) count++;
+        if (color != null && !color.isBlank()) count++;
+        if (size != null && !size.isBlank()) count++;
+        if (Boolean.TRUE.equals(inStockOnly)) count++;
+        return count;
+    }
+
+    /**
+     * Kiểm tra có ít nhất một tiêu chí lọc đang được áp dụng hay không.
+     */
+    public boolean hasActiveFilters() {
+        return getActiveFilterCount() > 0;
+    }
 }
 

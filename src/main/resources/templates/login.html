@@ -24,6 +24,8 @@
 
             <form th:action="@{/login}" method="post">
                 <!-- CSRF Token tự động được Thymeleaf chèn khi dùng th:action -->
+                <!-- Giữ lại tham số redirect khi đăng nhập -->
+                <input type="hidden" name="redirect" th:value="${param.redirect}" th:if="${param.redirect != null and !#strings.isEmpty(param.redirect)}">
 
                 <div class="mb-3">
                     <label for="username" class="form-label fw-semibold">Email / Tên đăng nhập</label>

@@ -4,6 +4,8 @@ import com.dahdt.ecommerce.modules.catalog.entity.Product;
 import com.dahdt.ecommerce.modules.catalog.entity.ProductStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -44,6 +46,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
      */
     @Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.brand b WHERE p.id = :id")
     Optional<Product> findByIdWithCategoryAndBrand(@Param("id") Long id);
+
+    /**
+     * Nạp sẵn danh mục và thương hiệu khi phân trang theo Specification để tránh hoàn toàn N+1 queries.
+     */
+    @Override
+    @EntityGraph(attributePaths = {"category", "brand"})
+    Page<Product> findAll(Specification<Product> spec, Pageable pageable);
 
     /**
      * Tìm kiếm sản phẩm phân trang theo từ khóa, danh mục, thương hiệu và trạng thái.

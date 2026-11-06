@@ -5,6 +5,15 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
+<style>
+    .filter-group .btn[aria-expanded="true"] .bi-chevron-down {
+        transform: rotate(180deg);
+    }
+    .filter-group .bi-chevron-down {
+        transition: transform 0.2s ease-in-out;
+    }
+</style>
+
 <!-- Header Navbar -->
 <div th:replace="~{layout/shop-navbar :: navbar}"></div>
 
@@ -24,12 +33,15 @@
         </nav>
 
         <div class="row g-4">
-            <!-- CỘT BỘ LỌC (SIDEBAR FILTER) -->
-            <div class="col-12 col-lg-3">
+            <!-- CỘT BỘ LỌC CHO MÀN HÌNH LỚN (LG TRỞ LÊN) -->
+            <div class="col-12 col-lg-3 d-none d-lg-block">
                 <div class="card border-0 shadow-sm rounded-3 p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="fw-bold mb-0"><i class="bi bi-funnel text-primary me-2"></i>Bộ lọc tìm kiếm</h6>
-                        <a th:href="@{/shop/products}" class="text-decoration-none small text-muted">Xoá bộ lọc</a>
+                        <a th:if="${filter.hasActiveFilters}" th:href="@{/shop/products(sort=${filter.sort})}"
+                           class="text-decoration-none small text-danger fw-semibold">
+                            <i class="bi bi-x-circle me-1"></i>Xoá tất cả bộ lọc
+                        </a>
                     </div>
 
                     <form th:action="@{/shop/products}" method="get" id="filterForm">
@@ -48,90 +60,127 @@
 
                         <hr class="my-3">
 
-                        <!-- 2. Danh mục -->
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Danh mục</label>
-                            <div class="list-group list-group-flush small">
-                                <a th:href="@{/shop/products(keyword=${filter.keyword}, sort=${filter.sort})}"
-                                   class="list-group-item list-group-item-action px-1 py-1 border-0"
-                                   th:classappend="${filter.category == null or filter.category.isBlank()} ? 'fw-bold text-primary' : 'text-muted'">
-                                    Tất cả danh mục
-                                </a>
-                                <th:block th:each="cat : ${filterData.categories}">
-                                    <a th:href="@{/shop/products(category=${cat.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
-                                       class="list-group-item list-group-item-action px-1 py-1 border-0 fw-semibold"
-                                       th:classappend="${filter.category == cat.slug} ? 'text-primary' : ''"
-                                       th:text="${cat.name}">Giày</a>
-                                    <!-- Danh mục con -->
-                                    <div class="ps-3 mb-1" th:if="${cat.children != null and !cat.children.isEmpty()}">
-                                        <a th:each="child : ${cat.children}"
-                                           th:href="@{/shop/products(category=${child.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
-                                           class="d-block py-1 text-decoration-none small"
-                                           th:classappend="${filter.category == child.slug} ? 'fw-bold text-primary' : 'text-muted'"
-                                           th:text="${child.name}">Sneaker</a>
+                        <!-- 2. Danh mục (Thu gọn được, mở sẵn nếu đã chọn hoặc chưa lọc gì) -->
+                        <div class="filter-group mb-3 border-bottom pb-3">
+                            <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseCategory"
+                                    th:aria-expanded="${(filter.category != null and !filter.category.isBlank()) or !filter.hasActiveFilters} ? 'true' : 'false'"
+                                    aria-controls="collapseCategory">
+                                <span><i class="bi bi-grid me-1 text-primary"></i>Danh mục</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <div class="collapse mt-2" id="collapseCategory"
+                                 th:classappend="${(filter.category != null and !filter.category.isBlank()) or !filter.hasActiveFilters} ? 'show'">
+                                <div class="list-group list-group-flush small">
+                                    <a th:href="@{/shop/products(keyword=${filter.keyword}, sort=${filter.sort})}"
+                                       class="list-group-item list-group-item-action px-1 py-1 border-0"
+                                       th:classappend="${filter.category == null or filter.category.isBlank()} ? 'fw-bold text-primary' : 'text-muted'">
+                                        Tất cả danh mục
+                                    </a>
+                                    <th:block th:each="cat : ${filterData.categories}">
+                                        <a th:href="@{/shop/products(category=${cat.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
+                                           class="list-group-item list-group-item-action px-1 py-1 border-0 fw-semibold"
+                                           th:classappend="${filter.category == cat.slug} ? 'text-primary' : ''"
+                                           th:text="${cat.name}">Giày</a>
+                                        <!-- Danh mục con -->
+                                        <div class="ps-3 mb-1" th:if="${cat.children != null and !cat.children.isEmpty()}">
+                                            <a th:each="child : ${cat.children}"
+                                               th:href="@{/shop/products(category=${child.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
+                                               class="d-block py-1 text-decoration-none small"
+                                               th:classappend="${filter.category == child.slug} ? 'fw-bold text-primary' : 'text-muted'"
+                                               th:text="${child.name}">Sneaker</a>
+                                        </div>
+                                    </th:block>
+                                </div>
+                                <input type="hidden" name="category" th:value="${filter.category}"
+                                       th:if="${filter.category != null and !filter.category.isBlank()}">
+                            </div>
+                        </div>
+
+                        <!-- 3. Thương hiệu (Thu gọn được, mở sẵn nếu đang chọn) -->
+                        <div class="filter-group mb-3 border-bottom pb-3" th:if="${filterData.brands != null and !filterData.brands.isEmpty()}">
+                            <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseBrand"
+                                    th:aria-expanded="${selectedBrands != null and !selectedBrands.isEmpty()} ? 'true' : 'false'"
+                                    aria-controls="collapseBrand">
+                                <span><i class="bi bi-tag me-1 text-primary"></i>Thương hiệu</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <div class="collapse mt-2" id="collapseBrand"
+                                 th:classappend="${selectedBrands != null and !selectedBrands.isEmpty()} ? 'show'">
+                                <div class="d-flex flex-column gap-1" style="max-height: 180px; overflow-y: auto;">
+                                    <div class="form-check small" th:each="b : ${filterData.brands}">
+                                        <input class="form-check-input" type="checkbox" name="brand" th:value="${b.slug}"
+                                               th:id="'brand_' + ${b.slug}"
+                                               th:checked="${selectedBrands != null and selectedBrands.contains(b.slug)}">
+                                        <label class="form-check-label" th:for="'brand_' + ${b.slug}" th:text="${b.name}">Nike</label>
                                     </div>
-                                </th:block>
-                            </div>
-                            <!-- Ẩn category input nếu đã chọn qua link -->
-                            <input type="hidden" name="category" th:value="${filter.category}" th:if="${filter.category != null and !filter.category.isBlank()}">
-                        </div>
-
-                        <hr class="my-3">
-
-                        <!-- 3. Thương hiệu (nhiều lựa chọn) -->
-                        <div class="mb-3" th:if="${filterData.brands != null and !filterData.brands.isEmpty()}">
-                            <label class="form-label small fw-semibold">Thương hiệu</label>
-                            <div class="d-flex flex-column gap-1" style="max-height: 180px; overflow-y: auto;">
-                                <div class="form-check small" th:each="b : ${filterData.brands}">
-                                    <input class="form-check-input" type="checkbox" name="brand" th:value="${b.slug}"
-                                           th:id="'brand_' + ${b.slug}"
-                                           th:checked="${selectedBrands != null and selectedBrands.contains(b.slug)}">
-                                    <label class="form-check-label" th:for="'brand_' + ${b.slug}" th:text="${b.name}">Nike</label>
                                 </div>
                             </div>
                         </div>
 
-                        <hr class="my-3">
-
-                        <!-- 4. Khoảng giá -->
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Khoảng giá (VNĐ)</label>
-                            <div class="row g-1 align-items-center">
-                                <div class="col">
-                                    <input type="number" step="10000" class="form-control form-control-sm" name="minPrice"
-                                           th:value="${filter.minPrice}" placeholder="Từ">
-                                </div>
-                                <div class="col-auto text-muted">-</div>
-                                <div class="col">
-                                    <input type="number" step="10000" class="form-control form-control-sm" name="maxPrice"
-                                           th:value="${filter.maxPrice}" placeholder="Đến">
+                        <!-- 4. Khoảng giá (Thu gọn được, mở sẵn nếu đang lọc giá) -->
+                        <div class="filter-group mb-3 border-bottom pb-3">
+                            <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapsePrice"
+                                    th:aria-expanded="${filter.minPrice != null or filter.maxPrice != null} ? 'true' : 'false'"
+                                    aria-controls="collapsePrice">
+                                <span><i class="bi bi-cash me-1 text-primary"></i>Khoảng giá (VNĐ)</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <div class="collapse mt-2" id="collapsePrice"
+                                 th:classappend="${filter.minPrice != null or filter.maxPrice != null} ? 'show'">
+                                <div class="row g-1 align-items-center">
+                                    <div class="col">
+                                        <input type="number" step="10000" class="form-control form-control-sm" name="minPrice"
+                                               th:value="${filter.minPrice}" placeholder="Từ">
+                                    </div>
+                                    <div class="col-auto text-muted">-</div>
+                                    <div class="col">
+                                        <input type="number" step="10000" class="form-control form-control-sm" name="maxPrice"
+                                               th:value="${filter.maxPrice}" placeholder="Đến">
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <hr class="my-3">
-
-                        <!-- 5. Kích cỡ Size -->
-                        <div class="mb-3" th:if="${filterData.sizes != null and !filterData.sizes.isEmpty()}">
-                            <label class="form-label small fw-semibold">Kích cỡ (Size)</label>
-                            <select class="form-select form-select-sm" name="size">
-                                <option value="">-- Tất cả size --</option>
-                                <option th:each="s : ${filterData.sizes}" th:value="${s}" th:text="${s}"
-                                        th:selected="${filter.size == s}">42</option>
-                            </select>
+                        <!-- 5. Kích cỡ Size (Thu gọn được, mở sẵn nếu đang chọn) -->
+                        <div class="filter-group mb-3 border-bottom pb-3" th:if="${filterData.sizes != null and !filterData.sizes.isEmpty()}">
+                            <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseSize"
+                                    th:aria-expanded="${filter.size != null and !filter.size.isBlank()} ? 'true' : 'false'"
+                                    aria-controls="collapseSize">
+                                <span><i class="bi bi-rulers me-1 text-primary"></i>Kích cỡ (Size)</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <div class="collapse mt-2" id="collapseSize"
+                                 th:classappend="${filter.size != null and !filter.size.isBlank()} ? 'show'">
+                                <select class="form-select form-select-sm" name="size">
+                                    <option value="">-- Tất cả size --</option>
+                                    <option th:each="s : ${filterData.sizes}" th:value="${s}" th:text="${s}"
+                                            th:selected="${filter.size == s}">42</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- 6. Màu sắc -->
-                        <div class="mb-3" th:if="${filterData.colors != null and !filterData.colors.isEmpty()}">
-                            <label class="form-label small fw-semibold">Màu sắc</label>
-                            <select class="form-select form-select-sm" name="color">
-                                <option value="">-- Tất cả màu --</option>
-                                <option th:each="c : ${filterData.colors}" th:value="${c}" th:text="${c}"
-                                        th:selected="${filter.color == c}">Đen</option>
-                            </select>
+                        <!-- 6. Màu sắc (Thu gọn được, mở sẵn nếu đang chọn) -->
+                        <div class="filter-group mb-3 border-bottom pb-3" th:if="${filterData.colors != null and !filterData.colors.isEmpty()}">
+                            <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapseColor"
+                                    th:aria-expanded="${filter.color != null and !filter.color.isBlank()} ? 'true' : 'false'"
+                                    aria-controls="collapseColor">
+                                <span><i class="bi bi-palette me-1 text-primary"></i>Màu sắc</span>
+                                <i class="bi bi-chevron-down small"></i>
+                            </button>
+                            <div class="collapse mt-2" id="collapseColor"
+                                 th:classappend="${filter.color != null and !filter.color.isBlank()} ? 'show'">
+                                <select class="form-select form-select-sm" name="color">
+                                    <option value="">-- Tất cả màu --</option>
+                                    <option th:each="c : ${filterData.colors}" th:value="${c}" th:text="${c}"
+                                            th:selected="${filter.color == c}">Đen</option>
+                                </select>
+                            </div>
                         </div>
-
-                        <hr class="my-3">
 
                         <!-- 7. Tình trạng còn hàng -->
                         <div class="form-check form-switch mb-3">
@@ -149,10 +198,19 @@
 
             <!-- CỘT LƯỚI SẢN PHẨM & PHÂN TRANG -->
             <div class="col-12 col-lg-9">
-                <!-- Thanh điều khiển sắp xếp & tổng số lượng -->
+                <!-- Thanh điều khiển sắp xếp & tổng số lượng & Nút mở Bộ lọc trên Mobile -->
                 <div class="card border-0 shadow-sm rounded-3 p-3 mb-4">
                     <div class="row align-items-center g-2">
-                        <div class="col-12 col-sm-6">
+                        <div class="col-12 col-sm-6 d-flex align-items-center gap-2">
+                            <!-- Nút Bộ lọc cho màn hình nhỏ (< lg) -->
+                            <button class="btn btn-outline-primary btn-sm d-lg-none d-flex align-items-center gap-1 shadow-sm"
+                                    type="button" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas"
+                                    aria-controls="filterOffcanvas">
+                                <i class="bi bi-funnel"></i>
+                                <span>Bộ lọc</span>
+                                <span th:if="${filter.hasActiveFilters}" class="badge bg-primary rounded-pill ms-1"
+                                      th:text="${filter.activeFilterCount}">0</span>
+                            </button>
                             <span class="text-muted small">
                                 Tìm thấy <strong class="text-dark" th:text="${productPage.totalElements}">0</strong> sản phẩm
                             </span>
@@ -160,7 +218,7 @@
                         <div class="col-12 col-sm-6 d-flex justify-content-sm-end align-items-center gap-2">
                             <label class="small text-muted text-nowrap mb-0" for="sortSelect">Sắp xếp:</label>
                             <select class="form-select form-select-sm w-auto" id="sortSelect"
-                                    onchange="document.querySelector('#filterForm input[name=sort]').value = this.value; document.getElementById('filterForm').submit();">
+                                    onchange="document.querySelectorAll('input[name=sort]').forEach(el => el.value = this.value); (document.getElementById('filterForm') || document.getElementById('mobileFilterForm')).submit();">
                                 <option value="latest" th:selected="${filter.sort == 'latest' or filter.sort == null}">Mới nhất</option>
                                 <option value="price_asc" th:selected="${filter.sort == 'price_asc'}">Giá tăng dần</option>
                                 <option value="price_desc" th:selected="${filter.sort == 'price_desc'}">Giá giảm dần</option>
@@ -233,7 +291,7 @@
                         <!-- Trang trước -->
                         <li class="page-item" th:classappend="${productPage.first} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/shop/products(page=${productPage.number - 1}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
+                                th:href="@{/shop/products(page=${productPage.number - 1}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
                                 <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
@@ -250,7 +308,7 @@
                         <!-- Trang sau -->
                         <li class="page-item" th:classappend="${productPage.last} ? 'disabled'">
                             <a class="page-link"
-                               th:href="@{/shop/products(page=${productPage.number + 1}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
+                                th:href="@{/shop/products(page=${productPage.number + 1}, keyword=${filter.keyword}, category=${filter.category}, brand=${filter.brands}, minPrice=${filter.minPrice}, maxPrice=${filter.maxPrice}, color=${filter.color}, size=${filter.size}, inStockOnly=${filter.inStockOnly}, sort=${filter.sort})}">
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </li>
@@ -261,9 +319,176 @@
     </div>
 </main>
 
+<!-- OFFCANVAS BỘ LỌC CHO MÀN HÌNH NHỎ (DƯỚI LG) -->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="filterOffcanvas" aria-labelledby="filterOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold" id="filterOffcanvasLabel">
+            <i class="bi bi-funnel text-primary me-2"></i>Bộ lọc tìm kiếm
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Đóng"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="d-flex justify-content-between align-items-center mb-3" th:if="${filter.hasActiveFilters}">
+            <span class="small text-muted" th:text="'Đang áp dụng ' + ${filter.activeFilterCount} + ' bộ lọc'">2 bộ lọc</span>
+            <a th:href="@{/shop/products(sort=${filter.sort})}" class="text-decoration-none small text-danger fw-semibold">
+                <i class="bi bi-x-circle me-1"></i>Xoá tất cả bộ lọc
+            </a>
+        </div>
+
+        <form th:action="@{/shop/products}" method="get" id="mobileFilterForm">
+            <!-- Giữ lại sắp xếp khi submit lọc -->
+            <input type="hidden" name="sort" th:value="${filter.sort}">
+
+            <!-- 1. Từ khóa -->
+            <div class="mb-3">
+                <label class="form-label small fw-semibold">Từ khóa</label>
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" name="keyword" th:value="${filter.keyword}"
+                           placeholder="Tên giày hoặc hãng...">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <!-- 2. Danh mục -->
+            <div class="filter-group mb-3 border-bottom pb-3">
+                <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapseCategoryMobile"
+                        th:aria-expanded="${(filter.category != null and !filter.category.isBlank()) or !filter.hasActiveFilters} ? 'true' : 'false'"
+                        aria-controls="collapseCategoryMobile">
+                    <span><i class="bi bi-grid me-1 text-primary"></i>Danh mục</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="collapse mt-2" id="collapseCategoryMobile"
+                     th:classappend="${(filter.category != null and !filter.category.isBlank()) or !filter.hasActiveFilters} ? 'show'">
+                    <div class="list-group list-group-flush small">
+                        <a th:href="@{/shop/products(keyword=${filter.keyword}, sort=${filter.sort})}"
+                           class="list-group-item list-group-item-action px-1 py-1 border-0"
+                           th:classappend="${filter.category == null or filter.category.isBlank()} ? 'fw-bold text-primary' : 'text-muted'">
+                            Tất cả danh mục
+                        </a>
+                        <th:block th:each="cat : ${filterData.categories}">
+                            <a th:href="@{/shop/products(category=${cat.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
+                               class="list-group-item list-group-item-action px-1 py-1 border-0 fw-semibold"
+                               th:classappend="${filter.category == cat.slug} ? 'text-primary' : ''"
+                               th:text="${cat.name}">Giày</a>
+                            <!-- Danh mục con -->
+                            <div class="ps-3 mb-1" th:if="${cat.children != null and !cat.children.isEmpty()}">
+                                <a th:each="child : ${cat.children}"
+                                   th:href="@{/shop/products(category=${child.slug}, keyword=${filter.keyword}, sort=${filter.sort})}"
+                                   class="d-block py-1 text-decoration-none small"
+                                   th:classappend="${filter.category == child.slug} ? 'fw-bold text-primary' : 'text-muted'"
+                                   th:text="${child.name}">Sneaker</a>
+                            </div>
+                        </th:block>
+                    </div>
+                    <input type="hidden" name="category" th:value="${filter.category}"
+                           th:if="${filter.category != null and !filter.category.isBlank()}">
+                </div>
+            </div>
+
+            <!-- 3. Thương hiệu -->
+            <div class="filter-group mb-3 border-bottom pb-3" th:if="${filterData.brands != null and !filterData.brands.isEmpty()}">
+                <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapseBrandMobile"
+                        th:aria-expanded="${selectedBrands != null and !selectedBrands.isEmpty()} ? 'true' : 'false'"
+                        aria-controls="collapseBrandMobile">
+                    <span><i class="bi bi-tag me-1 text-primary"></i>Thương hiệu</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="collapse mt-2" id="collapseBrandMobile"
+                     th:classappend="${selectedBrands != null and !selectedBrands.isEmpty()} ? 'show'">
+                    <div class="d-flex flex-column gap-1" style="max-height: 180px; overflow-y: auto;">
+                        <div class="form-check small" th:each="b : ${filterData.brands}">
+                            <input class="form-check-input" type="checkbox" name="brand" th:value="${b.slug}"
+                                   th:id="'brand_m_' + ${b.slug}"
+                                   th:checked="${selectedBrands != null and selectedBrands.contains(b.slug)}">
+                            <label class="form-check-label" th:for="'brand_m_' + ${b.slug}" th:text="${b.name}">Nike</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Khoảng giá -->
+            <div class="filter-group mb-3 border-bottom pb-3">
+                <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapsePriceMobile"
+                        th:aria-expanded="${filter.minPrice != null or filter.maxPrice != null} ? 'true' : 'false'"
+                        aria-controls="collapsePriceMobile">
+                    <span><i class="bi bi-cash me-1 text-primary"></i>Khoảng giá (VNĐ)</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="collapse mt-2" id="collapsePriceMobile"
+                     th:classappend="${filter.minPrice != null or filter.maxPrice != null} ? 'show'">
+                    <div class="row g-1 align-items-center">
+                        <div class="col">
+                            <input type="number" step="10000" class="form-control form-control-sm" name="minPrice"
+                                   th:value="${filter.minPrice}" placeholder="Từ">
+                        </div>
+                        <div class="col-auto text-muted">-</div>
+                        <div class="col">
+                            <input type="number" step="10000" class="form-control form-control-sm" name="maxPrice"
+                                   th:value="${filter.maxPrice}" placeholder="Đến">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Kích cỡ Size -->
+            <div class="filter-group mb-3 border-bottom pb-3" th:if="${filterData.sizes != null and !filterData.sizes.isEmpty()}">
+                <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapseSizeMobile"
+                        th:aria-expanded="${filter.size != null and !filter.size.isBlank()} ? 'true' : 'false'"
+                        aria-controls="collapseSizeMobile">
+                    <span><i class="bi bi-rulers me-1 text-primary"></i>Kích cỡ (Size)</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="collapse mt-2" id="collapseSizeMobile"
+                     th:classappend="${filter.size != null and !filter.size.isBlank()} ? 'show'">
+                    <select class="form-select form-select-sm" name="size">
+                        <option value="">-- Tất cả size --</option>
+                        <option th:each="s : ${filterData.sizes}" th:value="${s}" th:text="${s}"
+                                th:selected="${filter.size == s}">42</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 6. Màu sắc -->
+            <div class="filter-group mb-3 border-bottom pb-3" th:if="${filterData.colors != null and !filterData.colors.isEmpty()}">
+                <button class="btn btn-link text-decoration-none w-100 d-flex justify-content-between align-items-center p-0 text-dark fw-semibold small"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapseColorMobile"
+                        th:aria-expanded="${filter.color != null and !filter.color.isBlank()} ? 'true' : 'false'"
+                        aria-controls="collapseColorMobile">
+                    <span><i class="bi bi-palette me-1 text-primary"></i>Màu sắc</span>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="collapse mt-2" id="collapseColorMobile"
+                     th:classappend="${filter.color != null and !filter.color.isBlank()} ? 'show'">
+                    <select class="form-select form-select-sm" name="color">
+                        <option value="">-- Tất cả màu --</option>
+                        <option th:each="c : ${filterData.colors}" th:value="${c}" th:text="${c}"
+                                th:selected="${filter.color == c}">Đen</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 7. Tình trạng còn hàng -->
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" name="inStockOnly" value="true" id="inStockOnlyMobile"
+                       th:checked="${filter.inStockOnly == true}">
+                <label class="form-check-label small fw-semibold" for="inStockOnlyMobile">Chỉ xem hàng còn</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm">
+                <i class="bi bi-funnel-fill me-1"></i>Áp dụng bộ lọc
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- Footer -->
 <div th:replace="~{layout/shop-footer :: footer}"></div>
 
 </body>
 </html>
-

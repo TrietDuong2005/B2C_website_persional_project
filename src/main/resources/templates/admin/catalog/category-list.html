@@ -84,9 +84,12 @@
                                                                 <i class="bi" th:classappend="${root.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
                                                             </button>
                                                         </form>
-                                                        <form th:action="@{/admin/categories/{id}/delete(id=${root.id})}" method="post" class="d-inline"
-                                                              onsubmit="return confirm('Bạn có chắc chắn muốn ẩn danh mục này?');">
-                                                            <button type="submit" class="btn btn-outline-danger" title="Ẩn danh mục">
+                                                        <form th:action="@{/admin/categories/{id}/delete(id=${root.id})}" method="post" class="d-inline">
+                                                            <button type="button" class="btn btn-outline-danger" title="Ẩn danh mục"
+                                                                    data-confirm-message="Bạn có chắc chắn muốn ẩn danh mục này?"
+                                                                    data-confirm-title="Xác nhận ẩn danh mục"
+                                                                    data-confirm-button="Ẩn danh mục"
+                                                                    data-confirm-btn-class="btn-danger">
                                                                 <i class="bi bi-trash"></i>
                                                             </button>
                                                         </form>
@@ -119,9 +122,12 @@
                                                                 <i class="bi" th:classappend="${child.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
                                                             </button>
                                                         </form>
-                                                        <form th:action="@{/admin/categories/{id}/delete(id=${child.id})}" method="post" class="d-inline"
-                                                              onsubmit="return confirm('Bạn có chắc muốn ẩn danh mục con này?');">
-                                                            <button type="submit" class="btn btn-outline-danger" title="Ẩn danh mục">
+                                                        <form th:action="@{/admin/categories/{id}/delete(id=${child.id})}" method="post" class="d-inline">
+                                                            <button type="button" class="btn btn-outline-danger" title="Ẩn danh mục con"
+                                                                    data-confirm-message="Bạn có chắc muốn ẩn danh mục con này?"
+                                                                    data-confirm-title="Xác nhận ẩn danh mục con"
+                                                                    data-confirm-button="Ẩn danh mục con"
+                                                                    data-confirm-btn-class="btn-danger">
                                                                 <i class="bi bi-trash"></i>
                                                             </button>
                                                         </form>

@@ -1,6 +1,7 @@
 package com.dahdt.ecommerce.config;
 
 import com.dahdt.ecommerce.common.response.ApiResponse;
+import com.dahdt.ecommerce.common.util.RedirectUtil;
 import com.dahdt.ecommerce.config.security.CustomUserDetailsService;
 import com.dahdt.ecommerce.config.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -101,8 +102,13 @@ public class SecurityConfig {
             } else if (roles.contains("ROLE_CASHIER")) {
                 response.sendRedirect("/pos");
             } else {
-                // Khách hàng cá nhân (CUSTOMER) quay lại trang đang xem trước đó nếu có, nếu không về "/"
-                if (savedRequest != null && savedRequest.getRedirectUrl() != null && !savedRequest.getRedirectUrl().isBlank()) {
+                // Khách hàng cá nhân (CUSTOMER):
+                // 1. Nếu có tham số redirect hợp lệ từ form, chuyển hướng đến URL đó
+                String redirectParam = request.getParameter("redirect");
+                if (RedirectUtil.isValidRedirect(redirectParam)) {
+                    response.sendRedirect(redirectParam.trim());
+                } else if (savedRequest != null && savedRequest.getRedirectUrl() != null && !savedRequest.getRedirectUrl().isBlank()) {
+                    // 2. Giữ nguyên hành vi SavedRequest hiện có (ví dụ khi bị chặn chuyển hướng từ /cart)
                     response.sendRedirect(savedRequest.getRedirectUrl());
                 } else {
                     response.sendRedirect("/");

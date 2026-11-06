@@ -26,7 +26,7 @@
             <div class="col-6 col-md-4">
                 <h6 class="fw-bold text-uppercase text-light small mb-2">Hệ thống phân quyền</h6>
                 <ul class="list-unstyled small text-white-50 mb-0">
-                    <li><a th:href="@{/login}" class="text-white-50 text-decoration-none">Đăng nhập hệ thống</a></li>
+                    <li><a th:href="@{/login(redirect=${currentUri})}" class="text-white-50 text-decoration-none">Đăng nhập hệ thống</a></li>
                     <li><span class="text-white-50">Khu Quản trị & Bán hàng POS</span></li>
                 </ul>
             </div>
@@ -42,6 +42,10 @@
     <!-- Bootstrap 5 Bundle JS qua CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Modal xác nhận thao tác dùng chung -->
+    <div th:replace="~{layout/confirm-modal :: confirmModal}"></div>
+    <div th:replace="~{layout/confirm-modal :: confirmModalScript}"></div>
 </footer>
 
 </body>

@@ -130,7 +130,7 @@
 
                             <!-- Nút chuyển tới đăng nhập khi chưa đăng nhập hoặc không phải CUSTOMER -->
                             <div sec:authorize="!hasRole('CUSTOMER')">
-                                <a th:href="@{/login}" class="btn btn-outline-primary btn-lg w-100 fw-semibold">
+                                <a th:href="@{/login(redirect=${currentUri})}" class="btn btn-outline-primary btn-lg w-100 fw-semibold">
                                     <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập để thêm vào giỏ
                                 </a>
                             </div>

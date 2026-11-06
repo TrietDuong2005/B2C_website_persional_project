@@ -184,9 +184,12 @@
                                                     <i class="bi" th:classappend="${p.status.name() == 'ACTIVE'} ? 'bi-eye-slash' : 'bi-eye'"></i>
                                                 </button>
                                             </form>
-                                            <form th:action="@{/admin/products/{id}/delete(id=${p.id})}" method="post" class="d-inline"
-                                                  onsubmit="return confirm('Bạn có chắc chắn muốn ẩn sản phẩm này?');">
-                                                <button type="submit" class="btn btn-outline-danger" title="Ẩn sản phẩm">
+                                            <form th:action="@{/admin/products/{id}/delete(id=${p.id})}" method="post" class="d-inline">
+                                                <button type="button" class="btn btn-outline-danger" title="Ẩn sản phẩm"
+                                                        data-confirm-message="Bạn có chắc chắn muốn ẩn sản phẩm này?"
+                                                        data-confirm-title="Xác nhận ẩn sản phẩm"
+                                                        data-confirm-button="Ẩn sản phẩm"
+                                                        data-confirm-btn-class="btn-danger">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>

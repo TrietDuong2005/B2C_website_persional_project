@@ -72,7 +72,7 @@
 
                 <!-- Khi chưa đăng nhập -->
                 <div sec:authorize="isAnonymous()">
-                    <a th:href="@{/login}" class="btn btn-primary btn-sm">
+                    <a th:href="@{/login(redirect=${currentUri})}" class="btn btn-primary btn-sm">
                         <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
                     </a>
                 </div>

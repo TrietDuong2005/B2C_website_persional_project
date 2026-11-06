@@ -242,7 +242,7 @@ public class ShopCatalogServiceImpl implements ShopCatalogService {
     // HÀM BỔ TRỢ: XÂY DỰNG SPECIFICATION VÀ ENRICH DỮ LIỆU CHỐNG N+1
     // =========================================================================
 
-    private Specification<Product> buildProductSpecification(ShopProductFilterDTO filter) {
+    Specification<Product> buildProductSpecification(ShopProductFilterDTO filter) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -319,7 +319,9 @@ public class ShopCatalogServiceImpl implements ShopCatalogService {
                 predicates.add(brandJoin.get("slug").in(filter.getBrands()));
             }
 
-            query.distinct(true);
+            // Lưu ý: Không dùng query.distinct(true) vì khi kết hợp ORDER BY truy vấn con MIN(price),
+            // SQL Server sẽ báo lỗi Error 145 (ORDER BY items must appear in the select list if SELECT DISTINCT is specified).
+            // Các điều kiện lọc biến thể đều dùng EXISTS (truy vấn con) và quan hệ category/brand là ManyToOne nên không làm nhân bản dòng.
 
             // 6. Xử lý sắp xếp (chỉ áp dụng khi không phải count query)
             if (query.getResultType() != Long.class && query.getResultType() != long.class) {
@@ -337,7 +339,7 @@ public class ShopCatalogServiceImpl implements ShopCatalogService {
                     minPriceSub.where(cb.equal(pv.get("product"), root), cb.equal(pv.get("status"), ProductVariantStatus.ACTIVE));
                     query.orderBy(cb.desc(minPriceSub), cb.desc(root.get("id")));
                 } else if ("name_asc".equalsIgnoreCase(sort)) {
-                    query.orderBy(cb.asc(root.get("name")));
+                    query.orderBy(cb.asc(root.get("name")), cb.desc(root.get("id")));
                 } else {
                     query.orderBy(cb.desc(root.get("createdAt")), cb.desc(root.get("id")));
                 }

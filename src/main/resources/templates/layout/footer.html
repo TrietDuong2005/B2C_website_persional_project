@@ -23,6 +23,10 @@
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <!-- AdminLTE 4 JS qua CDN -->
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@4.0.0-beta3/dist/js/adminlte.min.js"></script>
+
+    <!-- Modal xác nhận thao tác dùng chung cho Admin -->
+    <div th:replace="~{layout/confirm-modal :: confirmModal}"></div>
+    <div th:replace="~{layout/confirm-modal :: confirmModalScript}"></div>
 </footer>
 
 </body>

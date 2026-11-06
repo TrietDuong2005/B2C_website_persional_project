@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Modal xác nhận thao tác dùng chung cho toàn bộ hệ thống (Shop & Admin) -->
+<div th:fragment="confirmModal" class="modal fade" id="globalConfirmModal" tabindex="-1"
+     aria-labelledby="globalConfirmModalLabel" aria-hidden="true" data-bs-keyboard="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0 rounded-3">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="globalConfirmModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2" id="globalConfirmModalIcon"></i>
+                    <span id="globalConfirmModalTitle">Xác nhận thao tác</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body py-3 text-secondary" id="globalConfirmModalMessage">
+                Bạn có chắc chắn muốn thực hiện thao tác này?
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger btn-sm px-3 shadow-sm" id="globalConfirmSubmitBtn">
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script điều khiển modal xác nhận dùng chung -->
+<script th:fragment="confirmModalScript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('globalConfirmModal');
+        if (!modalEl) return;
+
+        const titleEl = document.getElementById('globalConfirmModalTitle');
+        const messageEl = document.getElementById('globalConfirmModalMessage');
+        const submitBtn = document.getElementById('globalConfirmSubmitBtn');
+        let pendingForm = null;
+
+        function getBsModal() {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                return bootstrap.Modal.getOrCreateInstance(modalEl);
+            }
+            return null;
+        }
+
+        // Bắt sự kiện click trên các phần tử có data-confirm-message
+        document.addEventListener('click', function (e) {
+            const trigger = e.target.closest('[data-confirm-message]');
+            if (!trigger) return;
+
+            // Chặn submit form tự nhiên để chờ người dùng xác nhận
+            e.preventDefault();
+
+            pendingForm = trigger.closest('form') || (trigger.tagName === 'FORM' ? trigger : null);
+
+            const message = trigger.getAttribute('data-confirm-message') || 'Bạn có chắc chắn muốn thực hiện?';
+            const title = trigger.getAttribute('data-confirm-title') || 'Xác nhận thao tác';
+            const btnText = trigger.getAttribute('data-confirm-button') || 'Xác nhận';
+            const btnClass = trigger.getAttribute('data-confirm-btn-class') || 'btn-danger';
+
+            if (titleEl) titleEl.textContent = title;
+            if (messageEl) messageEl.textContent = message;
+            if (submitBtn) {
+                submitBtn.textContent = btnText;
+                submitBtn.className = 'btn btn-sm px-3 shadow-sm ' + btnClass;
+            }
+
+            const bsModal = getBsModal();
+            if (bsModal) {
+                bsModal.show();
+            }
+        });
+
+        // Khi người dùng bấm nút xác nhận trong modal
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function () {
+                if (pendingForm) {
+                    const formToSubmit = pendingForm;
+                    pendingForm = null;
+                    const bsModal = getBsModal();
+                    if (bsModal) bsModal.hide();
+                    formToSubmit.submit();
+                }
+            });
+        }
+
+        // Xóa form đang chờ khi modal bị đóng hoặc nhấn Hủy
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            pendingForm = null;
+        });
+    });
+</script>
+
+</body>
+</html>
+

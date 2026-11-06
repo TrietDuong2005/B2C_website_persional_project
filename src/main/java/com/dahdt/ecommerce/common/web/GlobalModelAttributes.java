@@ -36,6 +36,20 @@ public class GlobalModelAttributes {
     }
 
     /**
+     * Cung cấp đường dẫn hiện tại (path kèm query string nếu có)
+     * để gắn vào tham số redirect cho nút Đăng nhập trên navbar và trang sản phẩm.
+     */
+    @ModelAttribute("currentUri")
+    public String getCurrentUri(jakarta.servlet.http.HttpServletRequest request) {
+        if (request == null) {
+            return "/";
+        }
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+        return (query != null && !query.isBlank()) ? (uri + "?" + query) : uri;
+    }
+
+    /**
      * Lấy tổng số lượng món hàng trong giỏ để hiển thị huy hiệu (badge) trên navbar.
      * Chỉ thực hiện truy vấn khi người dùng đã đăng nhập với vai trò CUSTOMER.
      */

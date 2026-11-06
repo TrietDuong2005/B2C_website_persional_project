@@ -99,12 +99,16 @@
                                         1.290.000 đ
                                     </td>
 
-                                    <!-- Xoá dòng (Form POST có CSRF) -->
+                                    <!-- Xoá dòng (Form POST có CSRF kèm Modal xác nhận Bootstrap) -->
                                     <td class="text-center">
                                         <form th:action="@{/cart/remove}" method="post">
                                             <input type="hidden" name="itemId" th:value="${item.id}">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm border-0"
-                                                    title="Xoá món này" onclick="return confirm('Bạn có chắc muốn xoá sản phẩm này khỏi giỏ?');">
+                                            <button type="button" class="btn btn-outline-danger btn-sm border-0"
+                                                    title="Xoá món này"
+                                                    data-confirm-message="Bạn có chắc chắn muốn xoá sản phẩm này khỏi giỏ hàng?"
+                                                    data-confirm-title="Xoá sản phẩm khỏi giỏ"
+                                                    data-confirm-button="Xoá sản phẩm"
+                                                    data-confirm-btn-class="btn-danger">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>

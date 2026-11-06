@@ -148,9 +148,12 @@
                                                         </button>
                                                     </form>
                                                     <form th:action="@{/admin/products/{id}/variants/{vid}/delete(id=${product.id}, vid=${v.id})}"
-                                                          method="post" class="d-inline"
-                                                          onsubmit="return confirm('Bạn có chắc muốn ngưng kinh doanh biến thể này?');">
-                                                        <button type="submit" class="btn btn-outline-danger" title="Ngưng kinh doanh">
+                                                          method="post" class="d-inline">
+                                                        <button type="button" class="btn btn-outline-danger" title="Ngưng kinh doanh"
+                                                                data-confirm-message="Bạn có chắc muốn ngưng kinh doanh biến thể này?"
+                                                                data-confirm-title="Xác nhận ngưng kinh doanh biến thể"
+                                                                data-confirm-button="Ngưng kinh doanh"
+                                                                data-confirm-btn-class="btn-danger">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
@@ -181,8 +184,12 @@
                                             </div>
                                             <div class="card-footer bg-white p-2 text-end">
                                                 <form th:action="@{/admin/products/{id}/images/{imgId}/delete(id=${product.id}, imgId=${img.id})}"
-                                                      method="post" onsubmit="return confirm('Bạn có chắc muốn xóa ảnh này?');">
-                                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                                      method="post">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm w-100"
+                                                            data-confirm-message="Bạn có chắc muốn xóa ảnh này?"
+                                                            data-confirm-title="Xác nhận xóa ảnh"
+                                                            data-confirm-button="Xóa ảnh"
+                                                            data-confirm-btn-class="btn-danger">
                                                         <i class="bi bi-trash me-1"></i>Xóa
                                                     </button>
                                                 </form>

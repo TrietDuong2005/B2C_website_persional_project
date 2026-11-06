@@ -98,9 +98,12 @@
                                                             <i class="bi" th:classappend="${b.isActive} ? 'bi-eye-slash' : 'bi-eye'"></i>
                                                         </button>
                                                     </form>
-                                                    <form th:action="@{/admin/brands/{id}/delete(id=${b.id})}" method="post" class="d-inline"
-                                                          onsubmit="return confirm('Bạn có chắc muốn ẩn thương hiệu này?');">
-                                                        <button type="submit" class="btn btn-outline-danger" title="Ẩn thương hiệu">
+                                                    <form th:action="@{/admin/brands/{id}/delete(id=${b.id})}" method="post" class="d-inline">
+                                                        <button type="button" class="btn btn-outline-danger" title="Ẩn thương hiệu"
+                                                                data-confirm-message="Bạn có chắc chắn muốn ẩn thương hiệu này?"
+                                                                data-confirm-title="Xác nhận ẩn thương hiệu"
+                                                                data-confirm-button="Ẩn thương hiệu"
+                                                                data-confirm-btn-class="btn-danger">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </form>
