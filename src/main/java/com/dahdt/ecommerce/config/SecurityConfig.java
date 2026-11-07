@@ -186,7 +186,7 @@ public class SecurityConfig {
                         .requestMatchers("/pos/**").hasAnyRole("CASHIER", "STORE_MANAGER", "ADMIN")
 
                         // Khách hàng cá nhân: giỏ hàng, checkout, tài khoản -> CUSTOMER
-                        .requestMatchers("/cart/**", "/checkout/**", "/account/**").hasRole("CUSTOMER")
+                        .requestMatchers("/cart", "/cart/**", "/checkout", "/checkout/**", "/account", "/account/**").hasRole("CUSTOMER")
 
                         // Các trang web còn lại yêu cầu đăng nhập
                         .anyRequest().authenticated()

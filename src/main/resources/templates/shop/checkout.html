@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Thanh toán đơn hàng - ' + ${brandName})}">
+    <title th:text="'Thanh toán đơn hàng - ' + ${brandName}">Thanh toán</title>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Header Navbar -->
+<div th:replace="~{layout/shop-navbar :: navbar}"></div>
+
+<main class="flex-grow-1 py-4">
+    <div class="container">
+        <!-- Flash messages -->
+        <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/cart}" class="text-decoration-none">Giỏ hàng</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Thanh toán</li>
+            </ol>
+        </nav>
+
+        <h3 class="fw-bold mb-4">
+            <i class="bi bi-credit-card-2-front text-primary me-2"></i>Tiến hành thanh toán
+        </h3>
+
+        <form id="checkoutForm" th:action="@{/checkout/place}" th:object="${form}" method="post">
+            <div class="row g-4">
+                <!-- CỘT TRÁI: TÓM TẮT GIỎ, THÔNG TIN GIAO HÀNG, PHƯƠNG THỨC THANH TOÁN -->
+                <div class="col-12 col-lg-8">
+
+                    <!-- 1. Tóm tắt giỏ hàng (chỉ đọc) -->
+                    <div class="card border-0 shadow-sm rounded-3 mb-4 overflow-hidden">
+                        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0 text-dark">
+                                <i class="bi bi-bag me-2 text-primary"></i>Kiện hàng của bạn
+                                <span class="badge bg-light text-dark fw-normal fs-6 ms-1"
+                                      th:text="'(' + ${cart.totalQuantity} + ' đôi giày)'">(0 đôi)</span>
+                            </h5>
+                            <a th:href="@{/cart}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil me-1"></i>Sửa giỏ hàng
+                            </a>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light text-uppercase small text-muted">
+                                    <tr>
+                                        <th scope="col" style="min-width: 240px;">Sản phẩm</th>
+                                        <th scope="col" class="text-center" style="width: 120px;">Đơn giá</th>
+                                        <th scope="col" class="text-center" style="width: 100px;">Số lượng</th>
+                                        <th scope="col" class="text-end" style="width: 130px;">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="item : ${cart.items}">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img th:src="@{${item.imageUrl}}" th:alt="${item.productName}"
+                                                     class="rounded-3 border p-1 bg-white flex-shrink-0"
+                                                     style="width: 52px; height: 52px; object-fit: contain;">
+                                                <div>
+                                                    <div class="fw-semibold text-dark small mb-1" th:text="${item.productName}">Tên giày</div>
+                                                    <div class="small text-muted">
+                                                        Màu: <span class="fw-semibold text-dark" th:text="${item.color}">Đen</span> ·
+                                                        Size: <span class="fw-semibold text-dark" th:text="${item.size}">42</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center small text-muted" th:text="${@money.format(item.unitPrice)}">1.000.000 đ</td>
+                                        <td class="text-center fw-semibold" th:text="${item.quantity}">1</td>
+                                        <td class="text-end fw-bold text-primary small" th:text="${@money.format(item.lineTotal)}">1.000.000 đ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. Form thông tin người nhận hàng -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4 mb-4 bg-white">
+                        <h5 class="fw-bold mb-3 text-dark">
+                            <i class="bi bi-geo-alt me-2 text-primary"></i>Địa chỉ nhận hàng
+                        </h5>
+
+                        <div class="row g-3">
+                            <!-- Họ và tên người nhận -->
+                            <div class="col-12 col-md-6">
+                                <label for="shipName" class="form-label small fw-semibold">Họ và tên người nhận <span class="text-danger">*</span></label>
+                                <input type="text" id="shipName" th:field="*{shipName}" class="form-control"
+                                       placeholder="Nguyễn Văn A"
+                                       th:classappend="${#fields.hasErrors('shipName')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('shipName')}" th:errors="*{shipName}"></div>
+                            </div>
+
+                            <!-- Số điện thoại nhận hàng -->
+                            <div class="col-12 col-md-6">
+                                <label for="shipPhone" class="form-label small fw-semibold">Số điện thoại nhận hàng <span class="text-danger">*</span></label>
+                                <input type="tel" id="shipPhone" th:field="*{shipPhone}" class="form-control"
+                                       placeholder="0901234567"
+                                       th:classappend="${#fields.hasErrors('shipPhone')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('shipPhone')}" th:errors="*{shipPhone}"></div>
+                            </div>
+
+                            <!-- Tỉnh / Thành phố -->
+                            <div class="col-12 col-md-4">
+                                <label for="province" class="form-label small fw-semibold">Tỉnh / Thành phố <span class="text-danger">*</span></label>
+                                <input type="text" id="province" th:field="*{province}" class="form-control"
+                                       placeholder="TP. Hồ Chí Minh"
+                                       th:classappend="${#fields.hasErrors('province')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('province')}" th:errors="*{province}"></div>
+                            </div>
+
+                            <!-- Quận / Huyện -->
+                            <div class="col-12 col-md-4">
+                                <label for="district" class="form-label small fw-semibold">Quận / Huyện <span class="text-danger">*</span></label>
+                                <input type="text" id="district" th:field="*{district}" class="form-control"
+                                       placeholder="Quận 1"
+                                       th:classappend="${#fields.hasErrors('district')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('district')}" th:errors="*{district}"></div>
+                            </div>
+
+                            <!-- Phường / Xã -->
+                            <div class="col-12 col-md-4">
+                                <label for="ward" class="form-label small fw-semibold">Phường / Xã <span class="text-danger">*</span></label>
+                                <input type="text" id="ward" th:field="*{ward}" class="form-control"
+                                       placeholder="Phường Bến Thành"
+                                       th:classappend="${#fields.hasErrors('ward')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('ward')}" th:errors="*{ward}"></div>
+                            </div>
+
+                            <!-- Địa chỉ chi tiết -->
+                            <div class="col-12">
+                                <label for="detailAddress" class="form-label small fw-semibold">Địa chỉ chi tiết (Số nhà, tên đường, tòa nhà) <span class="text-danger">*</span></label>
+                                <input type="text" id="detailAddress" th:field="*{detailAddress}" class="form-control"
+                                       placeholder="123 Đường Nguyễn Huệ"
+                                       th:classappend="${#fields.hasErrors('detailAddress')} ? 'is-invalid' : ''">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('detailAddress')}" th:errors="*{detailAddress}"></div>
+                            </div>
+
+                            <!-- Ghi chú cho shipper -->
+                            <div class="col-12">
+                                <label for="note" class="form-label small fw-semibold">Ghi chú giao hàng (tùy chọn)</label>
+                                <textarea id="note" th:field="*{note}" class="form-control" rows="2"
+                                          placeholder="Ví dụ: Giao vào giờ hành chính, gọi trước khi giao 15 phút..."></textarea>
+                            </div>
+
+                            <!-- Tọa độ ẩn nếu có -->
+                            <input type="hidden" th:field="*{shipLatitude}">
+                            <input type="hidden" th:field="*{shipLongitude}">
+                        </div>
+                    </div>
+
+                    <!-- 3. Phương thức thanh toán -->
+                    <div class="card border-0 shadow-sm rounded-3 p-4 bg-white">
+                        <h5 class="fw-bold mb-3 text-dark">
+                            <i class="bi bi-wallet2 me-2 text-primary"></i>Phương thức thanh toán <span class="text-danger">*</span>
+                        </h5>
+
+                        <div class="d-flex flex-column gap-3">
+                            <!-- COD -->
+                            <label class="form-check p-3 border rounded-3 cursor-pointer transition d-flex align-items-start gap-3 bg-white"
+                                   for="paymentCod">
+                                <input class="form-check-input mt-1" type="radio" th:field="*{paymentMethod}"
+                                       value="COD" id="paymentCod">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-cash-stack text-success fs-5"></i>
+                                        <span class="fw-bold text-dark">Thanh toán khi nhận hàng (COD)</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        Nhận hàng, kiểm tra sản phẩm tại chỗ và thanh toán tiền mặt trực tiếp cho nhân viên giao hàng.
+                                    </small>
+                                </div>
+                            </label>
+
+                            <!-- Ví điện tử giả lập -->
+                            <label class="form-check p-3 border rounded-3 cursor-pointer transition d-flex align-items-start gap-3 bg-white"
+                                   for="paymentEwallet">
+                                <input class="form-check-input mt-1" type="radio" th:field="*{paymentMethod}"
+                                       value="EWALLET_MOCK" id="paymentEwallet">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-phone text-primary fs-5"></i>
+                                        <span class="fw-bold text-dark">Ví điện tử giả lập (MoMo / ZaloPay / VNPay)</span>
+                                        <span class="badge bg-success-subtle text-success small">Tự động duyệt</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        Mô phỏng thanh toán trực tuyến tức thì. Trạng thái giao dịch tự động chuyển sang <strong>Đã thanh toán</strong> ngay sau khi đặt hàng.
+                                    </small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CỘT PHẢI: TỔNG KẾT CHI PHÍ, VOUCHER VÀ NÚT ĐẶT HÀNG (STICKY) -->
+                <div class="col-12 col-lg-4">
+                    <div class="card border-0 shadow-sm rounded-3 p-4 sticky-top bg-white" style="top: 80px;">
+                        <h5 class="fw-bold mb-3 text-dark">Tóm tắt thanh toán</h5>
+
+                        <!-- Khối nhập Voucher -->
+                        <div class="mb-3">
+                            <label for="voucherCodeInput" class="form-label small fw-semibold text-muted">Mã giảm giá khuyến mãi</label>
+                            <div class="input-group">
+                                <input type="text" id="voucherCodeInput" th:field="*{voucherCode}"
+                                       class="form-control text-uppercase"
+                                       placeholder="Mã voucher">
+                                <button type="submit" class="btn btn-outline-primary"
+                                        formaction="/checkout/preview" formmethod="post"
+                                        title="Kiểm tra và áp dụng mã giảm giá">
+                                    Áp dụng
+                                </button>
+                            </div>
+
+                            <!-- Kết quả áp dụng voucher -->
+                            <div th:if="${voucherSuccess}" class="alert alert-success py-2 px-3 small mt-2 mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+                                <span th:text="${voucherSuccess}">Áp dụng thành công!</span>
+                            </div>
+                            <div th:if="${voucherError}" class="alert alert-danger py-2 px-3 small mt-2 mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                                <span th:text="${voucherError}">Mã voucher không hợp lệ</span>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <!-- Các khoản tiền -->
+                        <div class="d-flex justify-content-between mb-2 small text-muted">
+                            <span>Tạm tính tiền hàng:</span>
+                            <span class="fw-semibold text-dark" th:text="${@money.format(preview.subtotal)}">0 đ</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 small text-muted">
+                            <span>Giảm giá voucher:</span>
+                            <span th:if="${preview.discountTotal != null and preview.discountTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                  class="fw-semibold text-success"
+                                  th:text="'- ' + ${@money.format(preview.discountTotal)}">- 0 đ</span>
+                            <span th:unless="${preview.discountTotal != null and preview.discountTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+                                  class="text-muted">0 đ</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3 small text-muted">
+                            <span>Phí vận chuyển:</span>
+                            <span th:if="${preview.shippingFee != null and preview.shippingFee.compareTo(T(java.math.BigDecimal).ZERO) == 0}"
+                                  class="badge bg-success-subtle text-success">Miễn phí</span>
+                            <span th:unless="${preview.shippingFee != null and preview.shippingFee.compareTo(T(java.math.BigDecimal).ZERO) == 0}"
+                                  class="fw-semibold text-dark"
+                                  th:text="${@money.format(preview.shippingFee)}">30.000 đ</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top mb-3">
+                            <span class="fw-bold text-dark fs-6">Tổng thanh toán:</span>
+                            <span class="fw-bold text-primary fs-4" th:text="${@money.format(preview.totalAmount)}">0 đ</span>
+                        </div>
+
+                        <!-- Nút Đặt hàng -->
+                        <button type="submit" id="placeOrderBtn"
+                                class="btn btn-primary btn-lg w-100 fw-bold shadow-sm"
+                                formaction="/checkout/place" formmethod="post">
+                            <i class="bi bi-bag-check me-2"></i>Đặt hàng
+                        </button>
+
+                        <div class="small text-muted text-center mt-3">
+                            <i class="bi bi-shield-check text-success me-1"></i>Bảo mật thanh toán 100% · Hỗ trợ đổi size
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<!-- Footer -->
+<div th:replace="~{layout/shop-footer :: footer}"></div>
+
+<!-- Script chống bấm đặt hàng hai lần -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('checkoutForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            const submitter = e.submitter;
+            if (submitter && submitter.id === 'placeOrderBtn') {
+                submitter.disabled = true;
+                submitter.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý đơn hàng...';
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
+

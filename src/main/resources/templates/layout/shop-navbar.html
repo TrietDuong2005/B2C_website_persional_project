@@ -96,6 +96,11 @@
                                 <span th:if="${cartItemCount > 0}" class="badge bg-primary ms-1" th:text="${cartItemCount}">0</span>
                             </a>
                         </li>
+                        <li sec:authorize="hasRole('CUSTOMER')">
+                            <a class="dropdown-item" th:href="@{/account/orders}">
+                                <i class="bi bi-bag-check me-2"></i>Đơn hàng của tôi
+                            </a>
+                        </li>
                         <li sec:authorize="hasAnyRole('ADMIN', 'STORE_MANAGER')">
                             <a class="dropdown-item" th:href="@{/admin}"><i class="bi bi-speedometer2 me-2"></i>Khu Quản trị</a>
                         </li>

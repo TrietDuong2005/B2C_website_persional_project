@@ -5,6 +5,8 @@ import com.dahdt.ecommerce.modules.order.entity.Order;
 import com.dahdt.ecommerce.modules.order.entity.OrderItem;
 import com.dahdt.ecommerce.modules.order.entity.OrderStatusHistory;
 import com.dahdt.ecommerce.modules.payment.entity.Payment;
+import com.dahdt.ecommerce.modules.payment.entity.PaymentMethod;
+import com.dahdt.ecommerce.modules.payment.entity.PaymentStatus;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -17,6 +19,8 @@ import java.util.List;
 public interface OrderMapper {
 
     @Mapping(target = "totalQuantity", expression = "java(order.getTotalQuantity())")
+    @Mapping(target = "paymentMethod", expression = "java(mapPaymentMethod(order))")
+    @Mapping(target = "paymentStatus", expression = "java(mapPaymentStatus(order))")
     OrderResponseDTO toResponseDTO(Order order);
 
     List<OrderResponseDTO> toResponseDTOList(List<Order> orders);
@@ -55,5 +59,18 @@ public interface OrderMapper {
         }
         return history.getChangedBy().getEmail();
     }
-}
 
+    default PaymentMethod mapPaymentMethod(Order order) {
+        if (order == null || order.getPayments() == null || order.getPayments().isEmpty()) {
+            return null;
+        }
+        return order.getPayments().get(0).getMethod();
+    }
+
+    default PaymentStatus mapPaymentStatus(Order order) {
+        if (order == null || order.getPayments() == null || order.getPayments().isEmpty()) {
+            return null;
+        }
+        return order.getPayments().get(0).getStatus();
+    }
+}

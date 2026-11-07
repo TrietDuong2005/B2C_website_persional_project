@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout/head :: head('Đơn hàng của tôi - ' + ${brandName})}">
+    <title th:text="'Đơn hàng của tôi - ' + ${brandName}">Đơn hàng của tôi</title>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Header Navbar -->
+<div th:replace="~{layout/shop-navbar :: navbar}"></div>
+
+<main class="flex-grow-1 py-4">
+    <div class="container">
+        <!-- Flash messages -->
+        <div th:replace="~{layout/flash :: flashMessages}"></div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a th:href="@{/}" class="text-decoration-none">Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Đơn hàng của tôi</li>
+            </ol>
+        </nav>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">
+                <i class="bi bi-bag-check text-primary me-2"></i>Đơn hàng của tôi
+            </h3>
+            <span class="text-muted small" th:if="${orders != null and !orders.isEmpty()}"
+                  th:text="'Tổng cộng: ' + ${orders.totalElements} + ' đơn hàng'">0 đơn hàng</span>
+        </div>
+
+        <!-- DANH SÁCH ĐƠN HÀNG KHI CÓ DỮ LIỆU -->
+        <div th:if="${orders != null and !orders.isEmpty()}">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden mb-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-uppercase small text-muted">
+                            <tr>
+                                <th scope="col" style="min-width: 160px;">Mã đơn hàng</th>
+                                <th scope="col" style="min-width: 150px;">Ngày đặt</th>
+                                <th scope="col" class="text-end" style="min-width: 140px;">Tổng tiền</th>
+                                <th scope="col" class="text-center" style="min-width: 140px;">Trạng thái đơn</th>
+                                <th scope="col" class="text-center" style="min-width: 150px;">Thanh toán</th>
+                                <th scope="col" class="text-center" style="width: 100px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="order : ${orders.content}">
+                                <!-- Mã đơn -->
+                                <td>
+                                    <a th:href="@{/account/orders/{code}(code=${order.orderCode})}"
+                                       class="fw-bold text-primary text-decoration-none">
+                                        <i class="bi bi-receipt me-1"></i>
+                                        <span th:text="${order.orderCode}">DH202611070001</span>
+                                    </a>
+                                </td>
+
+                                <!-- Ngày đặt -->
+                                <td class="small text-muted"
+                                    th:text="${#temporals.format(order.placedAt, 'dd/MM/yyyy HH:mm')}">
+                                    07/11/2026 15:30
+                                </td>
+
+                                <!-- Tổng tiền -->
+                                <td class="text-end fw-bold text-dark" th:text="${@money.format(order.totalAmount)}">
+                                    1.290.000 đ
+                                </td>
+
+                                <!-- Trạng thái đơn hàng -->
+                                <td class="text-center">
+                                    <span th:class="${@orderDisplay.getStatusBadgeClass(order.status)}"
+                                          th:text="${@orderDisplay.getStatusLabel(order.status)}">
+                                        Chờ xác nhận
+                                    </span>
+                                </td>
+
+                                <!-- Trạng thái thanh toán -->
+                                <td class="text-center">
+                                    <span th:class="${@orderDisplay.getPaymentStatusBadgeClass(order.paymentStatus)}"
+                                          th:text="${@orderDisplay.getPaymentStatusLabel(order.paymentStatus)}">
+                                        Chờ thanh toán
+                                    </span>
+                                </td>
+
+                                <!-- Nút xem chi tiết -->
+                                <td class="text-center">
+                                    <a th:href="@{/account/orders/{code}(code=${order.orderCode})}"
+                                       class="btn btn-outline-secondary btn-sm"
+                                       title="Xem chi tiết đơn hàng">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PHÂN TRANG (PAGINATION) -->
+            <nav th:if="${orders.totalPages > 1}" aria-label="Phân trang đơn hàng" class="d-flex justify-content-center">
+                <ul class="pagination pagination-sm">
+                    <!-- Nút trang trước -->
+                    <li class="page-item" th:classappend="${!orders.hasPrevious()} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/account/orders(page=${orders.number - 1})}" aria-label="Trước">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+
+                    <!-- Các số trang -->
+                    <li class="page-item" th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}"
+                        th:classappend="${i == orders.number} ? 'active' : ''">
+                        <a class="page-link" th:href="@{/account/orders(page=${i})}" th:text="${i + 1}">1</a>
+                    </li>
+
+                    <!-- Nút trang kế tiếp -->
+                    <li class="page-item" th:classappend="${!orders.hasNext()} ? 'disabled' : ''">
+                        <a class="page-link" th:href="@{/account/orders(page=${orders.number + 1})}" aria-label="Sau">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- DANH SÁCH ĐƠN HÀNG TRỐNG -->
+        <div th:if="${orders == null or orders.isEmpty()}"
+             class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white my-4">
+            <div class="display-3 text-muted mb-3"><i class="bi bi-box2"></i></div>
+            <h4 class="fw-bold text-dark mb-2">Bạn chưa có đơn hàng nào</h4>
+            <p class="text-muted small mb-4">Các sản phẩm bạn mua sẽ xuất hiện tại đây để bạn tiện theo dõi quá trình giao hàng.</p>
+            <div>
+                <a th:href="@{/shop/products}" class="btn btn-primary px-4 shadow-sm">
+                    <i class="bi bi-bag-check me-2"></i>Khám phá sản phẩm ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<div th:replace="~{layout/shop-footer :: footer}"></div>
+
+</body>
+</html>
+

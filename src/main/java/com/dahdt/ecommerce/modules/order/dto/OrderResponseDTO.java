@@ -2,6 +2,8 @@ package com.dahdt.ecommerce.modules.order.dto;
 
 import com.dahdt.ecommerce.modules.order.entity.OrderChannel;
 import com.dahdt.ecommerce.modules.order.entity.OrderStatus;
+import com.dahdt.ecommerce.modules.payment.entity.PaymentMethod;
+import com.dahdt.ecommerce.modules.payment.entity.PaymentStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -31,5 +33,6 @@ public class OrderResponseDTO {
     private String shipName;
     private String shipPhone;
     private String shipAddress;
+    private PaymentMethod paymentMethod;
+    private PaymentStatus paymentStatus;
 }
-
