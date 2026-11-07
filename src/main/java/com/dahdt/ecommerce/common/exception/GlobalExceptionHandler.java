@@ -43,6 +43,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Xử lý lỗi xung đột khóa lạc quan (Optimistic Locking) khi nhiều giao dịch cập nhật tồn kho cùng lúc.
+     */
+    @ExceptionHandler(org.springframework.dao.OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Object>> handleOptimisticLocking(Exception ex) {
+        log.warn("REST API OptimisticLockingFailure: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("Một số sản phẩm vừa thay đổi tồn kho, vui lòng kiểm tra lại giỏ hàng", HttpStatus.BAD_REQUEST.value()));
+    }
+
+    /**
      * Bắt tất cả các lỗi chưa được xử lý riêng (fallback handler) cho REST API.
      */
     @ExceptionHandler(Exception.class)

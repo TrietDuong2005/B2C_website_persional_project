@@ -110,7 +110,7 @@ class CartTest {
     @DisplayName("subtotal() tính tổng tiền chính xác từ các dòng")
     void subtotal_shouldCalculateTotalCorrectly() {
         // Giỏ trống: subtotal = 0
-        assertEquals(BigDecimal.ZERO, cart.subtotal());
+        assertEquals(0, BigDecimal.ZERO.compareTo(cart.subtotal()));
         assertTrue(cart.isEmpty());
 
         // item1: 2 * 1.200.000 = 2.400.000
@@ -119,7 +119,7 @@ class CartTest {
         cart.addItem(variant2, 3);
 
         // Tổng: 2.400.000 + 4.500.000 = 6.900.000
-        assertEquals(new BigDecimal("6900000"), cart.subtotal());
+        assertEquals(0, new BigDecimal("6900000").compareTo(cart.subtotal()));
         assertEquals(5, cart.getTotalQuantity());
         assertFalse(cart.isEmpty());
     }

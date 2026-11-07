@@ -39,6 +39,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     Optional<Inventory> findByIdWithDetails(@Param("id") Long id);
 
     /**
+     * Lấy toàn bộ danh sách tồn kho của một chi nhánh.
+     */
+    List<Inventory> findByStoreId(Long storeId);
+
+    /**
      * Lấy danh sách tồn kho của nhiều biến thể tại một chi nhánh cụ thể (tránh N+1 khi hiển thị Shop/Cart).
      */
     @Query("SELECT i FROM Inventory i WHERE i.store.id = :storeId AND i.variant.id IN :variantIds")

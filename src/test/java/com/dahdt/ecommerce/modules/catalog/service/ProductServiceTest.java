@@ -233,7 +233,7 @@ class ProductServiceTest {
 
         assertNotNull(result);
         assertEquals("COOL-WHT-S", result.getSku());
-        assertEquals(new BigDecimal("189000"), result.getPrice());
+        assertEquals(0, new BigDecimal("189000").compareTo(result.getPrice()));
         verify(productVariantRepository, times(1)).save(any(ProductVariant.class));
     }
 

@@ -227,10 +227,10 @@ class CartServiceTest {
         cart.addItem(activeVariant, 2);
 
         CartItem item = cart.getItems().get(0);
-        assertEquals(new BigDecimal("2500000"), item.getVariant().getPrice());
+        assertEquals(0, new BigDecimal("2500000").compareTo(item.getVariant().getPrice()));
         // lineTotal = 2 * 2.500.000 = 5.000.000 đ
-        assertEquals(new BigDecimal("5000000"), item.lineTotal());
-        assertEquals(new BigDecimal("5000000"), cart.subtotal());
+        assertEquals(0, new BigDecimal("5000000").compareTo(item.lineTotal()));
+        assertEquals(0, new BigDecimal("5000000").compareTo(cart.subtotal()));
     }
 }
 

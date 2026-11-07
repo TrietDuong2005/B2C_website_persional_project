@@ -149,7 +149,7 @@ class ShopCatalogServiceTest {
         assertEquals(1, detail.getVariants().size());
         assertEquals(10, detail.getVariants().get(0).getAvailableStock());
         assertTrue(detail.isInStock());
-        assertEquals(new BigDecimal("2600000"), detail.getMinPrice());
+        assertEquals(0, new BigDecimal("2600000").compareTo(detail.getMinPrice()));
     }
 }
 

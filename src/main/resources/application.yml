@@ -35,10 +35,13 @@ springdoc:
 server:
   port: 8080
 
-# Cấu hình thương hiệu và bảo mật
+# Cấu hình thương hiệu, vận chuyển và bảo mật
 app:
   brand:
     name: "Triết Store"
+  shipping:
+    flat-fee: 30000
+    free-threshold: 1000000
   jwt:
     access-token-expiration: 900000     # 15 phút (milliseconds)
     refresh-token-expiration: 604800000 # 7 ngày (milliseconds)
