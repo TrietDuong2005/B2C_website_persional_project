@@ -21,14 +21,14 @@ import java.util.Set;
 
 /**
  * Seeder dữ liệu mẫu cho môi trường DEV (chỉ kích hoạt với profile 'dev').
- * Tự động tạo 4 tài khoản thử nghiệm ứng với 4 vai trò chính:
+ * Tự động tạo và tự sửa chuẩn dev cho đúng 5 tài khoản thử nghiệm:
  * 1. ADMIN (admin@dahdt.com)
  * 2. STORE_MANAGER (manager@dahdt.com - gắn với chi nhánh STORE-Q1)
  * 3. CASHIER (cashier@dahdt.com - gắn với chi nhánh STORE-Q1)
  * 4. CUSTOMER (customer@dahdt.com)
- * 5. CUSTOMER 2 (customer2@dahdt.com - khách hàng thứ hai phục vụ kiểm thử phân quyền đơn hàng)
+ * 5. CUSTOMER 2 (customer2@dahdt.com - khách hàng thứ hai kiểm thử phân quyền đơn hàng)
  *
- * Lưu ý: Bảng employees được thao tác trực tiếp bằng JdbcTemplate để không phải tạo Entity mới trong Ngày 2.
+ * Lưu ý: Bảng employees được thao tác trực tiếp bằng JdbcTemplate để không phải tạo Entity mới.
  */
 @Component
 @Profile("dev")
@@ -41,7 +41,19 @@ public class DevDataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
-    private static final String DEFAULT_PASSWORD = "password123";
+    public static final String DEFAULT_PASSWORD = "password123";
+
+    /**
+     * Danh sách DUY NHẤT 5 email dev được phép tự động sửa chuẩn dev.
+     * Tuyệt đối không đụng tới tài khoản ngoài danh sách này.
+     */
+    public static final Set<String> DEV_EMAILS = Set.of(
+            "admin@dahdt.com",
+            "manager@dahdt.com",
+            "cashier@dahdt.com",
+            "customer@dahdt.com",
+            "customer2@dahdt.com"
+    );
 
     @Override
     @Transactional
@@ -63,7 +75,9 @@ public class DevDataSeeder implements CommandLineRunner {
                 "Quản lý Chi nhánh Q1",
                 "STORE_MANAGER"
         );
-        linkEmployeeToStore(manager.getId(), "STORE-Q1", "MANAGER");
+        if (manager != null) {
+            linkEmployeeToStore(manager.getId(), "STORE-Q1", "MANAGER");
+        }
 
         // 3. Tài khoản Thu ngân (CASHIER)
         User cashier = createOrUpdateUser(
@@ -72,10 +86,12 @@ public class DevDataSeeder implements CommandLineRunner {
                 "Thu ngân Chi nhánh Q1",
                 "CASHIER"
         );
-        linkEmployeeToStore(cashier.getId(), "STORE-Q1", "CASHIER");
+        if (cashier != null) {
+            linkEmployeeToStore(cashier.getId(), "STORE-Q1", "CASHIER");
+        }
 
         // 4. Tài khoản Khách hàng 1 (CUSTOMER)
-        User customer = createOrUpdateUser(
+        createOrUpdateUser(
                 "customer@dahdt.com",
                 "0901000004",
                 "Khách hàng Thân thiết",
@@ -83,7 +99,7 @@ public class DevDataSeeder implements CommandLineRunner {
         );
 
         // 5. Tài khoản Khách hàng 2 (CUSTOMER)
-        User customer2 = createOrUpdateUser(
+        createOrUpdateUser(
                 "customer2@dahdt.com",
                 "0901000005",
                 "Khách hàng Thử nghiệm 2",
@@ -93,25 +109,77 @@ public class DevDataSeeder implements CommandLineRunner {
         log.info("========== HOÀN THÀNH DEV DATA SEEDER ==========");
     }
 
-    private User createOrUpdateUser(String email, String phone, String fullName, String roleCode) {
-        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+    User createOrUpdateUser(String email, String phone, String fullName, String roleCode) {
+        // Ràng buộc nghiêm ngặt: TUYỆT ĐỐI chỉ đụng tới 5 email dev
+        if (!DEV_EMAILS.contains(email)) {
+            log.warn("Email [{}] không thuộc danh sách tài khoản dev, bỏ qua hoàn toàn.", email);
+            return null;
+        }
+
         Role role = roleRepository.findByCode(roleCode)
                 .orElseThrow(() -> new IllegalStateException("Không tìm thấy vai trò: " + roleCode));
 
-        User user;
+        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+
         if (existingUserOpt.isPresent()) {
-            user = existingUserOpt.get();
-            log.info("Tài khoản [{}] đã tồn tại, kiểm tra và cập nhật vai trò...", email);
+            User user = existingUserOpt.get();
+            boolean modified = false;
+
+            // 1. Kiểm tra và sửa mật khẩu khớp chuẩn dev
+            if (user.getPassword() == null || !passwordEncoder.matches(DEFAULT_PASSWORD, user.getPassword())) {
+                user.setPassword(passwordEncoder.encode(DEFAULT_PASSWORD));
+                log.info("Đã đặt lại mật khẩu dev cho tài khoản [{}]", email);
+                modified = true;
+            }
+
+            // 2. Kiểm tra và sửa trạng thái hoạt động
+            if (!"active".equalsIgnoreCase(user.getStatus())) {
+                user.setStatus("active");
+                log.info("Đã khôi phục trạng thái hoạt động 'active' cho tài khoản [{}]", email);
+                modified = true;
+            }
+            if (user.isDeleted()) {
+                user.setDeleted(false);
+                user.setDeletedAt(null);
+                log.info("Đã khôi phục trạng thái chưa xóa cho tài khoản [{}]", email);
+                modified = true;
+            }
+
+            // 3. Kiểm tra và bổ sung đúng vai trò mong đợi
+            if (user.getRoles() == null) {
+                user.setRoles(new HashSet<>());
+            }
             if (!user.getRoles().contains(role)) {
                 user.getRoles().add(role);
+                log.info("Đã bổ sung vai trò [{}] cho tài khoản [{}]", roleCode, email);
+                modified = true;
+            }
+
+            // 4. Kiểm tra và bổ sung user_profiles
+            if (user.getProfile() == null) {
+                UserProfile profile = UserProfile.builder()
+                        .user(user)
+                        .fullName(fullName)
+                        .build();
+                user.setProfile(profile);
+                log.info("Đã tạo hồ sơ user_profile cho tài khoản [{}]", email);
+                modified = true;
+            } else if (user.getProfile().getFullName() == null || user.getProfile().getFullName().isBlank()) {
+                user.getProfile().setFullName(fullName);
+                log.info("Đã cập nhật họ tên trong user_profile cho tài khoản [{}]", email);
+                modified = true;
+            }
+
+            if (modified) {
                 user = userRepository.save(user);
             }
+            return user;
         } else {
-            log.info("Tạo mới tài khoản [{}] với vai trò [{}]...", email, roleCode);
+            log.info("Tạo mới tài khoản dev [{}] với vai trò [{}]...", email, roleCode);
             Set<Role> roles = new HashSet<>();
             roles.add(role);
 
-            user = User.builder()
+            User user = User.builder()
                     .email(email)
                     .phone(phone)
                     .password(passwordEncoder.encode(DEFAULT_PASSWORD))
@@ -127,12 +195,14 @@ public class DevDataSeeder implements CommandLineRunner {
                     .build();
             user.setProfile(profile);
 
-            user = userRepository.save(user);
+            return userRepository.save(user);
         }
-        return user;
     }
 
     private void linkEmployeeToStore(Long userId, String storeCode, String position) {
+        if (userId == null) {
+            return;
+        }
         try {
             Long storeId = jdbcTemplate.queryForObject(
                     "SELECT id FROM stores WHERE code = ?",
@@ -165,4 +235,3 @@ public class DevDataSeeder implements CommandLineRunner {
         }
     }
 }
-

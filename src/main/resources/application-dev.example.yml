@@ -1,15 +1,25 @@
 # ====================================================================
 # CẤU HÌNH MÔI TRƯỜNG PHÁT TRIỂN MẪU (DEV EXAMPLE)
-# Sao chép file này thành application-dev.yml và điền mật khẩu SQL Server của bạn.
+# Sao chép file này thành application-dev.yml và cấu hình kết nối SQL Server của bạn.
 # File application-dev.yml đã được đưa vào .gitignore để tránh lộ bí mật.
 # ====================================================================
 
 spring:
   datasource:
+    # --- CÁCH 1: Xác thực SQL Server Authentication (mặc định) ---
     url: jdbc:sqlserver://localhost:1433;databaseName=ecommerce_db;encrypt=true;trustServerCertificate=true
     username: sa
     password: <mat_khau_sql_server>    # ← ĐIỀN mật khẩu SQL Server của bạn ở đây
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+    # --- CÁCH 2: Xác thực Windows Authentication (chú thích) ---
+    # Bỏ chú thích dòng url bên dưới, đồng thời xoá hoặc chú thích 2 dòng username và password ở trên:
+    # url: jdbc:sqlserver://localhost:1433;databaseName=ecommerce_db;integratedSecurity=true;encrypt=true;trustServerCertificate=true
+    # Điều kiện theo tài liệu chính thức của Microsoft:
+    # Trên Windows cần chép file mssql-jdbc_auth-<phiên bản>-<kiến trúc>.dll (đúng với số bit của JVM, ví dụ x64)
+    # vào một thư mục nằm trong biến môi trường PATH (hoặc thư mục bin của JDK), hoặc đặt thuộc tính
+    # java.library.path trỏ tới thư mục chứa nó (-Djava.library.path=...).
+    # Nếu thiếu file DLL này, ứng dụng sẽ báo lỗi không tìm thấy thư viện xác thực tích hợp.
 
   jpa:
     hibernate:
@@ -34,4 +44,3 @@ app:
   dev-hints: true
   jwt:
     secret: MyDevSecretKeyForJWTSigningMustBeAtLeast256BitsLong1234567890ABCDEF
-

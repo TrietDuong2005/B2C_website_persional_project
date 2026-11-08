@@ -21,12 +21,16 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
    ```
 2. **Cấu hình môi trường:** Sao chép file cấu hình mẫu sang file cấu hình cá nhân:
    - Sao chép `src/main/resources/application-dev.example.yml` thành `src/main/resources/application-dev.yml`.
-   - Mở `application-dev.yml` và thay thế `<mat_khau_sql_server>` bằng mật khẩu sa/tài khoản SQL Server của bạn.
+   - Chọn một trong hai cách kết nối CSDL trong `application-dev.yml`:
+     - **Cách 1: Tài khoản SQL (sa) — Mặc định:** URL có `databaseName=ecommerce_db;encrypt=true;trustServerCertificate=true`, cấu hình `username: sa` và `password: <mat_khau_sql_server>`.
+     - **Cách 2: Windows Authentication (xác thực tích hợp):** URL thêm `integratedSecurity=true` và KHÔNG khai báo `username` hay `password`.
+       *Điều kiện theo tài liệu chính thức của Microsoft:* trên Windows cần chép file `mssql-jdbc_auth-<phiên bản>-<kiến trúc>.dll` (đúng với số bit của JVM) vào một thư mục nằm trong biến môi trường `PATH`, hoặc đặt thuộc tính `java.library.path` trỏ tới thư mục chứa nó (`-Djava.library.path=...`); nếu thiếu, ứng dụng sẽ báo lỗi không tìm thấy thư viện xác thực.
 3. **Khởi chạy ứng dụng:**
    ```bash
    mvn spring-boot:run
    ```
    Flyway sẽ tự động chạy toàn bộ migration (V1–V30), và `DevDataSeeder` sẽ nạp 5 tài khoản dev mẫu.
+   *Lưu ý:* Ở profile dev, tài khoản dev luôn được đặt lại mật khẩu mặc định khi khởi động.
 
 ## Tài khoản dev thử nghiệm (mật khẩu: `password123`)
 | Vai trò | Email | Chi nhánh | Phạm vi / Mục đích |

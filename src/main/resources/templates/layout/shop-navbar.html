@@ -85,9 +85,9 @@
                         <span sec:authentication="name" class="d-inline-block text-truncate" style="max-width: 140px;">User</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li>
+                        <li th:if="${@roleDisplay.hasStaffRole(#authentication)}">
                             <h6 class="dropdown-header">
-                                Vai trò: <span class="badge bg-primary" sec:authentication="principal.authorities">CUSTOMER</span>
+                                Vai trò: <span class="badge bg-primary" th:text="${@roleDisplay.getStaffRoleLabel(#authentication)}">Nhân viên</span>
                             </h6>
                         </li>
                         <li sec:authorize="hasRole('CUSTOMER')">
