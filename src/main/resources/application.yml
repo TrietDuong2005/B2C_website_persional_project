@@ -39,6 +39,7 @@ server:
 app:
   brand:
     name: "Triết Store"
+  dev-hints: false
   shipping:
     flat-fee: 30000
     free-threshold: 1000000

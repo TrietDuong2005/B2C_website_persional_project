@@ -1,0 +1,37 @@
+# ====================================================================
+# CẤU HÌNH MÔI TRƯỜNG PHÁT TRIỂN MẪU (DEV EXAMPLE)
+# Sao chép file này thành application-dev.yml và điền mật khẩu SQL Server của bạn.
+# File application-dev.yml đã được đưa vào .gitignore để tránh lộ bí mật.
+# ====================================================================
+
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=ecommerce_db;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: <mat_khau_sql_server>    # ← ĐIỀN mật khẩu SQL Server của bạn ở đây
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true          # Bật để nhìn thấy câu SQL thật Hibernate sinh ra (phục vụ học)
+    properties:
+      hibernate:
+        format_sql: true    # Định dạng SQL cho dễ đọc trong console
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+# Log level cho môi trường dev (hiện nhiều thông tin hơn để debug)
+logging:
+  level:
+    com.dahdt.ecommerce: DEBUG
+    org.springframework.security: DEBUG
+
+# Cấu hình JWT cho môi trường dev (production phải dùng key mạnh hơn)
+app:
+  dev-hints: true
+  jwt:
+    secret: MyDevSecretKeyForJWTSigningMustBeAtLeast256BitsLong1234567890ABCDEF
+

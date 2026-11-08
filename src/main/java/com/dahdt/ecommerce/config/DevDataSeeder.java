@@ -26,6 +26,7 @@ import java.util.Set;
  * 2. STORE_MANAGER (manager@dahdt.com - gắn với chi nhánh STORE-Q1)
  * 3. CASHIER (cashier@dahdt.com - gắn với chi nhánh STORE-Q1)
  * 4. CUSTOMER (customer@dahdt.com)
+ * 5. CUSTOMER 2 (customer2@dahdt.com - khách hàng thứ hai phục vụ kiểm thử phân quyền đơn hàng)
  *
  * Lưu ý: Bảng employees được thao tác trực tiếp bằng JdbcTemplate để không phải tạo Entity mới trong Ngày 2.
  */
@@ -73,11 +74,19 @@ public class DevDataSeeder implements CommandLineRunner {
         );
         linkEmployeeToStore(cashier.getId(), "STORE-Q1", "CASHIER");
 
-        // 4. Tài khoản Khách hàng (CUSTOMER)
+        // 4. Tài khoản Khách hàng 1 (CUSTOMER)
         User customer = createOrUpdateUser(
                 "customer@dahdt.com",
                 "0901000004",
                 "Khách hàng Thân thiết",
+                "CUSTOMER"
+        );
+
+        // 5. Tài khoản Khách hàng 2 (CUSTOMER)
+        User customer2 = createOrUpdateUser(
+                "customer2@dahdt.com",
+                "0901000005",
+                "Khách hàng Thử nghiệm 2",
                 "CUSTOMER"
         );
 

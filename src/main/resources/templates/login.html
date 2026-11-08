@@ -59,7 +59,7 @@
     </div>
 
     <!-- Bảng thông tin tài khoản dev thử nghiệm -->
-    <div class="card mt-4 border-info shadow-sm bg-info-subtle">
+    <div class="card mt-4 border-info shadow-sm bg-info-subtle" th:if="${devHints}">
         <div class="card-body p-3">
             <h6 class="fw-bold text-info-emphasis mb-2">
                 <i class="bi bi-info-circle-fill me-1"></i>Tài khoản DEV thử nghiệm (mật khẩu: <code>password123</code>):
@@ -80,6 +80,10 @@
                 <button type="button" class="list-group-item list-group-item-action bg-transparent py-1 px-0 border-0"
                         onclick="fillCreds('customer@dahdt.com')">
                     <strong>CUSTOMER:</strong> <code>customer@dahdt.com</code> <span class="badge bg-primary ms-1">→ /</span>
+                </button>
+                <button type="button" class="list-group-item list-group-item-action bg-transparent py-1 px-0 border-0"
+                        onclick="fillCreds('customer2@dahdt.com')">
+                    <strong>CUSTOMER 2:</strong> <code>customer2@dahdt.com</code> <span class="badge bg-primary ms-1">→ /</span>
                 </button>
             </div>
             <div class="form-text mt-1 text-muted">Nhấn vào tài khoản trên để tự điền nhanh.</div>

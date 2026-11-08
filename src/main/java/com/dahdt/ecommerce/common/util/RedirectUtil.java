@@ -18,6 +18,7 @@ public final class RedirectUtil {
      * 3. Không chứa schema "://" (chặn http://evil.com, https://evil.com, javascript://...).
      * 4. Không chứa dấu gạch chéo ngược "\" (chặn /\evil.com hoặc \evil.com có thể bị trình duyệt chuẩn hóa thành //).
      * 5. Không chứa ký tự xuống dòng (\r, \n) (chặn HTTP Response Splitting / Header Injection).
+     * 6. Không bắt đầu bằng /login, /logout, /error (so sánh phần path, trước dấu ?) để tránh vòng lặp chuyển hướng.
      *
      * @param url Đường dẫn cần kiểm tra
      * @return true nếu là đường dẫn nội bộ hợp lệ, false nếu không an toàn
@@ -45,6 +46,18 @@ public final class RedirectUtil {
 
         // Không chứa ký tự xuống dòng (\r, \n)
         if (trimmed.contains("\r") || trimmed.contains("\n")) {
+            return false;
+        }
+
+        // Tách phần path trước dấu ? để kiểm tra các đường dẫn có thể gây vòng lặp
+        String path = trimmed;
+        int queryIndex = path.indexOf('?');
+        if (queryIndex != -1) {
+            path = path.substring(0, queryIndex);
+        }
+
+        // Từ chối các đường dẫn bắt đầu bằng /login, /logout, /error
+        if (path.startsWith("/login") || path.startsWith("/logout") || path.startsWith("/error")) {
             return false;
         }
 

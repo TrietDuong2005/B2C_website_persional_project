@@ -1,78 +1,96 @@
-# Triết Store — Hệ Thống Bán Lẻ Chuỗi Cửa Hàng Giày Dép Đa Kênh (Shop + POS + Admin)
-### Spring Boot MVC + Thymeleaf + SQL Server
+# Triết Store — Hệ Thống Bán Lẻ Chuỗi Cửa Hàng Giày Dép Đa Kênh
 
-## Mô tả
+Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết hợp bán hàng tại quầy (POS), đặt hàng trực tuyến (Shop) và quản trị tập trung (Admin), xây dựng theo kiến trúc MVC phân lớp theo module nghiệp vụ.
 
-Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết hợp bán hàng tại quầy (POS), đặt hàng trực tuyến (Shop) và quản trị tập trung (Admin), xây dựng bằng **Spring Boot 3.x** với kiến trúc MVC phân lớp theo module nghiệp vụ. Hệ thống hỗ trợ đầy đủ các chức năng: quản lý danh mục giày dép 2 cấp, 8 thương hiệu, 30 sản phẩm mẫu (120 biến thể màu/size EU), tồn kho theo từng chi nhánh có khóa lạc quan, bán hàng POS quét mã SKU, đặt hàng online, thanh toán đa phương thức và khuyến mãi voucher.
+## Công nghệ sử dụng
+- **Backend:** Java 17, Spring Boot 3.x (Spring MVC, Spring Data JPA, Spring Security, Validation)
+- **Cơ sở dữ liệu & Migration:** Microsoft SQL Server, Flyway (`ddl-auto: validate`)
+- **Giao diện:** Thymeleaf, Bootstrap 5, Bootstrap Icons (tập trung theme CSS và tên thương hiệu)
+- **Tiện ích & Mapping:** Lombok, MapStruct, springdoc-openapi (Swagger UI)
+- **Build tool:** Maven
 
-## Tech Stack
+## Yêu cầu môi trường
+- **Java:** JDK 17 trở lên
+- **Maven:** 3.8 trở lên
+- **CSDL:** Microsoft SQL Server (đang chạy trên `localhost:1433`)
 
-- **Java 17** + **Spring Boot 3.x** (MVC)
-- **SQL Server** (cơ sở dữ liệu)
-- **Spring Data JPA** (ORM/Hibernate)
-- **Flyway** (quản lý migration CSDL)
-- **Spring Security + JWT** (bảo mật, phân quyền)
-- **MapStruct** (chuyển đổi Entity ↔ DTO)
-- **springdoc-openapi** (Swagger UI — tài liệu API)
-- **Maven** (build tool)
-
-> ⚠️ **Lưu ý CDN & Rủi ro RSK-09**: Trong các giai đoạn phát triển ban đầu, CSS/JS giao diện (Bootstrap 5, Bootstrap Icons, AdminLTE 4) được tải qua CDN công khai. Theo kế hoạch quản lý rủi ro (RSK-09), vào **Ngày 14** trước khi đóng băng mã nguồn và demo, toàn bộ tài nguyên CDN này sẽ được tải về lưu trữ offline tại thư mục `src/main/resources/static/vendor/` để đảm bảo hệ thống hoạt động hoàn toàn độc lập khi không có Internet.
-
-## Yêu cầu trước khi chạy
-
-1. **Java 17+** — tải tại [Adoptium](https://adoptium.net/)
-2. **Maven 3.8+** — tải tại [Maven](https://maven.apache.org/download.cgi) (hoặc dùng IntelliJ có sẵn)
-3. **SQL Server** — cài đặt và đảm bảo đang chạy trên `localhost:1433`
-4. **Tạo database**: mở SQL Server Management Studio (SSMS), chạy lệnh:
+## Các bước cài đặt và khởi chạy
+1. **Tạo CSDL SQL Server:** Mở SSMS hoặc sqlcmd, tạo database rỗng không chỉ định COLLATE:
    ```sql
    CREATE DATABASE ecommerce_db;
    ```
-5. **Cấu hình kết nối DB**: mở file `src/main/resources/application-dev.yml`, đổi `password` thành mật khẩu SQL Server của bạn.
+2. **Cấu hình môi trường:** Sao chép file cấu hình mẫu sang file cấu hình cá nhân:
+   - Sao chép `src/main/resources/application-dev.example.yml` thành `src/main/resources/application-dev.yml`.
+   - Mở `application-dev.yml` và thay thế `<mat_khau_sql_server>` bằng mật khẩu sa/tài khoản SQL Server của bạn.
+3. **Khởi chạy ứng dụng:**
+   ```bash
+   mvn spring-boot:run
+   ```
+   Flyway sẽ tự động chạy toàn bộ migration (V1–V30), và `DevDataSeeder` sẽ nạp 5 tài khoản dev mẫu.
 
-## Cách chạy
+## Tài khoản dev thử nghiệm (mật khẩu: `password123`)
+| Vai trò | Email | Chi nhánh | Phạm vi / Mục đích |
+|---|---|---|---|
+| **ADMIN** | `admin@dahdt.com` | Toàn chuỗi | Quản trị toàn hệ thống, danh mục, kho bãi |
+| **STORE_MANAGER** | `manager@dahdt.com` | `STORE-Q1` | Quản lý cửa hàng, nhân viên, tồn kho chi nhánh |
+| **CASHIER** | `cashier@dahdt.com` | `STORE-Q1` | Thu ngân POS, bán hàng tại quầy |
+| **CUSTOMER** | `customer@dahdt.com` | — | Khách hàng mua sắm online, đặt hàng |
+| **CUSTOMER** | `customer2@dahdt.com` | — | Khách hàng thứ hai kiểm thử phân quyền đơn hàng |
 
+## Các URL chính theo từng khu
+- **Khu Shop (Khách hàng):**
+  - Trang chủ: [http://localhost:8080/](http://localhost:8080/)
+  - Danh sách & lọc sản phẩm: [http://localhost:8080/shop/products](http://localhost:8080/shop/products)
+  - Giỏ hàng: [http://localhost:8080/cart](http://localhost:8080/cart)
+  - Thanh toán (Checkout): [http://localhost:8080/checkout](http://localhost:8080/checkout)
+  - Lịch sử đơn hàng: [http://localhost:8080/account/orders](http://localhost:8080/account/orders)
+- **Khu Quản trị (Admin):**
+  - Dashboard: [http://localhost:8080/admin](http://localhost:8080/admin)
+  - Danh mục: [http://localhost:8080/admin/categories](http://localhost:8080/admin/categories)
+  - Thương hiệu: [http://localhost:8080/admin/brands](http://localhost:8080/admin/brands)
+  - Sản phẩm: [http://localhost:8080/admin/products](http://localhost:8080/admin/products)
+  - Tồn kho & Sổ kho: [http://localhost:8080/admin/inventory](http://localhost:8080/admin/inventory)
+  - Cửa hàng & Nhân viên: [http://localhost:8080/admin/stores](http://localhost:8080/admin/stores)
+- **Khu Bán hàng tại quầy (POS):**
+  - Màn hình POS (dự kiến hoàn thiện Ngày 8–9): [http://localhost:8080/pos](http://localhost:8080/pos)
+- **Tài liệu API (Swagger UI):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- **Đăng nhập:** [http://localhost:8080/login](http://localhost:8080/login)
+
+## Cách chạy kiểm thử (Tests)
+> **Lưu ý:** Lệnh `mvn test` sử dụng trực tiếp cơ sở dữ liệu môi trường dev (`application-dev.yml`), do đó **Microsoft SQL Server phải đang chạy** và database `ecommerce_db` đã được cấu hình trước khi chạy test.
 ```bash
-# Build project (kiểm tra không có lỗi)
-mvn clean install
-
-# Chạy ứng dụng
-mvn spring-boot:run
+mvn test
 ```
 
-Sau khi chạy, truy cập:
-- **Swagger UI** (test API): [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **API Docs** (JSON): [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
-
-### Tài khoản dev (mẫu thử nghiệm)
-
-Dữ liệu tài khoản được tự động khởi tạo khi chạy profile `dev` qua `DevDataSeeder` (mật khẩu đã được mã hóa bằng `BCryptPasswordEncoder`):
-
-| Vai trò | Email | Mật khẩu | Chi nhánh gắn kèm | Mục đích sử dụng |
-|---|---|---|---|---|
-| **ADMIN** | `admin@dahdt.com` | `password123` | Toàn hệ thống | Quản trị chuỗi, danh mục, kho bãi toàn quốc |
-| **STORE_MANAGER** | `manager@dahdt.com` | `password123` | `STORE-Q1` (Nguyễn Trãi - Q1) | Quản lý cửa hàng, duyệt đơn, xem tồn kho chi nhánh |
-| **CASHIER** | `cashier@dahdt.com` | `password123` | `STORE-Q1` (Nguyễn Trãi - Q1) | Đăng nhập POS, quét mã bán hàng tại quầy |
-| **CUSTOMER** | `customer@dahdt.com` | `password123` | — | Đăng nhập Website Shop, mua hàng, áp voucher |
-
-## Cấu trúc dự án
-
-Dự án tổ chức theo **module nghiệp vụ** (feature-based):
-
+## Cấu trúc thư mục rút gọn
 ```
 src/main/java/com/dahdt/ecommerce/
-├── config/          # Cấu hình: Security, Swagger, CORS...
-├── common/          # Code dùng chung: exception handler, API response, tiện ích
-└── modules/         # Từng module nghiệp vụ (auth, catalog, order...)
-    └── <module>/
-        ├── controller/   # Nhận request, trả response
-        ├── service/      # Logic nghiệp vụ
-        ├── repository/   # Truy vấn CSDL
-        ├── entity/       # Ánh xạ bảng CSDL
-        ├── dto/          # Dữ liệu vào/ra API
-        └── mapper/       # Chuyển đổi Entity ↔ DTO
+├── config/                  # Cấu hình Security (2 chain), Swagger, DevDataSeeder
+├── common/                  # Exception, BaseEntity, RedirectUtil, ControllerAdvice chung
+└── modules/
+    ├── auth/ & user/        # Xác thực JWT/Session, quản lý người dùng, địa chỉ
+    ├── catalog/             # Danh mục, thương hiệu, sản phẩm giày dép, biến thể size/màu
+    ├── store/               # Cửa hàng chi nhánh, nhân viên, phạm vi quản lý
+    ├── inventory/           # Quản lý tồn kho theo chi nhánh, sổ cái biến động kho
+    ├── cart/                # Giỏ hàng online của khách hàng
+    ├── order/               # Đơn hàng trực tuyến, Factory tạo đơn, Observer trừ/hoàn kho
+    ├── payment/             # Chiến lược thanh toán (Strategy: COD, Tiền mặt, Thẻ, QR)
+    ├── promotion/           # Mã giảm giá (Strategy: Phần trăm, Cố định), kiểm tra điều kiện
+    └── report/              # Thống kê báo cáo, dashboard doanh thu
+src/main/resources/
+├── db/migration/            # Flyway migrations (V1 đến V30)
+└── templates/               # Giao diện Thymeleaf (shop/, admin/, pos/, layout/)
 ```
 
-## Tài liệu tham khảo
-
-- `PROJECT_BRIEF.md` — đặc tả kiến trúc và quy ước dự án
-- `thiet-ke-db-ecommerce-b2c.md` — thiết kế CSDL 40+ bảng theo module
+## Trạng thái chức năng
+- **Đã hoàn thành (Ngày 1–6, Mốc v0.5):**
+  - Xác thực 2 chain (Session cho Web + JWT cho API), phân quyền 4 vai trò.
+  - CRUD danh mục 2 cấp, thương hiệu, sản phẩm giày dép kèm biến thể màu/size EU.
+  - Quản lý cửa hàng, nhân viên, tồn kho chi nhánh có khóa lạc quan (`@Version`) và sổ cái kho.
+  - Shop online: trang chủ, xem/tìm kiếm/lọc sản phẩm, giỏ hàng, checkout, áp mã voucher.
+  - Đặt hàng online với Design Pattern: Factory (tạo đơn), Strategy (thanh toán & giảm giá), Observer (trừ kho tự động qua Spring Events).
+  - Tối ưu hiệu năng nạp dữ liệu Shop và chuẩn hóa bảo mật Open Redirect.
+- **Đang triển khai tiếp theo (Ngày 8–14):**
+  - Khu POS bán hàng tại quầy: tìm/quét mã SKU, giỏ hàng quầy, tính tiền thừa, in hóa đơn.
+  - Quản lý đơn hàng tập trung đa kênh trên trang Admin (đổi trạng thái với State Pattern).
+  - Báo cáo thống kê, dashboard doanh thu theo chi nhánh và kênh bán.

@@ -41,9 +41,11 @@ public class Address extends BaseEntity {
     @Column(name = "detail_address", nullable = false, length = 500)
     private String detailAddress;
 
+    @Builder.Default
     @Column(name = "is_default", nullable = false)
     private boolean isDefault = false;
 
+    @Builder.Default
     @Column(nullable = false, length = 20)
     private String type = "shipping";
 

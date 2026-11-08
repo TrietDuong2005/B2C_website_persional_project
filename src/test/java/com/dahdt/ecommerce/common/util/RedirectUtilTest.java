@@ -63,11 +63,26 @@ class RedirectUtilTest {
     }
 
     @Test
+    @DisplayName("isValidRedirect(): Từ chối đường dẫn bắt đầu bằng /login, /logout, /error để tránh vòng lặp")
+    void testLoopProneUrls_shouldBeInvalid() {
+        assertFalse(RedirectUtil.isValidRedirect("/login"));
+        assertFalse(RedirectUtil.isValidRedirect("/login?redirect=/login"));
+        assertFalse(RedirectUtil.isValidRedirect("/logout"));
+        assertFalse(RedirectUtil.isValidRedirect("/logout?redirect=/shop"));
+        assertFalse(RedirectUtil.isValidRedirect("/error"));
+        assertFalse(RedirectUtil.isValidRedirect("/error?status=500"));
+    }
+
+    @Test
     @DisplayName("getSafeRedirect(): Trả về đúng URL khi hợp lệ và fallback về mặc định khi không hợp lệ")
     void testGetSafeRedirect() {
         assertEquals("/shop/products", RedirectUtil.getSafeRedirect("/shop/products", "/"));
         assertEquals("/", RedirectUtil.getSafeRedirect("http://evil.com", "/"));
         assertEquals("/shop/products", RedirectUtil.getSafeRedirect("//evil.com", "/shop/products"));
+        assertEquals("/", RedirectUtil.getSafeRedirect("/login?redirect=/login", "/"));
+        assertEquals("/", RedirectUtil.getSafeRedirect("/login", "/"));
+        assertEquals("/", RedirectUtil.getSafeRedirect("/logout", "/"));
+        assertEquals("/", RedirectUtil.getSafeRedirect("/error", "/"));
     }
 }
 

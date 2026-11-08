@@ -30,6 +30,7 @@ public class User extends BaseEntity {
     @Column(name = "password_hash", nullable = false)
     private String password;
 
+    @Builder.Default
     @Column(nullable = false, length = 20)
     private String status = "pending";
 
@@ -39,12 +40,14 @@ public class User extends BaseEntity {
     @Column(name = "phone_verified_at")
     private LocalDateTime phoneVerifiedAt;
 
+    @Builder.Default
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
