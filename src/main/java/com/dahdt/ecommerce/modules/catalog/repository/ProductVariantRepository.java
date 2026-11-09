@@ -1,6 +1,7 @@
 package com.dahdt.ecommerce.modules.catalog.repository;
 
 import com.dahdt.ecommerce.modules.catalog.entity.ProductVariant;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -87,5 +88,25 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
      */
     @Query("SELECT MAX(v.price) FROM ProductVariant v WHERE v.status = com.dahdt.ecommerce.modules.catalog.entity.ProductVariantStatus.ACTIVE AND v.product.status = com.dahdt.ecommerce.modules.catalog.entity.ProductStatus.ACTIVE")
     BigDecimal findMaxActivePrice();
+
+    /**
+     * Tìm kiếm biến thể ACTIVE thuộc sản phẩm ACTIVE phục vụ bán hàng tại quầy POS:
+     * - Khớp chính xác SKU
+     * - Khớp chính xác Barcode
+     * - Khớp từ khóa trong tên sản phẩm cha
+     * - Eager fetch Product để tránh N+1
+     * - Giới hạn bằng Pageable (tối đa 20 dòng)
+     */
+    @Query("SELECT v FROM ProductVariant v JOIN FETCH v.product p " +
+            "WHERE v.status = com.dahdt.ecommerce.modules.catalog.entity.ProductVariantStatus.ACTIVE " +
+            "AND p.status = com.dahdt.ecommerce.modules.catalog.entity.ProductStatus.ACTIVE " +
+            "AND (LOWER(v.sku) = LOWER(:kw) " +
+            "     OR v.barcode = :kw " +
+            "     OR LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%'))) " +
+            "ORDER BY CASE " +
+            "    WHEN LOWER(v.sku) = LOWER(:kw) THEN 0 " +
+            "    WHEN v.barcode = :kw THEN 1 " +
+            "    ELSE 2 END, p.name ASC, v.sku ASC")
+    List<ProductVariant> searchActiveVariantsForPos(@Param("kw") String kw, Pageable pageable);
 }
 

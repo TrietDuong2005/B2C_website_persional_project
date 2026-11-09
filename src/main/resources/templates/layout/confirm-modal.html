@@ -37,6 +37,7 @@
         const messageEl = document.getElementById('globalConfirmModalMessage');
         const submitBtn = document.getElementById('globalConfirmSubmitBtn');
         let pendingForm = null;
+        let pendingCallback = null;
 
         function getBsModal() {
             if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -44,6 +45,24 @@
             }
             return null;
         }
+
+        // Hàm mở modal xác nhận linh hoạt cho JavaScript (như POS xóa giỏ)
+        window.openConfirmModal = function (options) {
+            options = options || {};
+            if (titleEl) titleEl.textContent = options.title || 'Xác nhận thao tác';
+            if (messageEl) messageEl.textContent = options.message || 'Bạn có chắc chắn muốn thực hiện thao tác này?';
+            if (submitBtn) {
+                submitBtn.textContent = options.btnText || 'Xác nhận';
+                submitBtn.className = 'btn btn-sm px-3 shadow-sm ' + (options.btnClass || 'btn-danger');
+            }
+            pendingForm = null;
+            pendingCallback = typeof options.onConfirm === 'function' ? options.onConfirm : null;
+
+            const bsModal = getBsModal();
+            if (bsModal) {
+                bsModal.show();
+            }
+        };
 
         // Bắt sự kiện click trên các phần tử có data-confirm-message
         document.addEventListener('click', function (e) {
@@ -82,13 +101,20 @@
                     const bsModal = getBsModal();
                     if (bsModal) bsModal.hide();
                     formToSubmit.submit();
+                } else if (pendingCallback) {
+                    const callbackToRun = pendingCallback;
+                    pendingCallback = null;
+                    const bsModal = getBsModal();
+                    if (bsModal) bsModal.hide();
+                    callbackToRun();
                 }
             });
         }
 
-        // Xóa form đang chờ khi modal bị đóng hoặc nhấn Hủy
+        // Xóa form và callback đang chờ khi modal bị đóng hoặc nhấn Hủy
         modalEl.addEventListener('hidden.bs.modal', function () {
             pendingForm = null;
+            pendingCallback = null;
         });
     });
 </script>

@@ -75,6 +75,42 @@ class OrderFactoryTest {
         assertMoneyEquals(BigDecimal.ZERO, order.getTotalAmount());
     }
 
+    @Test
+    @DisplayName("createPosOrder: Khởi tạo đúng kênh POS, trạng thái COMPLETED, cashier đúng, customer null, ship_* null")
+    void testCreatePosOrder_Success() {
+        Store store = Store.builder().id(2L).code("STORE-Q1").name("Triết Store - Quận 1").build();
+        User cashier = User.builder().id(30L).email("cashier@dahdt.com").build();
+
+        Order order = orderFactory.createPosOrder(store, cashier);
+
+        assertNotNull(order);
+        assertNotNull(order.getOrderCode());
+        assertTrue(order.getOrderCode().startsWith("HD"), "Mã đơn POS phải bắt đầu bằng tiền tố HD");
+        assertEquals(OrderChannel.POS, order.getChannel());
+        assertEquals(OrderStatus.COMPLETED, order.getStatus());
+        assertEquals(store, order.getStore());
+        assertEquals(cashier, order.getCashier());
+        assertNull(order.getCustomer());
+
+        // Thông tin giao hàng toàn bộ là null
+        assertNull(order.getShipName());
+        assertNull(order.getShipPhone());
+        assertNull(order.getShipAddress());
+        assertNull(order.getShipLatitude());
+        assertNull(order.getShipLongitude());
+        assertNull(order.getNote());
+
+        // Thời điểm bán và hoàn tất
+        assertNotNull(order.getPlacedAt());
+        assertNotNull(order.getCompletedAt());
+
+        // Giá trị ban đầu
+        assertMoneyEquals(BigDecimal.ZERO, order.getSubtotal());
+        assertMoneyEquals(BigDecimal.ZERO, order.getDiscountTotal());
+        assertMoneyEquals(BigDecimal.ZERO, order.getShippingFee());
+        assertMoneyEquals(BigDecimal.ZERO, order.getTotalAmount());
+    }
+
     private void assertMoneyEquals(BigDecimal expected, BigDecimal actual) {
         assertNotNull(expected, "Expected money should not be null");
         assertNotNull(actual, "Actual money should not be null");
@@ -83,12 +119,15 @@ class OrderFactoryTest {
     }
 
     @Test
-    @DisplayName("OrderCodeGenerator: Sinh mã có định dạng chuẩn DH + yyyyMMdd + 4 chữ số")
+    @DisplayName("OrderCodeGenerator: Sinh mã có định dạng chuẩn DH cho ONLINE và HD cho POS")
     void testOrderCodeFormat() {
-        String code = codeGenerator.generateUniqueOrderCode();
-        assertNotNull(code);
-        // Định dạng DH + 8 ký tự ngày (yyyyMMdd) + 4 chữ số = 14 ký tự
-        assertTrue(code.matches("^DH\\d{12}$"), "Mã đơn hàng phải khớp regex DH + 8 số ngày + 4 số: " + code);
+        String onlineCode = codeGenerator.generateUniqueOrderCode(OrderChannel.ONLINE);
+        assertNotNull(onlineCode);
+        assertTrue(onlineCode.matches("^DH\\d{12}$"), "Mã đơn online phải khớp regex DH + 8 số ngày + 4 số: " + onlineCode);
+
+        String posCode = codeGenerator.generateUniqueOrderCode(OrderChannel.POS);
+        assertNotNull(posCode);
+        assertTrue(posCode.matches("^HD\\d{12}$"), "Mã đơn POS phải khớp regex HD + 8 số ngày + 4 số: " + posCode);
     }
 }
 

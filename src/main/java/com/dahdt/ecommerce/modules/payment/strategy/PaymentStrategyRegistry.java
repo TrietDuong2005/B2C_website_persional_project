@@ -48,6 +48,27 @@ public class PaymentStrategyRegistry {
     }
 
     /**
+     * Lấy chiến lược thanh toán phù hợp cho đơn hàng bán tại quầy POS.
+     * Kiểm tra chặt chẽ: nếu phương thức không tồn tại hoặc không được hỗ trợ ở quầy POS thì ném lỗi nghiệp vụ.
+     *
+     * @param method Phương thức thanh toán được chọn tại quầy (CASH, CARD, QR)
+     * @return Chiến lược thanh toán tương ứng
+     * @throws BadRequestException nếu phương thức không hợp lệ hoặc không hỗ trợ ở quầy
+     */
+    public PaymentStrategy getPosStrategy(PaymentMethod method) {
+        if (method == null) {
+            throw new BadRequestException("Vui lòng chọn phương thức thanh toán.");
+        }
+
+        PaymentStrategy strategy = strategies.get(method);
+        if (strategy == null || !strategy.isSupportedPos()) {
+            throw new BadRequestException("Phương thức thanh toán [" + method + "] không hỗ trợ ở quầy.");
+        }
+
+        return strategy;
+    }
+
+    /**
      * Lấy chiến lược thanh toán tổng quát theo phương thức (dùng chung cho cả POS sau này).
      *
      * @param method Phương thức thanh toán

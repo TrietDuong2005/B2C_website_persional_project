@@ -54,6 +54,21 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Xử lý lỗi validation dữ liệu đầu vào (@Valid) cho REST API.
+     */
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValid(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        String message = "Dữ liệu yêu cầu không hợp lệ";
+        if (ex.getBindingResult() != null && !ex.getBindingResult().getAllErrors().isEmpty()) {
+            message = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        }
+        log.warn("REST API Validation error: {}", message);
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(message, HttpStatus.BAD_REQUEST.value()));
+    }
+
+    /**
      * Bắt tất cả các lỗi chưa được xử lý riêng (fallback handler) cho REST API.
      */
     @ExceptionHandler(Exception.class)

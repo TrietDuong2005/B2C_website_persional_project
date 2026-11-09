@@ -31,6 +31,11 @@ public class CodPaymentStrategy implements PaymentStrategy {
     }
 
     @Override
+    public boolean isSupportedPos() {
+        return false;
+    }
+
+    @Override
     public Payment processPayment(Order order) {
         return Payment.builder()
                 .order(order)

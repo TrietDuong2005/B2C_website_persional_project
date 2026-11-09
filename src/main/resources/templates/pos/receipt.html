@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Hóa đơn ' + ${receipt.orderCode} + ' - ' + ${brandName}">Hóa đơn bán lẻ POS</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+    <!-- Bootstrap 5 CSS qua CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons qua CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Theme CSS thương hiệu -->
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+
+    <style>
+        /* Khổ giấy phiếu 80mm cho máy in nhiệt POS */
+        .receipt-container {
+            width: 80mm;
+            max-width: 100%;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 15px 12px;
+            font-family: 'Courier New', Courier, monospace, system-ui, sans-serif;
+            font-size: 13px;
+            line-height: 1.35;
+            color: #000000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        .receipt-dashed {
+            border-top: 1px dashed #444;
+            margin: 8px 0;
+        }
+
+        .receipt-double {
+            border-top: 2px dashed #000;
+            margin: 10px 0;
+        }
+
+        /* Tối ưu hóa khi in (window.print()) */
+        @media print {
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .receipt-container {
+                width: 80mm !important;
+                max-width: 80mm !important;
+                margin: 0 !important;
+                padding: 5mm 3mm !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body class="bg-body-secondary py-3">
+
+<!-- Thanh công cụ phía trên (Ẩn khi in ấn) -->
+<div class="container text-center mb-3 no-print">
+    <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+        <button type="button" onclick="window.print()" class="btn btn-primary shadow-sm">
+            <i class="bi bi-printer-fill me-1"></i>In hóa đơn
+        </button>
+        <a th:href="@{/pos}" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-circle me-1"></i>Bán đơn mới
+        </a>
+        <a th:href="@{/pos/orders}" class="btn btn-outline-secondary shadow-sm">
+            <i class="bi bi-clock-history me-1"></i>Đơn gần đây
+        </a>
+    </div>
+</div>
+
+<!-- Khối Phiếu Hóa đơn 80mm -->
+<div class="receipt-container">
+    <!-- Tiêu đề cửa hàng -->
+    <div class="text-center">
+        <h5 class="fw-bold text-uppercase mb-1" th:text="${brandName}">TRIẾT STORE</h5>
+        <div class="fw-semibold" th:text="${receipt.storeName}">Chi nhánh</div>
+        <div class="small" th:text="${receipt.storeAddress}">Địa chỉ chi nhánh</div>
+        <div class="small" th:if="${receipt.storePhone}">ĐT: <span th:text="${receipt.storePhone}">0123456789</span></div>
+    </div>
+
+    <div class="receipt-dashed"></div>
+
+    <div class="text-center my-2">
+        <h6 class="fw-bold text-uppercase mb-1">PHIẾU THANH TOÁN</h6>
+        <div class="fw-bold" th:text="'Mã đơn: ' + ${receipt.orderCode}">HD202611081234</div>
+    </div>
+
+    <!-- Thông tin thời gian và thu ngân -->
+    <div class="small mb-1">
+        <div class="d-flex justify-content-between">
+            <span>Thời gian:</span>
+            <span th:text="${#temporals.format(receipt.orderTime, 'dd/MM/yyyy HH:mm:ss')}">08/11/2026 14:30:00</span>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Thu ngân:</span>
+            <span th:text="${receipt.cashierName}">Thu ngân</span>
+        </div>
+    </div>
+
+    <div class="receipt-dashed"></div>
+
+    <!-- Danh sách mặt hàng snapshot -->
+    <table class="w-100" style="font-size: 12.5px;">
+        <thead>
+        <tr class="fw-bold">
+            <th style="width: 50%;">Tên hàng</th>
+            <th class="text-center" style="width: 15%;">SL</th>
+            <th class="text-end" style="width: 35%;">T.Tiền</th>
+        </tr>
+        </thead>
+        <tbody>
+        <th:block th:each="item : ${receipt.items}">
+            <tr>
+                <td colspan="3" class="pt-1">
+                    <span class="fw-semibold" th:text="${item.productName}">Tên giày</span>
+                    <span class="text-muted" th:text="'(' + ${item.color} + ', ' + ${item.size} + ')'">(Đen, 42)</span>
+                </td>
+            </tr>
+            <tr class="pb-1" style="border-bottom: 1px dotted #ccc;">
+                <td class="text-muted ps-2" th:text="${@money.format(item.unitPrice)}">500.000 đ</td>
+                <td class="text-center" th:text="'x' + ${item.quantity}">x1</td>
+                <td class="text-end fw-semibold" th:text="${@money.format(item.lineTotal)}">500.000 đ</td>
+            </tr>
+        </th:block>
+        </tbody>
+    </table>
+
+    <div class="receipt-dashed"></div>
+
+    <!-- Tổng kết số tiền -->
+    <div style="font-size: 13px;">
+        <div class="d-flex justify-content-between mb-1">
+            <span>Tạm tính:</span>
+            <span class="fw-semibold" th:text="${@money.format(receipt.subtotal)}">500.000 đ</span>
+        </div>
+        <div class="d-flex justify-content-between mb-1" th:if="${receipt.discountTotal != null and receipt.discountTotal.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+            <span>Giảm giá voucher:</span>
+            <span class="fw-semibold" th:text="'-' + ${@money.format(receipt.discountTotal)}">-50.000 đ</span>
+        </div>
+        <div class="receipt-double"></div>
+        <div class="d-flex justify-content-between align-items-center my-1 fs-6">
+            <strong class="text-uppercase">TỔNG CỘNG:</strong>
+            <strong class="fs-5" th:text="${@money.format(receipt.totalAmount)}">450.000 đ</strong>
+        </div>
+        <div class="receipt-double"></div>
+    </div>
+
+    <!-- Thông tin thanh toán (Strategy: CASH, CARD, QR) -->
+    <div style="font-size: 12.5px;">
+        <div class="d-flex justify-content-between mb-1">
+            <span>Hình thức:</span>
+            <span class="fw-bold" th:switch="${receipt.paymentMethod}">
+                <span th:case="${T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).CASH}">Tiền mặt</span>
+                <span th:case="${T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).CARD}">Thẻ ngân hàng</span>
+                <span th:case="${T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).QR}">VietQR</span>
+                <span th:case="*">Khác</span>
+            </span>
+        </div>
+
+        <!-- Chi tiết Tiền mặt -->
+        <th:block th:if="${receipt.paymentMethod == T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).CASH}">
+            <div class="d-flex justify-content-between mb-1" th:if="${receipt.cashReceived}">
+                <span>Khách đưa:</span>
+                <span th:text="${@money.format(receipt.cashReceived)}">500.000 đ</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1" th:if="${receipt.changeAmount}">
+                <span>Tiền thừa:</span>
+                <span class="fw-bold" th:text="${@money.format(receipt.changeAmount)}">50.000 đ</span>
+            </div>
+        </th:block>
+
+        <!-- Chi tiết Thẻ hoặc QR (Mã chuẩn y / giao dịch) -->
+        <th:block th:if="${receipt.paymentMethod == T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).CARD or receipt.paymentMethod == T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).QR}">
+            <div class="d-flex justify-content-between mb-1" th:if="${receipt.transactionRef}">
+                <span>Mã giao dịch / chuẩn y:</span>
+                <span class="fw-semibold text-break" th:text="${receipt.transactionRef}">TXN12345678</span>
+            </div>
+        </th:block>
+    </div>
+
+    <div class="receipt-dashed"></div>
+
+    <!-- Ghi chú cuối phiếu theo đúng yêu cầu brief -->
+    <div class="text-center mt-3 pt-1">
+        <p class="mb-1 fw-bold">CẢM ƠN QUÝ KHÁCH & HẸN GẶP LẠI!</p>
+        <p class="small text-muted mb-0" style="font-size: 11px;">
+            Phiếu bán hàng minh họa. Hóa đơn điện tử theo quy định cần được tích hợp riêng.
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
+

@@ -7,7 +7,9 @@ import com.dahdt.ecommerce.modules.inventory.entity.InventoryTransactionType;
 import com.dahdt.ecommerce.modules.inventory.repository.InventoryRepository;
 import com.dahdt.ecommerce.modules.inventory.repository.InventoryTransactionRepository;
 import com.dahdt.ecommerce.modules.order.entity.Order;
+import com.dahdt.ecommerce.modules.order.entity.OrderChannel;
 import com.dahdt.ecommerce.modules.order.entity.OrderItem;
+import com.dahdt.ecommerce.modules.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -77,6 +79,15 @@ public class OrderPlacedListener {
             Inventory savedInventory = inventoryRepository.saveAndFlush(inventory);
 
             // 4. Ghi một dòng vào sổ cái giao dịch kho (Audit Log - Append-Only)
+            // Phân biệt người tạo và ghi chú theo kênh bán:
+            // - Đơn POS: người tạo là thu ngân (cashier_id), ghi chú có "Bán tại quầy" và mã đơn
+            // - Đơn ONLINE: người tạo là khách hàng (customer_id)
+            boolean isPosOrder = (order.getChannel() == OrderChannel.POS);
+            User createdByUser = isPosOrder ? order.getCashier() : order.getCustomer();
+            String txNote = isPosOrder
+                    ? "Bán tại quầy cho đơn hàng " + order.getOrderCode()
+                    : "Xuất kho cho đơn hàng " + order.getOrderCode();
+
             InventoryTransaction tx = InventoryTransaction.builder()
                     .variant(item.getVariant())
                     .store(order.getStore())
@@ -85,8 +96,8 @@ public class OrderPlacedListener {
                     .quantityAfter(savedInventory.getQuantityOnHand())
                     .referenceType("ORDER")
                     .referenceId(order.getId())
-                    .note("Xuất kho cho đơn hàng " + order.getOrderCode())
-                    .createdBy(order.getCustomer())
+                    .note(txNote)
+                    .createdBy(createdByUser)
                     .createdAt(LocalDateTime.now())
                     .build();
 

@@ -8,6 +8,7 @@ import com.dahdt.ecommerce.modules.inventory.entity.InventoryTransactionType;
 import com.dahdt.ecommerce.modules.inventory.repository.InventoryRepository;
 import com.dahdt.ecommerce.modules.inventory.repository.InventoryTransactionRepository;
 import com.dahdt.ecommerce.modules.order.entity.Order;
+import com.dahdt.ecommerce.modules.order.entity.OrderChannel;
 import com.dahdt.ecommerce.modules.order.entity.OrderItem;
 import com.dahdt.ecommerce.modules.store.entity.Store;
 import com.dahdt.ecommerce.modules.user.entity.User;
@@ -135,6 +136,45 @@ class OrderPlacedListenerTest {
         assertThrows(InsufficientStockException.class, () -> listener.onOrderPlaced(event));
         // Không được lưu sổ cái kho khi bị lỗi
         verify(inventoryTransactionRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("onOrderPlaced: Đơn POS thì created_by là thu ngân và note có chữ Bán tại quầy kèm mã đơn")
+    void testOnOrderPlaced_PosOrder_CreatedByCashier() {
+        User cashier = User.builder().id(30L).email("cashier@trietstore.vn").build();
+        when(inventoryRepository.findByStoreIdAndVariantId(1L, 100L)).thenReturn(Optional.of(inventory));
+        when(inventoryRepository.saveAndFlush(any(Inventory.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderItem item = OrderItem.builder()
+                .variant(variant)
+                .productName("Giày Thể Thao")
+                .sku("SNK-01")
+                .quantity(2)
+                .build();
+
+        Order posOrder = Order.builder()
+                .id(300L)
+                .orderCode("HD202611080001")
+                .channel(OrderChannel.POS)
+                .store(store)
+                .cashier(cashier)
+                .customer(null)
+                .items(List.of(item))
+                .build();
+
+        OrderPlacedEvent event = new OrderPlacedEvent(this, posOrder);
+        listener.onOrderPlaced(event);
+
+        assertEquals(18, inventory.getQuantityOnHand());
+
+        ArgumentCaptor<InventoryTransaction> txCaptor = ArgumentCaptor.forClass(InventoryTransaction.class);
+        verify(inventoryTransactionRepository, times(1)).save(txCaptor.capture());
+
+        InventoryTransaction tx = txCaptor.getValue();
+        assertNotNull(tx);
+        assertEquals(cashier, tx.getCreatedBy(), "CreatedBy của dòng sổ kho cho đơn POS phải là thu ngân (cashier)");
+        assertTrue(tx.getNote().contains("Bán tại quầy"), "Note sổ kho đơn POS phải chứa 'Bán tại quầy'");
+        assertTrue(tx.getNote().contains("HD202611080001"), "Note sổ kho đơn POS phải chứa mã đơn hàng");
     }
 }
 

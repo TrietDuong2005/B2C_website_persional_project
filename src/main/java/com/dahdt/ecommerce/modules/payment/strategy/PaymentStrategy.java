@@ -4,6 +4,8 @@ import com.dahdt.ecommerce.modules.order.entity.Order;
 import com.dahdt.ecommerce.modules.payment.entity.Payment;
 import com.dahdt.ecommerce.modules.payment.entity.PaymentMethod;
 
+import java.math.BigDecimal;
+
 /**
  * ============================================================================
  * DESIGN PATTERN: STRATEGY (Hành vi - Behavioral Pattern)
@@ -28,9 +30,15 @@ public interface PaymentStrategy {
 
     /**
      * Xác định phương thức thanh toán này có được phép sử dụng cho đơn hàng đặt trực tuyến (Online) hay không.
-     * Ví dụ: COD và EWALLET_MOCK = true; CASH, CARD tại quầy = false.
+     * Ví dụ: COD và EWALLET_MOCK = true; CASH, CARD, QR tại quầy = false.
      */
     boolean isSupportedOnline();
+
+    /**
+     * Xác định phương thức thanh toán này có được phép sử dụng cho đơn hàng bán tại quầy (POS) hay không.
+     * Ví dụ: CASH, CARD, QR = true; COD, EWALLET_MOCK = false.
+     */
+    boolean isSupportedPos();
 
     /**
      * Khởi tạo và xử lý bản ghi giao dịch thanh toán cho đơn hàng.
@@ -39,5 +47,17 @@ public interface PaymentStrategy {
      * @return Thực thể Payment đã được khởi tạo
      */
     Payment processPayment(Order order);
+
+    /**
+     * Khởi tạo và xử lý thanh toán có kèm số tiền khách đưa (dành cho thanh toán tiền mặt CASH tại quầy POS).
+     * Mặc định chuyển tiếp gọi processPayment(order).
+     *
+     * @param order Đơn hàng cần thanh toán
+     * @param cashReceived Số tiền mặt khách đưa
+     * @return Thực thể Payment đã được khởi tạo
+     */
+    default Payment processPayment(Order order, BigDecimal cashReceived) {
+        return processPayment(order);
+    }
 }
 

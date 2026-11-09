@@ -85,11 +85,47 @@ public class OrderFactory {
                 .build();
     }
 
-    // =========================================================================
-    // ĐIỂM MỞ RỘNG CHO NGÀY 8-9 (POS - BÁN HÀNG TẠI QUẦY):
-    // public Order createPosOrder(Store store, User cashier, User customerOrNull) {
-    //     // Kênh POS: channel = POS, status = COMPLETED, cashier = cashier, ship_* = null
-    // }
-    // =========================================================================
+    /**
+     * Khởi tạo đơn hàng bán lẻ tại quầy (POS):
+     * - Kênh bán: POS
+     * - Trạng thái ban đầu: COMPLETED (Đã hoàn tất ngay tại quầy)
+     * - Chi nhánh xuất kho: Cửa hàng nơi thu ngân đang làm việc (store)
+     * - Thu ngân: Tài khoản nhân viên/thu ngân lập đơn (cashier)
+     * - Khách hàng: null (khách lẻ / vãng lai tại quầy)
+     * - Thông tin giao hàng: Toàn bộ là null (không giao hàng)
+     * - Phí vận chuyển: 0đ
+     * - Thời điểm bán và hoàn tất: completedAt = placedAt = now
+     * - Mã đơn hàng: Định dạng tiền tố HD (HD + yyyyMMdd + 4 số ngẫu nhiên)
+     *
+     * @param store Chi nhánh cửa hàng nơi thực hiện giao dịch POS
+     * @param cashier Tài khoản thu ngân thực hiện bán hàng
+     * @return Đối tượng Order mới được khởi tạo ở trạng thái COMPLETED
+     */
+    public Order createPosOrder(Store store, User cashier) {
+        String code = orderCodeGenerator.generateUniqueOrderCode(OrderChannel.POS);
+        LocalDateTime now = LocalDateTime.now();
+
+        return Order.builder()
+                .orderCode(code)
+                .channel(OrderChannel.POS)
+                .status(OrderStatus.COMPLETED)
+                .store(store)
+                .customer(null)
+                .cashier(cashier)
+                .subtotal(BigDecimal.ZERO)
+                .discountTotal(BigDecimal.ZERO)
+                .shippingFee(BigDecimal.ZERO)
+                .totalAmount(BigDecimal.ZERO)
+                .voucherCode(null)
+                .shipName(null)
+                .shipPhone(null)
+                .shipAddress(null)
+                .shipLatitude(null)
+                .shipLongitude(null)
+                .note(null)
+                .placedAt(now)
+                .completedAt(now)
+                .build();
+    }
 }
 

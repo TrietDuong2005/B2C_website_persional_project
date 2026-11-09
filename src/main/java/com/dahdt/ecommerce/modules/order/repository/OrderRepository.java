@@ -1,6 +1,7 @@
 package com.dahdt.ecommerce.modules.order.repository;
 
 import com.dahdt.ecommerce.modules.order.entity.Order;
+import com.dahdt.ecommerce.modules.order.entity.OrderChannel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -42,5 +43,20 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * Lấy danh sách đơn hàng của khách hàng theo phân trang, sắp xếp theo thời điểm đặt giảm dần.
      */
     Page<Order> findByCustomerIdOrderByPlacedAtDesc(Long customerId, Pageable pageable);
+
+    /**
+     * Lấy danh sách đơn hàng POS theo chi nhánh cửa hàng, phân trang và sắp xếp mới nhất trước (tránh N+1 query).
+     */
+    @Query(value = "SELECT o FROM Order o " +
+            "LEFT JOIN FETCH o.cashier c " +
+            "LEFT JOIN FETCH c.profile " +
+            "LEFT JOIN FETCH o.store s " +
+            "WHERE o.channel = :channel AND o.store.id = :storeId " +
+            "ORDER BY o.placedAt DESC",
+            countQuery = "SELECT COUNT(o) FROM Order o WHERE o.channel = :channel AND o.store.id = :storeId")
+    Page<Order> findByChannelAndStoreIdOrderByPlacedAtDesc(
+            @Param("channel") OrderChannel channel,
+            @Param("storeId") Long storeId,
+            Pageable pageable);
 }
 

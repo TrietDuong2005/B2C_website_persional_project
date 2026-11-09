@@ -37,6 +37,11 @@ public class EWalletMockPaymentStrategy implements PaymentStrategy {
     }
 
     @Override
+    public boolean isSupportedPos() {
+        return false;
+    }
+
+    @Override
     public Payment processPayment(Order order) {
         String timestamp = LocalDateTime.now().format(FORMATTER);
         String randomSuffix = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
