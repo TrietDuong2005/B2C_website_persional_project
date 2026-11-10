@@ -33,6 +33,10 @@ public class OrderResponseDTO {
     private String shipName;
     private String shipPhone;
     private String shipAddress;
+    private Long storeId;
+    private String storeName;
+    private String customerName;
+    private String cashierName;
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
 }

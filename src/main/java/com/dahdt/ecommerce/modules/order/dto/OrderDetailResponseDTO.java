@@ -39,6 +39,8 @@ public class OrderDetailResponseDTO {
     private String note;
     private Long storeId;
     private String storeName;
+    private String customerName;
+    private String cashierName;
 
     @Builder.Default
     private List<OrderItemResponseDTO> items = new ArrayList<>();

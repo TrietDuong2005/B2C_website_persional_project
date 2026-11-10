@@ -18,6 +18,10 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface OrderMapper {
 
+    @Mapping(source = "store.id", target = "storeId")
+    @Mapping(source = "store.name", target = "storeName")
+    @Mapping(target = "customerName", expression = "java(mapCustomerName(order))")
+    @Mapping(target = "cashierName", expression = "java(mapCashierName(order))")
     @Mapping(target = "totalQuantity", expression = "java(order.getTotalQuantity())")
     @Mapping(target = "paymentMethod", expression = "java(mapPaymentMethod(order))")
     @Mapping(target = "paymentStatus", expression = "java(mapPaymentStatus(order))")
@@ -27,6 +31,8 @@ public interface OrderMapper {
 
     @Mapping(source = "store.id", target = "storeId")
     @Mapping(source = "store.name", target = "storeName")
+    @Mapping(target = "customerName", expression = "java(mapCustomerName(order))")
+    @Mapping(target = "cashierName", expression = "java(mapCashierName(order))")
     @Mapping(target = "totalQuantity", expression = "java(order.getTotalQuantity())")
     @Mapping(target = "items", source = "items")
     @Mapping(target = "payments", source = "payments")
@@ -72,5 +78,29 @@ public interface OrderMapper {
             return null;
         }
         return order.getPayments().get(0).getStatus();
+    }
+
+    default String mapCustomerName(Order order) {
+        if (order == null || order.getCustomer() == null) {
+            return null;
+        }
+        if (order.getCustomer().getProfile() != null &&
+                order.getCustomer().getProfile().getFullName() != null &&
+                !order.getCustomer().getProfile().getFullName().isBlank()) {
+            return order.getCustomer().getProfile().getFullName();
+        }
+        return order.getCustomer().getEmail();
+    }
+
+    default String mapCashierName(Order order) {
+        if (order == null || order.getCashier() == null) {
+            return null;
+        }
+        if (order.getCashier().getProfile() != null &&
+                order.getCashier().getProfile().getFullName() != null &&
+                !order.getCashier().getProfile().getFullName().isBlank()) {
+            return order.getCashier().getProfile().getFullName();
+        }
+        return order.getCashier().getEmail();
     }
 }

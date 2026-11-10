@@ -7,8 +7,10 @@ import com.dahdt.ecommerce.config.security.CustomUserDetails;
 import com.dahdt.ecommerce.modules.cart.dto.CartResponseDTO;
 import com.dahdt.ecommerce.modules.cart.service.CartService;
 import com.dahdt.ecommerce.modules.order.dto.*;
+import com.dahdt.ecommerce.modules.order.entity.OrderStatus;
 import com.dahdt.ecommerce.modules.order.service.OrderQueryService;
 import com.dahdt.ecommerce.modules.order.service.OrderService;
+import com.dahdt.ecommerce.modules.order.service.OrderStatusService;
 import com.dahdt.ecommerce.modules.payment.entity.PaymentMethod;
 import com.dahdt.ecommerce.modules.user.dto.AddressResponseDTO;
 import com.dahdt.ecommerce.modules.user.service.AddressService;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -38,6 +41,7 @@ public class ShopOrderPageController {
 
     private final OrderService orderService;
     private final OrderQueryService orderQueryService;
+    private final OrderStatusService orderStatusService;
     private final CartService cartService;
     private final AddressService addressService;
 
@@ -253,6 +257,36 @@ public class ShopOrderPageController {
         OrderDetailResponseDTO order = orderQueryService.getCustomerOrderDetail(userId, code);
         model.addAttribute("order", order);
         return "shop/order-detail";
+    }
+
+    /**
+     * Khách hàng tự hủy đơn hàng trực tuyến của chính mình khi đơn đang ở trạng thái PENDING.
+     * Áp dụng Post-Redirect-Get (PRG) và tái sử dụng OrderStatusService.
+     */
+    @PostMapping("/account/orders/{code}/cancel")
+    public String cancelCustomerOrder(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("code") String code,
+            @RequestParam(name = "reason", required = false) String reason,
+            RedirectAttributes redirectAttributes) {
+
+        Long userId = userDetails.getId();
+        try {
+            OrderDetailResponseDTO order = orderQueryService.getCustomerOrderDetail(userId, code);
+            String cancelNote = (reason != null && !reason.trim().isBlank())
+                    ? "Khách hàng tự hủy đơn: " + reason.trim()
+                    : "Khách hàng tự hủy đơn hàng";
+
+            orderStatusService.changeStatus(order.getId(), OrderStatus.CANCELLED, userId, cancelNote);
+            redirectAttributes.addFlashAttribute("successMessage", "Hủy đơn hàng #" + code + " thành công!");
+        } catch (BadRequestException | AccessDeniedException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        } catch (Exception ex) {
+            log.error("Lỗi khi khách hàng hủy đơn hàng [{}]: ", code, ex);
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy đơn hàng: " + ex.getMessage());
+        }
+
+        return "redirect:/account/orders/" + code;
     }
 
     // =========================================================================

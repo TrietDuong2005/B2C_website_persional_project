@@ -46,5 +46,19 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     int incrementUsedCountConditionally(@Param("voucherId") Long voucherId,
                                         @Param("status") VoucherStatus status,
                                         @Param("now") LocalDateTime now);
+
+    /**
+     * Giảm số lượt sử dụng used_count của voucher khi hủy đơn hàng bằng một câu UPDATE nguyên tử.
+     * Đảm bảo used_count chỉ giảm khi đang lớn hơn 0, bảo toàn CHECK constraint trong CSDL (used_count >= 0).
+     *
+     * @param voucherId ID của voucher
+     * @param now Thời điểm cập nhật
+     * @return Số bản ghi được cập nhật (nếu = 0 nghĩa là used_count đã <= 0)
+     */
+    @Modifying
+    @Query("UPDATE Voucher v SET v.usedCount = v.usedCount - 1, v.updatedAt = :now " +
+            "WHERE v.id = :voucherId AND v.usedCount > 0")
+    int decrementUsedCountConditionally(@Param("voucherId") Long voucherId,
+                                        @Param("now") LocalDateTime now);
 }
 
