@@ -22,6 +22,8 @@ public class PaymentResponseDTO {
     private BigDecimal amount;
     private PaymentStatus status;
     private String transactionRef;
+    private BigDecimal cashReceived;
+    private BigDecimal changeAmount;
     private LocalDateTime paidAt;
 }
 

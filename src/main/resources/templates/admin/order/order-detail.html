@@ -370,7 +370,7 @@
                                     <span class="text-muted d-block">Tiền thối lại khách:</span>
                                     <span class="fw-semibold text-dark" th:text="${@money.format(payment.changeAmount)}">50.000 đ</span>
                                 </div>
-                                <div class="mb-2" th:if="${payment.transactionRef != null}">
+                                <div class="mb-2" th:if="${payment.transactionRef != null and !payment.transactionRef.isBlank()}">
                                     <span class="text-muted d-block">Mã tham chiếu giao dịch:</span>
                                     <code th:text="${payment.transactionRef}">TXN-123456</code>
                                 </div>

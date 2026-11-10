@@ -177,11 +177,11 @@
 
         <!-- Chi tiết Tiền mặt -->
         <th:block th:if="${receipt.paymentMethod == T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).CASH}">
-            <div class="d-flex justify-content-between mb-1" th:if="${receipt.cashReceived}">
+            <div class="d-flex justify-content-between mb-1" th:if="${receipt.cashReceived != null}">
                 <span>Khách đưa:</span>
                 <span th:text="${@money.format(receipt.cashReceived)}">500.000 đ</span>
             </div>
-            <div class="d-flex justify-content-between mb-1" th:if="${receipt.changeAmount}">
+            <div class="d-flex justify-content-between mb-1" th:if="${receipt.changeAmount != null}">
                 <span>Tiền thừa:</span>
                 <span class="fw-bold" th:text="${@money.format(receipt.changeAmount)}">50.000 đ</span>
             </div>
@@ -189,7 +189,7 @@
 
         <!-- Chi tiết Thẻ hoặc QR (Mã chuẩn y / giao dịch) -->
         <th:block th:if="${receipt.paymentMethod == T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).CARD or receipt.paymentMethod == T(com.dahdt.ecommerce.modules.payment.entity.PaymentMethod).QR}">
-            <div class="d-flex justify-content-between mb-1" th:if="${receipt.transactionRef}">
+            <div class="d-flex justify-content-between mb-1" th:if="${receipt.transactionRef != null and !receipt.transactionRef.isBlank()}">
                 <span>Mã giao dịch / chuẩn y:</span>
                 <span class="fw-semibold text-break" th:text="${receipt.transactionRef}">TXN12345678</span>
             </div>
