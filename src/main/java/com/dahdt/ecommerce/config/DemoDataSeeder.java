@@ -25,13 +25,11 @@ import com.dahdt.ecommerce.modules.store.entity.Store;
 import com.dahdt.ecommerce.modules.store.repository.StoreRepository;
 import com.dahdt.ecommerce.modules.user.entity.User;
 import com.dahdt.ecommerce.modules.user.repository.UserRepository;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -56,6 +54,7 @@ import java.util.*;
  */
 @Component
 @Profile("dev")
+@ConditionalOnProperty(name = "app.demo-data.enabled", havingValue = "true")
 @org.springframework.core.annotation.Order(2)
 @RequiredArgsConstructor
 @Slf4j
@@ -72,11 +71,6 @@ public class DemoDataSeeder implements ApplicationRunner {
     private final OrderService orderService;
     private final OrderStatusService orderStatusService;
 
-    @Getter
-    @Setter
-    @Value("${app.demo-data.enabled:false}")
-    private boolean demoDataEnabled;
-
     /**
      * Nạp danh sách biến thể sản phẩm đang mở bán (ACTIVE của sản phẩm cha ACTIVE)
      * với JOIN FETCH Product để tránh LazyInitializationException ngoài Hibernate Session.
@@ -87,13 +81,6 @@ public class DemoDataSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        // Kiểm tra thuộc tính hệ thống từ maven-surefire-plugin hoặc biến cấu hình
-        String sysProp = System.getProperty("app.demo-data.enabled");
-        if ("false".equalsIgnoreCase(sysProp) || !demoDataEnabled) {
-            log.info("Thuộc tính app.demo-data.enabled = false. Bỏ qua khởi tạo dữ liệu demo.");
-            return;
-        }
-
         try {
             executeSeeding();
         } catch (Exception ex) {

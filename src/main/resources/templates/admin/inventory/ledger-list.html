@@ -74,9 +74,9 @@
                                 <select name="type" class="form-select">
                                     <option value="">-- Tất cả loại --</option>
                                     <option th:each="t : ${types}" th:value="${t}"
-                                            th:text="${t}"
+                                            th:text="${t.displayName}"
                                             th:selected="${selectedType != null and selectedType == t}">
-                                        IMPORT
+                                        Nhập kho
                                     </option>
                                 </select>
                             </div>

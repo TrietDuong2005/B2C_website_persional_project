@@ -3,11 +3,13 @@ package com.dahdt.ecommerce.config;
 import com.dahdt.ecommerce.modules.catalog.entity.ProductStatus;
 import com.dahdt.ecommerce.modules.catalog.entity.ProductVariant;
 import com.dahdt.ecommerce.modules.catalog.entity.ProductVariantStatus;
+import com.dahdt.ecommerce.modules.catalog.repository.ProductVariantRepository;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -15,29 +17,36 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Kiểm thử tích hợp bắt đúng lỗi LazyInitializationException ngoài Hibernate Session (DemoDataSeederIntegrationTest).
+ * Kiểm thử tích hợp cho DemoDataSeeder và truy vấn nạp biến thể (DemoDataSeederIntegrationTest).
  * Ràng buộc:
  * - Chạy trên kết nối CSDL SQL Server thật của môi trường DEV (profile 'dev').
  * - Chạy HOÀN TOÀN NGOÀI transaction (KHÔNG có @Transactional trên class hay method) để tái hiện chính xác
- *   môi trường chạy thực tế của ApplicationRunner lúc ứng dụng khởi động.
- * - Khẳng định hàm nạp biến thể đủ điều kiện bán (loadSellableVariants) nạp sẵn Product bằng JOIN FETCH,
+ *   môi trường chạy thực tế lúc ứng dụng khởi động.
+ * - Khẳng định hàm nạp biến thể đủ điều kiện bán (findSellableVariants) nạp sẵn Product bằng JOIN FETCH,
  *   tuyệt đối không ném org.hibernate.LazyInitializationException khi gọi isSellable() hoặc getProduct().
- * - Đặt @SpringBootTest(properties = "app.demo-data.enabled=false") để seeder không tự ý nạp dữ liệu trong lúc test.
+ * - Khẳng định bean DemoDataSeeder KHÔNG ĐƯỢC NẠP vào ApplicationContext khi app.demo-data.enabled=false
+ *   nhờ điều kiện @ConditionalOnProperty(name = "app.demo-data.enabled", havingValue = "true").
  * - Tuân thủ quy tắc 17 của brief: Mọi assertion đều có thông điệp mô tả kèm giá trị thật.
  */
 @SpringBootTest(properties = "app.demo-data.enabled=false")
 @ActiveProfiles("dev")
-@DisplayName("Kiểm thử tích hợp chống LazyInitializationException ngoài Session (DemoDataSeederIntegrationTest)")
+@DisplayName("Kiểm thử tích hợp chống LazyInitializationException ngoài Session & Chứng minh Seeder không nạp trong Test")
 class DemoDataSeederIntegrationTest {
 
-    @Autowired
+    @Autowired(required = false)
     private DemoDataSeeder demoDataSeeder;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private ProductVariantRepository productVariantRepository;
+
     @Test
-    @DisplayName("Hàm loadSellableVariants nạp sẵn Product bằng JOIN FETCH, chạy ngoài Transaction không ném LazyInitializationException")
+    @DisplayName("1. Truy vấn findSellableVariants nạp sẵn Product bằng JOIN FETCH, chạy ngoài Transaction không ném LazyInitializationException")
     void testLoadSellableVariants_OutsideTransaction_DoesNotThrowLazyInitializationException() {
         // Thực thi gọi hàm đọc dữ liệu hoàn toàn ngoài Hibernate Session / Transaction
-        List<ProductVariant> variants = demoDataSeeder.loadSellableVariants();
+        List<ProductVariant> variants = productVariantRepository.findSellableVariants();
 
         // Sử dụng Assumptions: nếu cơ sở dữ liệu dev chưa áp dụng migration V29 thì bỏ qua an toàn
         Assumptions.assumeTrue(variants != null && !variants.isEmpty(),
@@ -68,15 +77,16 @@ class DemoDataSeederIntegrationTest {
     }
 
     @Test
-    @DisplayName("Khẳng định seeder bị vô hiệu hóa trong môi trường kiểm thử (app.demo-data.enabled=false)")
-    void testDemoDataSeeder_DisabledInTestEnvironment() {
-        // Thuộc tính demoDataEnabled được cấu hình là false trong test
-        assertFalse(demoDataSeeder.isDemoDataEnabled(),
-                "demoDataEnabled của DemoDataSeeder phải là false trong môi trường kiểm thử");
+    @DisplayName("2. Tự động chứng minh: Bean DemoDataSeeder không được nạp trong Test khi app.demo-data.enabled=false")
+    void testDemoDataSeeder_NotLoadedInTestEnvironment() {
+        // Khẳng định biến autowired demoDataSeeder phải là null vì bean bị chặn bởi @ConditionalOnProperty
+        assertNull(demoDataSeeder,
+                "Bean DemoDataSeeder không được nạp vào Spring Context khi app.demo-data.enabled=false. Thực tế: " + demoDataSeeder);
 
-        // Khi gọi run(), seeder phải kết thúc ngay lập tức và không ném lỗi
-        assertDoesNotThrow(() -> demoDataSeeder.run(null),
-                "Gọi demoDataSeeder.run() trong môi trường test phải kết thúc an toàn và không ném ngoại lệ");
+        // Khẳng định ApplicationContext không chứa bean "demoDataSeeder"
+        boolean containsBean = applicationContext.containsBean("demoDataSeeder");
+        assertFalse(containsBean,
+                "Spring ApplicationContext không được chứa bean 'demoDataSeeder'. Thực tế containsBean: " + containsBean);
     }
 }
 

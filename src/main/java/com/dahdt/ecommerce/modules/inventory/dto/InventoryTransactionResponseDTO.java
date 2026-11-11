@@ -40,14 +40,7 @@ public class InventoryTransactionResponseDTO {
 
     public String getTypeLabel() {
         if (type == null) return "Khác";
-        return switch (type) {
-            case IMPORT -> "Nhập kho";
-            case SALE -> "Xuất bán";
-            case CANCEL -> "Hoàn đơn";
-            case TRANSFER_IN -> "Nhập chuyển kho";
-            case TRANSFER_OUT -> "Xuất chuyển kho";
-            case ADJUST -> "Điều chỉnh kho";
-        };
+        return type.getDisplayName();
     }
 
     public String getTypeBadgeClass() {

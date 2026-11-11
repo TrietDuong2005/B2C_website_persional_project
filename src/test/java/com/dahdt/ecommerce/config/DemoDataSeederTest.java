@@ -171,7 +171,6 @@ class DemoDataSeederTest {
     void testRun_WhenDemoOrdersAlreadyExist_SkipsEntirely() {
         // Giả lập hệ thống đã có đơn hàng [DEMO]
         when(orderRepository.existsByNoteStartingWithDemo()).thenReturn(true);
-        demoDataSeeder.setDemoDataEnabled(true);
 
         demoDataSeeder.run(null);
 
@@ -187,16 +186,18 @@ class DemoDataSeederTest {
     }
 
     @Test
-    @DisplayName("4. Khi app.demo-data.enabled = false, seeder lập tức bỏ qua không truy vấn CSDL")
-    void testRun_WhenDisabled_SkipsImmediatelyWithoutQueryingDatabase() {
-        demoDataSeeder.setDemoDataEnabled(false);
+    @DisplayName("4. Khi gặp lỗi bất ngờ trong CSDL, seeder bắt gọn exception và không làm sập ứng dụng")
+    void testRun_WhenExceptionOccurs_HandlesGracefullyWithoutTerminatingApplication() {
+        when(orderRepository.existsByNoteStartingWithDemo())
+                .thenThrow(new RuntimeException("Mô phỏng lỗi kết nối CSDL khi kiểm tra đơn demo"));
 
-        demoDataSeeder.run(null);
+        // Khẳng định phương thức run() không làm ném exception ra ngoài ApplicationRunner
+        assertDoesNotThrow(() -> demoDataSeeder.run(null),
+                "Phương thức DemoDataSeeder.run() phải bắt mọi ngoại lệ và không bao giờ ném ra ngoài làm dừng ứng dụng");
 
-        // Không truy vấn bất kỳ repository nào
-        verifyNoInteractions(orderRepository);
-        verifyNoInteractions(userRepository);
+        verify(orderRepository).existsByNoteStartingWithDemo();
         verifyNoInteractions(inventoryService);
+        verifyNoInteractions(posSaleService);
     }
 
     @Test
@@ -204,9 +205,9 @@ class DemoDataSeederTest {
     void testRun_WhenAdminMissing_HandlesGracefully() {
         when(orderRepository.existsByNoteStartingWithDemo()).thenReturn(false);
         when(userRepository.findByEmail("admin@dahdt.com")).thenReturn(Optional.empty());
-        demoDataSeeder.setDemoDataEnabled(true);
 
-        assertDoesNotThrow(() -> demoDataSeeder.run(null));
+        assertDoesNotThrow(() -> demoDataSeeder.run(null),
+                "Gọi run() khi thiếu tài khoản admin@dahdt.com phải kết thúc an toàn và không ném ngoại lệ");
 
         verify(orderRepository).existsByNoteStartingWithDemo();
         verify(userRepository).findByEmail("admin@dahdt.com");
