@@ -23,6 +23,7 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
    mvn spring-boot:run
    ```
    Flyway sẽ tự động chạy toàn bộ migration (V1–V30), và `DevDataSeeder` sẽ nạp 5 tài khoản dev mẫu.
+   Thư mục lưu trữ tệp tải lên (upload) được cấu hình qua `app.upload.dir` (mặc định `uploads/`, giới hạn `app.upload.max-size-mb=2MB`), tự động tạo khi chạy và được bỏ qua trong git.
 
 ## Tài khoản dev thử nghiệm (mật khẩu: `password123`)
 | Vai trò | Email | Chi nhánh | Phạm vi / Mục đích |

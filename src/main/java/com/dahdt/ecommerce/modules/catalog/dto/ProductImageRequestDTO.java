@@ -1,12 +1,12 @@
 package com.dahdt.ecommerce.modules.catalog.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
- * DTO nhận dữ liệu gửi lên khi thêm hình ảnh sản phẩm qua URL.
+ * DTO nhận dữ liệu gửi lên khi thêm hình ảnh sản phẩm qua tệp tải lên hoặc qua URL.
  */
 @Getter
 @Setter
@@ -22,7 +22,14 @@ public class ProductImageRequestDTO {
 
     private Long variantId;
 
-    @NotBlank(message = "URL hình ảnh không được để trống")
+    /**
+     * Tệp ảnh tải lên từ máy cá nhân (chấp nhận jpg, jpeg, png, webp).
+     */
+    private MultipartFile imageFile;
+
+    /**
+     * Đường dẫn URL hình ảnh (nếu thêm qua URL thay vì tải tệp).
+     */
     @Size(max = 500, message = "URL hình ảnh tối đa 500 ký tự")
     private String url;
 
@@ -32,4 +39,5 @@ public class ProductImageRequestDTO {
     @Builder.Default
     private Boolean isThumbnail = false;
 }
+
 

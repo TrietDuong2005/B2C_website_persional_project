@@ -69,6 +69,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Xử lý lỗi vượt kích thước tệp tải lên (MaxUploadSizeExceededException) cho REST API.
+     */
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMaxUploadSizeExceeded(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        log.warn("REST API MaxUploadSizeExceeded: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error("Dung lượng tệp tải lên vượt quá giới hạn tối đa cho phép", HttpStatus.BAD_REQUEST.value()));
+    }
+
+    /**
      * Bắt tất cả các lỗi chưa được xử lý riêng (fallback handler) cho REST API.
      */
     @ExceptionHandler(Exception.class)

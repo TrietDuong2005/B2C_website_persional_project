@@ -24,6 +24,12 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  # Cấu hình tải tệp lên (multipart) khớp với cấu hình app.upload.max-size-mb
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
+
 # Cấu hình Swagger UI
 springdoc:
   swagger-ui:
@@ -52,6 +58,9 @@ app:
     top-products-limit: 10             # Giới hạn top sản phẩm bán chạy
     pending-orders-limit: 5            # Số đơn online chờ xác nhận mới nhất
     default-days-range: 30             # Khoảng ngày mặc định cho dashboard
+  upload:
+    dir: "uploads"                      # Thư mục gốc lưu trữ tệp tải lên
+    max-size-mb: 2                     # Kích thước tệp tải lên tối đa (MB)
   jwt:
     access-token-expiration: 900000     # 15 phút (milliseconds)
     refresh-token-expiration: 604800000 # 7 ngày (milliseconds)

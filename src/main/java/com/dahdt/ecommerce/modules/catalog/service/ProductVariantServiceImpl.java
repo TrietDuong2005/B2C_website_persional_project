@@ -33,6 +33,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     private final ProductImageRepository productImageRepository;
     private final ProductVariantMapper productVariantMapper;
     private final ProductImageMapper productImageMapper;
+    private final FileStorageService fileStorageService;
 
     @Override
     public List<ProductVariantResponseDTO> getVariantsByProductId(Long productId) {
@@ -163,15 +164,38 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                     .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy biến thể ID: " + dto.getVariantId()));
         }
 
+        boolean hasUrl = dto.getUrl() != null && !dto.getUrl().trim().isEmpty();
+        boolean hasFile = dto.getImageFile() != null && !dto.getImageFile().isEmpty();
+
+        if (hasFile && hasUrl) {
+            throw new BadRequestException("Chỉ được chọn một trong hai phương thức: tải tệp lên hoặc nhập URL hình ảnh, không dùng cả hai");
+        }
+
+        String finalUrl;
+        if (hasFile) {
+            finalUrl = fileStorageService.storeProductImage(dto.getImageFile());
+        } else if (hasUrl) {
+            finalUrl = dto.getUrl().trim();
+        } else {
+            throw new BadRequestException("Vui lòng chọn tệp ảnh tải lên hoặc nhập URL hình ảnh");
+        }
+
         ProductImage image = ProductImage.builder()
                 .product(product)
                 .variant(variant)
-                .url(dto.getUrl().trim())
+                .url(finalUrl)
                 .sortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 0)
                 .isThumbnail(Boolean.TRUE.equals(dto.getIsThumbnail()))
                 .build();
 
         ProductImage saved = productImageRepository.save(image);
+
+        // Nếu được đặt làm ảnh đại diện, cập nhật thumbnail của sản phẩm để trang danh sách và chi tiết hiển thị đúng
+        if (Boolean.TRUE.equals(dto.getIsThumbnail())) {
+            product.setThumbnailUrl(finalUrl);
+            productRepository.save(product);
+        }
+
         return productImageMapper.toDto(saved);
     }
 
@@ -180,7 +204,26 @@ public class ProductVariantServiceImpl implements ProductVariantService {
     public void deleteProductImage(Long imageId) {
         ProductImage image = productImageRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy hình ảnh ID: " + imageId));
+
+        String imageUrl = image.getUrl();
+        Product product = image.getProduct();
+
         productImageRepository.delete(image);
+
+        // Xóa tệp vật lý nếu nằm trong thư mục uploads
+        fileStorageService.deleteFile(imageUrl);
+
+        // Nếu ảnh vừa xóa chính là ảnh đại diện của sản phẩm, cập nhật lại thumbnail
+        if (product != null && imageUrl.equals(product.getThumbnailUrl())) {
+            List<ProductImage> remaining = productImageRepository.findByProductIdOrderBySortOrderAscIdAsc(product.getId());
+            String newThumb = remaining.stream()
+                    .filter(ProductImage::getIsThumbnail)
+                    .map(ProductImage::getUrl)
+                    .findFirst()
+                    .orElse(!remaining.isEmpty() ? remaining.get(0).getUrl() : null);
+            product.setThumbnailUrl(newThumb);
+            productRepository.save(product);
+        }
     }
 
     // =========================================================================

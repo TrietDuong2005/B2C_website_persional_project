@@ -44,5 +44,8 @@ app:
   dev-hints: true
   demo-data:
     enabled: false    # Đổi thành true để nạp dữ liệu demo cho dashboard/báo cáo, sau đó đổi lại false
+  upload:
+    dir: "uploads"    # Thư mục gốc lưu trữ tệp tải lên
+    max-size-mb: 2   # Kích thước tệp tối đa (MB)
   jwt:
     secret: MyDevSecretKeyForJWTSigningMustBeAtLeast256BitsLong1234567890ABCDEF

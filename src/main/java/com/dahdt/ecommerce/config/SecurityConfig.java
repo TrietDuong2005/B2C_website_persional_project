@@ -167,8 +167,9 @@ public class SecurityConfig {
         http
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
-                        // Tài nguyên tĩnh, tài liệu Swagger và trang lỗi
+                        // Tài nguyên tĩnh, tài liệu Swagger, tệp tải lên công khai (chỉ GET) và trang lỗi
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers("/error", "/error/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 

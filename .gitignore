@@ -27,6 +27,9 @@ application-dev.yml
 *.log
 logs/
 
+# ===== Uploaded files =====
+uploads/
+
 # ===== Maven =====
 .mvn/
 mvnw

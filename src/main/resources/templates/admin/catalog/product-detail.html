@@ -320,19 +320,37 @@
                             </div>
                         </div>
 
-                        <!-- Form Thêm Ảnh mới qua URL -->
+                        <!-- Form Thêm Ảnh mới qua Tệp hoặc URL -->
                         <div class="card shadow-sm border-0">
                             <div class="card-header bg-white py-3">
                                 <h6 class="mb-0 fw-bold text-dark"><i class="bi bi-cloud-arrow-up me-2 text-primary"></i>Thêm ảnh vào bộ sưu tập</h6>
                             </div>
                             <div class="card-body">
-                                <form th:action="@{/admin/products/{id}/images/save(id=${product.id})}" th:object="${imageForm}" method="post">
+                                <form th:action="@{/admin/products/{id}/images/save(id=${product.id})}" th:object="${imageForm}" method="post" enctype="multipart/form-data">
                                     <input type="hidden" th:field="*{productId}"/>
 
+                                    <!-- Tải ảnh lên từ máy -->
                                     <div class="mb-2">
-                                        <label for="imgUrl" class="form-label small fw-semibold">URL Hình ảnh <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="imgUrl" th:field="*{url}" required
-                                               placeholder="https://placehold.co/600x600?text=Product"/>
+                                        <label for="imgFile" class="form-label small fw-semibold">
+                                            <i class="bi bi-upload me-1"></i>Tải ảnh lên từ máy
+                                        </label>
+                                        <input type="file" class="form-control form-control-sm" id="imgFile" th:field="*{imageFile}"
+                                               accept=".jpg,.jpeg,.png,.webp"/>
+                                        <div class="form-text small" id="fileNamePreview">Chấp nhận JPG, JPEG, PNG, WEBP (tối đa 2MB).</div>
+                                    </div>
+
+                                    <div class="text-center my-2">
+                                        <span class="badge bg-light text-muted border px-2 py-1 small">HOẶC</span>
+                                    </div>
+
+                                    <!-- Nhập URL hình ảnh -->
+                                    <div class="mb-2">
+                                        <label for="imgUrl" class="form-label small fw-semibold">
+                                            <i class="bi bi-link-45deg me-1"></i>URL Hình ảnh
+                                        </label>
+                                        <input type="text" class="form-control form-control-sm" id="imgUrl" th:field="*{url}"
+                                               placeholder="https://example.com/anh-giay.jpg"/>
+                                        <div class="form-text small text-muted">Chỉ nhập URL nếu không tải tệp lên từ máy.</div>
                                     </div>
 
                                     <div class="mb-2">
@@ -375,6 +393,24 @@
     <!-- Footer -->
     <div th:replace="~{layout/footer :: adminFooter}"></div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const fileInput = document.getElementById('imgFile');
+        const preview = document.getElementById('fileNamePreview');
+        if (fileInput && preview) {
+            fileInput.addEventListener('change', function () {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    const sizeKb = (file.size / 1024).toFixed(1);
+                    preview.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle me-1"></i>Đã chọn: ' + file.name + ' (' + sizeKb + ' KB)</span>';
+                } else {
+                    preview.innerHTML = 'Chấp nhận JPG, JPEG, PNG, WEBP (tối đa 2MB).';
+                }
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

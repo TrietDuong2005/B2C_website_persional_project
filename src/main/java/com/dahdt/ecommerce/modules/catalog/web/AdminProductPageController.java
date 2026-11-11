@@ -7,6 +7,7 @@ import com.dahdt.ecommerce.modules.catalog.service.BrandService;
 import com.dahdt.ecommerce.modules.catalog.service.CategoryService;
 import com.dahdt.ecommerce.modules.catalog.service.ProductService;
 import com.dahdt.ecommerce.modules.catalog.service.ProductVariantService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -272,28 +274,62 @@ public class AdminProductPageController {
     }
 
     /**
-     * Thêm hình ảnh mới cho sản phẩm / biến thể qua URL.
+     * Thêm hình ảnh mới cho sản phẩm / biến thể qua tệp tải lên hoặc qua URL.
      */
     @PostMapping("/{id}/images/save")
     public String saveImage(@PathVariable("id") Long id,
-                            @Valid @ModelAttribute("imageForm") ProductImageRequestDTO imageForm,
+                            @ModelAttribute("imageForm") ProductImageRequestDTO imageForm,
                             BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
         imageForm.setProductId(id);
 
-        if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "URL hình ảnh không hợp lệ hoặc để trống!");
+        boolean hasUrl = imageForm.getUrl() != null && !imageForm.getUrl().trim().isEmpty();
+        boolean hasFile = imageForm.getImageFile() != null && !imageForm.getImageFile().isEmpty();
+
+        if (!hasUrl && !hasFile) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn tệp ảnh tải lên hoặc nhập URL hình ảnh!");
+            return "redirect:/admin/products/" + id;
+        }
+
+        if (hasUrl && hasFile) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Chỉ được chọn một trong hai phương thức: tải tệp lên hoặc nhập URL hình ảnh, không dùng cả hai!");
             return "redirect:/admin/products/" + id;
         }
 
         try {
             productVariantService.addProductImage(imageForm);
             redirectAttributes.addFlashAttribute("successMessage", "Thêm ảnh thành công!");
-        } catch (Exception e) {
+        } catch (BadRequestException e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage() != null ? e.getMessage() : "Đã xảy ra lỗi khi lưu hình ảnh");
         }
 
         return "redirect:/admin/products/" + id;
+    }
+
+    /**
+     * Xử lý lỗi vượt kích thước tệp tải lên (MaxUploadSizeExceededException) cho trang admin.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public String handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex,
+                                            HttpServletRequest request,
+                                            RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("errorMessage", "Dung lượng tệp tải lên vượt quá giới hạn tối đa cho phép!");
+        String uri = request.getRequestURI();
+        if (uri != null && uri.contains("/admin/products/")) {
+            String[] parts = uri.split("/");
+            for (int i = 0; i < parts.length - 1; i++) {
+                if ("products".equals(parts[i]) && i + 1 < parts.length && parts[i + 1].matches("\\d+")) {
+                    return "redirect:/admin/products/" + parts[i + 1];
+                }
+            }
+        }
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isBlank()) {
+            return "redirect:" + referer;
+        }
+        return "redirect:/admin/products";
     }
 
     /**

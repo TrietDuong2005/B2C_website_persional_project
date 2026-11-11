@@ -63,6 +63,9 @@ class ProductServiceTest {
     @Mock
     private ProductImageMapper productImageMapper;
 
+    @Mock
+    private FileStorageService fileStorageService;
+
     private ProductServiceImpl productService;
     private ProductVariantServiceImpl productVariantService;
 
@@ -87,7 +90,8 @@ class ProductServiceTest {
                 productRepository,
                 productImageRepository,
                 productVariantMapper,
-                productImageMapper
+                productImageMapper,
+                fileStorageService
         );
 
         testCategory = Category.builder()
