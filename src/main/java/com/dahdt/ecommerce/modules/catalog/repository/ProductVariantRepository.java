@@ -90,6 +90,18 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariant, 
     BigDecimal findMaxActivePrice();
 
     /**
+     * Nạp toàn bộ biến thể sản phẩm đang mở bán (ACTIVE của sản phẩm cha ACTIVE).
+     * Sử dụng JOIN FETCH v.product p để nạp sẵn thực thể Product, chống triệt để
+     * lỗi LazyInitializationException khi gọi isSellable() hoặc getProduct() ngoài Hibernate Session.
+     */
+    @Query("SELECT v FROM ProductVariant v " +
+            "JOIN FETCH v.product p " +
+            "WHERE v.status = com.dahdt.ecommerce.modules.catalog.entity.ProductVariantStatus.ACTIVE " +
+            "AND p.status = com.dahdt.ecommerce.modules.catalog.entity.ProductStatus.ACTIVE " +
+            "ORDER BY v.id ASC")
+    List<ProductVariant> findSellableVariants();
+
+    /**
      * Tìm kiếm biến thể ACTIVE thuộc sản phẩm ACTIVE phục vụ bán hàng tại quầy POS:
      * - Khớp chính xác SKU
      * - Khớp chính xác Barcode

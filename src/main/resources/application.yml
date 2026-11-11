@@ -35,11 +35,13 @@ springdoc:
 server:
   port: 8080
 
-# Cấu hình thương hiệu, vận chuyển và bảo mật
+# Cấu hình thương hiệu, vận chuyển, dữ liệu demo và bảo mật
 app:
   brand:
     name: "Triết Store"
   dev-hints: false
+  demo-data:
+    enabled: false    # Bật true để nạp dữ liệu demo cho báo cáo/dashboard (chỉ chạy một lần trên môi trường dev)
   shipping:
     flat-fee: 30000
     free-threshold: 1000000

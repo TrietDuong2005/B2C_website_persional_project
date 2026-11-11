@@ -39,8 +39,10 @@ logging:
     com.dahdt.ecommerce: DEBUG
     org.springframework.security: DEBUG
 
-# Cấu hình JWT cho môi trường dev (production phải dùng key mạnh hơn)
+# Cấu hình môi trường dev
 app:
   dev-hints: true
+  demo-data:
+    enabled: false    # Đổi thành true để nạp dữ liệu demo cho dashboard/báo cáo, sau đó đổi lại false
   jwt:
     secret: MyDevSecretKeyForJWTSigningMustBeAtLeast256BitsLong1234567890ABCDEF

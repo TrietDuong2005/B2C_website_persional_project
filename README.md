@@ -41,6 +41,11 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
 | **CUSTOMER** | `customer@dahdt.com` | — | Khách hàng mua sắm online, đặt hàng |
 | **CUSTOMER** | `customer2@dahdt.com` | — | Khách hàng thứ hai kiểm thử phân quyền đơn hàng |
 
+## Dữ liệu demo
+- **Cách kích hoạt:** Đặt `app.demo-data.enabled: true` trong `src/main/resources/application-dev.yml`, khởi chạy ứng dụng một lần (`mvn spring-boot:run`), sau khi thấy log tổng kết thì đặt lại `false`.
+- **Những gì được tạo:** Nhập bổ sung tồn kho an toàn (`[DEMO] Nhập kho mẫu`); khoảng 25 đơn POS tại quầy (tiền mặt, thẻ, QR xen kẽ, một số có voucher); khoảng 20 đơn trực tuyến của 2 khách hàng dev với đầy đủ 6 trạng thái vòng đời (PENDING, CONFIRMED, PACKING, SHIPPING, COMPLETED, CANCELLED); thời gian đặt đơn được rải ngẫu nhiên lặp lại trong 14 ngày gần nhất.
+- **Lưu ý:** Chỉ sử dụng trên môi trường phát triển (`profile = dev`), tự động bỏ qua nếu đã phát hiện đơn demo trước đó (idempotent), tuyệt đối không chạy trên môi trường test hay production.
+
 ## Các URL chính theo từng khu
 - **Khu Shop (Khách hàng):**
   - Trang chủ: [http://localhost:8080/](http://localhost:8080/)

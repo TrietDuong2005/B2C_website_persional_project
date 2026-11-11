@@ -131,5 +131,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "LEFT JOIN FETCH v.product p " +
             "WHERE o.id = :id")
     Optional<Order> findByIdWithDetails(@Param("id") Long id);
+
+    /**
+     * Kiểm tra xem đã tồn tại đơn hàng demo nào hay chưa (ghi chú bắt đầu bằng [DEMO]).
+     * Phục vụ tính Idempotent cho DemoDataSeeder.
+     */
+    @Query("SELECT CASE WHEN COUNT(o) > 0 THEN TRUE ELSE FALSE END FROM Order o WHERE SUBSTRING(o.note, 1, 6) = '[DEMO]'")
+    boolean existsByNoteStartingWithDemo();
 }
 
