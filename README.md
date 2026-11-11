@@ -1,50 +1,41 @@
 # Triết Store — Hệ Thống Bán Lẻ Chuỗi Cửa Hàng Giày Dép Đa Kênh
 
-Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết hợp bán hàng tại quầy (POS), đặt hàng trực tuyến (Shop) và quản trị tập trung (Admin), xây dựng theo kiến trúc MVC phân lớp theo module nghiệp vụ.
+Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết hợp bán hàng tại quầy (POS), đặt hàng trực tuyến (Shop) và quản trị tập trung (Admin), xây dựng trên nền tảng Spring Boot MVC phân lớp theo module nghiệp vụ.
 
 ## Công nghệ sử dụng
 - **Backend:** Java 17, Spring Boot 3.x (Spring MVC, Spring Data JPA, Spring Security, Validation)
 - **Cơ sở dữ liệu & Migration:** Microsoft SQL Server, Flyway (`ddl-auto: validate`)
 - **Giao diện:** Thymeleaf, Bootstrap 5, Bootstrap Icons (tập trung theme CSS và tên thương hiệu)
 - **Tiện ích & Mapping:** Lombok, MapStruct, springdoc-openapi (Swagger UI)
-- **Build tool:** Maven
+- **Kiến trúc & Design Patterns:** Strategy (thanh toán, giảm giá, phí ship, kho xuất), Factory (tạo đơn, mã đơn), Observer (trừ/hoàn kho), State (vòng đời đơn hàng)
 
 ## Yêu cầu môi trường
-- **Java:** JDK 17 trở lên
-- **Maven:** 3.8 trở lên
-- **CSDL:** Microsoft SQL Server (đang chạy trên `localhost:1433`)
+- **Java:** JDK 17 trở lên | **Maven:** 3.8 trở lên | **CSDL:** Microsoft SQL Server (cổng `1433`)
 
 ## Các bước cài đặt và khởi chạy
 1. **Tạo CSDL SQL Server:** Mở SSMS hoặc sqlcmd, tạo database rỗng không chỉ định COLLATE:
    ```sql
    CREATE DATABASE ecommerce_db;
    ```
-2. **Cấu hình môi trường:** Sao chép file cấu hình mẫu sang file cấu hình cá nhân:
-   - Sao chép `src/main/resources/application-dev.example.yml` thành `src/main/resources/application-dev.yml`.
-   - Chọn một trong hai cách kết nối CSDL trong `application-dev.yml`:
-     - **Cách 1: Tài khoản SQL (sa) — Mặc định:** URL có `databaseName=ecommerce_db;encrypt=true;trustServerCertificate=true`, cấu hình `username: sa` và `password: <mat_khau_sql_server>`.
-     - **Cách 2: Windows Authentication (xác thực tích hợp):** URL thêm `integratedSecurity=true` và KHÔNG khai báo `username` hay `password`.
-       *Điều kiện theo tài liệu chính thức của Microsoft:* trên Windows cần chép file `mssql-jdbc_auth-<phiên bản>-<kiến trúc>.dll` (đúng với số bit của JVM) vào một thư mục nằm trong biến môi trường `PATH`, hoặc đặt thuộc tính `java.library.path` trỏ tới thư mục chứa nó (`-Djava.library.path=...`); nếu thiếu, ứng dụng sẽ báo lỗi không tìm thấy thư viện xác thực.
+2. **Cấu hình môi trường:** Sao chép `src/main/resources/application-dev.example.yml` thành `src/main/resources/application-dev.yml` và điền thông tin kết nối SQL Server (xác thực `sa` hoặc Windows Authentication).
 3. **Khởi chạy ứng dụng:**
    ```bash
    mvn spring-boot:run
    ```
    Flyway sẽ tự động chạy toàn bộ migration (V1–V30), và `DevDataSeeder` sẽ nạp 5 tài khoản dev mẫu.
-   *Lưu ý:* Ở profile dev, tài khoản dev luôn được đặt lại mật khẩu mặc định khi khởi động.
 
 ## Tài khoản dev thử nghiệm (mật khẩu: `password123`)
 | Vai trò | Email | Chi nhánh | Phạm vi / Mục đích |
 |---|---|---|---|
-| **ADMIN** | `admin@dahdt.com` | Toàn chuỗi | Quản trị toàn hệ thống, danh mục, kho bãi |
+| **ADMIN** | `admin@dahdt.com` | Toàn chuỗi | Quản trị toàn hệ thống, danh mục, kho bãi, đơn hàng |
 | **STORE_MANAGER** | `manager@dahdt.com` | `STORE-Q1` | Quản lý cửa hàng, nhân viên, tồn kho chi nhánh |
-| **CASHIER** | `cashier@dahdt.com` | `STORE-Q1` | Thu ngân POS, bán hàng tại quầy |
+| **CASHIER** | `cashier@dahdt.com` | `STORE-Q1` | Thu ngân POS, bán hàng tại quầy, in hóa đơn |
 | **CUSTOMER** | `customer@dahdt.com` | — | Khách hàng mua sắm online, đặt hàng |
 | **CUSTOMER** | `customer2@dahdt.com` | — | Khách hàng thứ hai kiểm thử phân quyền đơn hàng |
 
-## Dữ liệu demo
-- **Cách kích hoạt:** Đặt `app.demo-data.enabled: true` trong `src/main/resources/application-dev.yml`, khởi chạy ứng dụng một lần (`mvn spring-boot:run`), sau khi thấy log tổng kết thì đặt lại `false`.
-- **Những gì được tạo:** Nhập bổ sung tồn kho an toàn (`[DEMO] Nhập kho mẫu`); khoảng 25 đơn POS tại quầy (tiền mặt, thẻ, QR xen kẽ, một số có voucher); khoảng 20 đơn trực tuyến của 2 khách hàng dev với đầy đủ 6 trạng thái vòng đời (PENDING, CONFIRMED, PACKING, SHIPPING, COMPLETED, CANCELLED); thời gian đặt đơn được rải ngẫu nhiên lặp lại trong 14 ngày gần nhất.
-- **Lưu ý:** Chỉ sử dụng trên môi trường phát triển (`profile = dev`), tự động bỏ qua nếu đã phát hiện đơn demo trước đó (idempotent), tuyệt đối không chạy trên môi trường test hay production.
+## Dữ liệu demo cho báo cáo & dashboard
+- **Cách kích hoạt:** Đặt `app.demo-data.enabled: true` trong `src/main/resources/application-dev.yml`, khởi chạy ứng dụng một lần (`mvn spring-boot:run`), sau khi hoàn tất nạp thì đặt lại `false`.
+- **Dữ liệu được tạo:** Nhập bổ sung tồn kho an toàn; khoảng 25 đơn POS tại quầy (tiền mặt, thẻ, QR); khoảng 20 đơn online của 2 khách dev với đầy đủ 6 trạng thái vòng đời (PENDING, CONFIRMED, PACKING, SHIPPING, COMPLETED, CANCELLED) rải ngẫu nhiên trong 14 ngày gần nhất. Tự động kiểm tra idempotent.
 
 ## Các URL chính theo từng khu
 - **Khu Shop (Khách hàng):**
@@ -54,52 +45,33 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
   - Thanh toán (Checkout): [http://localhost:8080/checkout](http://localhost:8080/checkout)
   - Lịch sử đơn hàng: [http://localhost:8080/account/orders](http://localhost:8080/account/orders)
 - **Khu Quản trị (Admin):**
-  - Dashboard: [http://localhost:8080/admin](http://localhost:8080/admin)
-  - Danh mục: [http://localhost:8080/admin/categories](http://localhost:8080/admin/categories)
+  - Dashboard báo cáo: [http://localhost:8080/admin](http://localhost:8080/admin)
+  - Danh mục sản phẩm: [http://localhost:8080/admin/categories](http://localhost:8080/admin/categories)
   - Thương hiệu: [http://localhost:8080/admin/brands](http://localhost:8080/admin/brands)
-  - Sản phẩm: [http://localhost:8080/admin/products](http://localhost:8080/admin/products)
-  - Tồn kho & Sổ kho: [http://localhost:8080/admin/inventory](http://localhost:8080/admin/inventory)
+  - Sản phẩm & biến thể: [http://localhost:8080/admin/products](http://localhost:8080/admin/products)
+  - Tồn kho & Sổ cái kho: [http://localhost:8080/admin/inventory](http://localhost:8080/admin/inventory)
+  - Quản lý đơn hàng đa kênh: [http://localhost:8080/admin/orders](http://localhost:8080/admin/orders)
   - Cửa hàng & Nhân viên: [http://localhost:8080/admin/stores](http://localhost:8080/admin/stores)
 - **Khu Bán hàng tại quầy (POS):**
-  - Màn hình POS (dự kiến hoàn thiện Ngày 8–9): [http://localhost:8080/pos](http://localhost:8080/pos)
+  - Màn hình bán hàng POS: [http://localhost:8080/pos](http://localhost:8080/pos)
+  - Đơn bán gần đây: [http://localhost:8080/pos/orders](http://localhost:8080/pos/orders)
 - **Tài liệu API (Swagger UI):** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-- **Đăng nhập:** [http://localhost:8080/login](http://localhost:8080/login)
+- **Đăng nhập form:** [http://localhost:8080/login](http://localhost:8080/login)
 
-## Cách chạy kiểm thử (Tests)
-> **Lưu ý:** Lệnh `mvn test` sử dụng trực tiếp cơ sở dữ liệu môi trường dev (`application-dev.yml`), do đó **Microsoft SQL Server phải đang chạy** và database `ecommerce_db` đã được cấu hình trước khi chạy test.
+## Danh sách chức năng đã hoàn thành
+- **Bảo mật & Phân quyền:** 2 SecurityFilterChain (Session cho Web + JWT cho API), phân quyền 4 vai trò rõ ràng.
+- **Danh mục & Sản phẩm:** CRUD danh mục dạng cây, thương hiệu, sản phẩm giày dép cha, biến thể màu/size EU, hình ảnh.
+- **Quản trị kho & Chi nhánh:** Quản lý điểm bán và nhân sự, tồn kho chi nhánh với khóa lạc quan (`@Version`), sổ cái biến động kho.
+- **Shop trực tuyến:** Trang chủ, xem/tìm kiếm/lọc sản phẩm, giỏ hàng, áp mã voucher, checkout, lịch sử và chi tiết đơn hàng.
+- **Quản lý đơn hàng đa kênh:** Theo dõi đơn Shop và POS, chuyển trạng thái theo State Pattern (PENDING → CONFIRMED → PACKING → SHIPPING → COMPLETED).
+- **Hủy đơn & Hoàn kho:** Khách hủy đơn PENDING, Admin hủy đơn hợp lệ; tự động hoàn lại tồn kho chi nhánh qua Observer Pattern.
+- **Bán hàng tại quầy (POS):** Tra cứu nhanh SKU/barcode, giỏ hàng quầy, áp voucher, tính tiền thừa, thanh toán trọn gói 1 transaction, in hóa đơn 80mm.
+- **Báo cáo & Dashboard:** Thống kê doanh thu theo ngày/chi nhánh/kênh bán, top sản phẩm bán chạy, cảnh báo tồn kho thấp.
+- **Dữ liệu demo:** Bộ tạo dữ liệu đa kênh phong phú phục vụ kiểm thử và báo cáo (`DemoDataSeeder`).
+
+## Kiểm thử (Tests)
+Hệ thống có **49 lớp kiểm thử** với tổng cộng **222 phương thức test** (đếm từ mã nguồn, gồm 219 `@Test` và 3 `@ParameterizedTest`), bao gồm các test tích hợp `@SpringBootTest` trên CSDL SQL Server thật và các test dựng trang hoàn chỉnh bằng MockMvc + Thymeleaf.
+> **Lưu ý:** Lệnh `mvn test` yêu cầu CSDL SQL Server đang chạy và kết nối được cấu hình trong `application-dev.yml`.
 ```bash
 mvn test
 ```
-
-## Cấu trúc thư mục rút gọn
-```
-src/main/java/com/dahdt/ecommerce/
-├── config/                  # Cấu hình Security (2 chain), Swagger, DevDataSeeder
-├── common/                  # Exception, BaseEntity, RedirectUtil, ControllerAdvice chung
-└── modules/
-    ├── auth/ & user/        # Xác thực JWT/Session, quản lý người dùng, địa chỉ
-    ├── catalog/             # Danh mục, thương hiệu, sản phẩm giày dép, biến thể size/màu
-    ├── store/               # Cửa hàng chi nhánh, nhân viên, phạm vi quản lý
-    ├── inventory/           # Quản lý tồn kho theo chi nhánh, sổ cái biến động kho
-    ├── cart/                # Giỏ hàng online của khách hàng
-    ├── order/               # Đơn hàng trực tuyến, Factory tạo đơn, Observer trừ/hoàn kho
-    ├── payment/             # Chiến lược thanh toán (Strategy: COD, Tiền mặt, Thẻ, QR)
-    ├── promotion/           # Mã giảm giá (Strategy: Phần trăm, Cố định), kiểm tra điều kiện
-    └── report/              # Thống kê báo cáo, dashboard doanh thu
-src/main/resources/
-├── db/migration/            # Flyway migrations (V1 đến V30)
-└── templates/               # Giao diện Thymeleaf (shop/, admin/, pos/, layout/)
-```
-
-## Trạng thái chức năng
-- **Đã hoàn thành (Ngày 1–6, Mốc v0.5):**
-  - Xác thực 2 chain (Session cho Web + JWT cho API), phân quyền 4 vai trò.
-  - CRUD danh mục 2 cấp, thương hiệu, sản phẩm giày dép kèm biến thể màu/size EU.
-  - Quản lý cửa hàng, nhân viên, tồn kho chi nhánh có khóa lạc quan (`@Version`) và sổ cái kho.
-  - Shop online: trang chủ, xem/tìm kiếm/lọc sản phẩm, giỏ hàng, checkout, áp mã voucher.
-  - Đặt hàng online với Design Pattern: Factory (tạo đơn), Strategy (thanh toán & giảm giá), Observer (trừ kho tự động qua Spring Events).
-  - Tối ưu hiệu năng nạp dữ liệu Shop và chuẩn hóa bảo mật Open Redirect.
-- **Đang triển khai tiếp theo (Ngày 8–14):**
-  - Khu POS bán hàng tại quầy: tìm/quét mã SKU, giỏ hàng quầy, tính tiền thừa, in hóa đơn.
-  - Quản lý đơn hàng tập trung đa kênh trên trang Admin (đổi trạng thái với State Pattern).
-  - Báo cáo thống kê, dashboard doanh thu theo chi nhánh và kênh bán.
