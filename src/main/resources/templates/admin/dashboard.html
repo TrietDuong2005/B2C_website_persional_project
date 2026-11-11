@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{layout/head :: adminHead('Bảng điều khiển Quản trị - ' + ${brandName})}">
-    <title th:text="'Bảng điều khiển Quản trị - ' + ${brandName}">Bảng điều khiển Quản trị</title>
+<head th:replace="~{layout/head :: adminHead('Dashboard Thống kê Bán hàng - ' + ${brandName})}">
+    <title th:text="'Dashboard Thống kê Bán hàng - ' + ${brandName}">Dashboard Quản trị</title>
 </head>
 <body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
 <div class="app-wrapper">
@@ -20,7 +20,9 @@
             <div class="container-fluid">
                 <div class="row align-items-center">
                     <div class="col-sm-6">
-                        <h3 class="mb-0 fw-bold"><i class="bi bi-speedometer2 me-2"></i>Bảng điều khiển Quản trị</h3>
+                        <h3 class="mb-0 fw-bold">
+                            <i class="bi bi-speedometer2 text-primary me-2"></i>Dashboard Thống kê Doanh số
+                        </h3>
                     </div>
                     <div class="col-sm-6">
                         <ol class="breadcrumb float-sm-end mb-0">
@@ -34,103 +36,596 @@
 
         <div class="app-content">
             <div class="container-fluid">
+
                 <!-- Flash messages -->
                 <div th:replace="~{layout/flash :: flashMessages}"></div>
 
+                <!-- Cảnh báo lỗi thân thiện nếu khoảng ngày không hợp lệ -->
+                <div th:if="${errorMessage != null}" class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span th:text="${errorMessage}">Thông báo kiểm tra khoảng ngày</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
                 <!-- Thẻ thông tin người dùng đang đăng nhập -->
-                <div class="card mb-4 border-primary shadow-sm bg-primary-subtle">
-                    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="card mb-4 border-0 shadow-sm bg-primary-subtle border-start border-4 border-primary">
+                    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3 py-3">
                         <div>
-                            <h4 class="card-title fw-bold text-primary-emphasis mb-1">
+                            <h5 class="card-title fw-bold text-primary-emphasis mb-1">
                                 Xin chào, <span th:text="${currentUserFullName} ?: 'Quản trị viên'">Admin</span>!
-                            </h4>
-                            <p class="text-muted mb-0">
-                                Email: <strong th:text="${currentUserEmail} ?: 'admin@dahdt.com'">admin@dahdt.com</strong> |
-                                Vai trò:
-                                <span th:each="r : ${currentUserRoles}" class="badge bg-primary me-1" th:text="${r.name}">Quản trị viên</span>
-                            </p>
+                            </h5>
+                            <div class="text-muted small">
+                                <span>Email: <strong th:text="${currentUserEmail} ?: 'admin@dahdt.com'">admin@dahdt.com</strong></span>
+                                <span class="mx-2">|</span>
+                                <span>Phạm vi: </span>
+                                <span th:if="${isStoreManager}" class="badge text-bg-warning">
+                                    <i class="bi bi-shop me-1"></i>Quản lý: <span th:text="${currentStore != null ? currentStore.name : 'Chi nhánh'}">Chi nhánh</span>
+                                </span>
+                                <span th:if="${isAdmin}" class="badge text-bg-primary">
+                                    <i class="bi bi-shield-check me-1"></i>Toàn chuỗi cửa hàng (Admin)
+                                </span>
+                            </div>
                         </div>
                         <div class="d-flex gap-2">
                             <a th:href="@{/}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-shop me-1"></i>Xem Shop
+                                <i class="bi bi-shop me-1"></i>Xem Shop Online
                             </a>
                             <a th:href="@{/pos}" target="_blank" class="btn btn-success btn-sm"
                                sec:authorize="hasAnyRole('ADMIN', 'STORE_MANAGER', 'CASHIER')">
-                                <i class="bi bi-calculator me-1"></i>Vào POS
+                                <i class="bi bi-calculator me-1"></i>Mở quầy POS
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Các thẻ thống kê khung (Placeholder Ngày 11) -->
-                <div class="row g-3 mb-4">
-                    <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="bg-primary text-white p-3 rounded-3 me-3 fs-3">
-                                    <i class="bi bi-cart-check"></i>
-                                </div>
-                                <div>
-                                    <div class="text-muted small">Đơn hàng hôm nay</div>
-                                    <h4 class="fw-bold mb-0">24</h4>
-                                </div>
-                            </div>
-                        </div>
+                <!-- FORM LỌC DOANH THU & KHOẢNG NGÀY -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="card-title fw-bold mb-0 text-dark">
+                            <i class="bi bi-funnel-fill text-primary me-2"></i>Bộ lọc thống kê
+                        </h6>
                     </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin}" method="get" class="row g-3 align-items-end">
+                            <!-- Từ ngày -->
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="startDate" class="form-label fw-semibold small">Từ ngày</label>
+                                <input type="date" id="startDate" name="startDate" class="form-control form-control-sm"
+                                       th:value="${startDate}">
+                            </div>
+
+                            <!-- Đến ngày -->
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label for="endDate" class="form-label fw-semibold small">Đến ngày</label>
+                                <input type="date" id="endDate" name="endDate" class="form-control form-control-sm"
+                                       th:value="${endDate}">
+                            </div>
+
+                            <!-- Chọn Cửa hàng (Chỉ ADMIN) -->
+                            <div class="col-12 col-sm-6 col-md-4" th:if="${!isStoreManager}">
+                                <label for="storeId" class="form-label fw-semibold small">Chi nhánh cửa hàng</label>
+                                <select id="storeId" name="storeId" class="form-select form-select-sm">
+                                    <option value="" th:selected="${selectedStoreId == null}">-- Tất cả chi nhánh toàn hệ thống --</option>
+                                    <option th:each="st : ${stores}"
+                                            th:value="${st.id}"
+                                            th:text="${st.name + ' (' + st.code + ')'}"
+                                            th:selected="${selectedStoreId != null && selectedStoreId == st.id}">
+                                        Cửa hàng mẫu
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Nhãn chi nhánh cố định (Với STORE_MANAGER) -->
+                            <div class="col-12 col-sm-6 col-md-4" th:if="${isStoreManager}">
+                                <label class="form-label fw-semibold small">Chi nhánh phụ trách</label>
+                                <input type="text" class="form-control form-control-sm bg-light" readonly
+                                       th:value="${currentStore != null ? currentStore.name : 'Chi nhánh phân công'}">
+                            </div>
+
+                            <!-- Nút thao tác -->
+                            <div class="col-12 col-sm-6 col-md-2 d-flex gap-2">
+                                <button type="submit" class="btn btn-primary btn-sm flex-fill">
+                                    <i class="bi bi-filter me-1"></i>Lọc
+                                </button>
+                                <a th:href="@{/admin}" class="btn btn-outline-secondary btn-sm" title="Đặt lại bộ lọc về 30 ngày gần nhất">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- PHẦN 1: CÁC THẺ CHỈ SỐ TỔNG QUAN (KPI CARDS) -->
+                <div class="row g-3 mb-4">
+                    <!-- 1. Doanh thu thực tế -->
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="bg-success text-white p-3 rounded-3 me-3 fs-3">
+                        <div class="card shadow-sm border-0 h-100 border-start border-4 border-success">
+                            <div class="card-body d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="text-muted small text-uppercase fw-semibold">Doanh thu thực tế</div>
+                                    <h4 class="fw-bold mb-0 text-success mt-1" th:text="${@money.format(report.summary.totalRevenue)}">0 đ</h4>
+                                    <small class="text-muted">Đơn COMPLETED trong kỳ</small>
+                                </div>
+                                <div class="bg-success text-white p-3 rounded-circle fs-3 shadow-sm">
                                     <i class="bi bi-currency-dollar"></i>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Số đơn hoàn thành -->
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card shadow-sm border-0 h-100 border-start border-4 border-primary">
+                            <div class="card-body d-flex align-items-center justify-content-between">
                                 <div>
-                                    <div class="text-muted small">Doanh thu hôm nay</div>
-                                    <h4 class="fw-bold mb-0">15.850.000 đ</h4>
+                                    <div class="text-muted small text-uppercase fw-semibold">Số đơn hoàn thành</div>
+                                    <h4 class="fw-bold mb-0 text-primary mt-1" th:text="${report.summary.completedOrderCount} + ' đơn'">0 đơn</h4>
+                                    <small class="text-muted">Đã giao hoặc bán tại quầy</small>
+                                </div>
+                                <div class="bg-primary text-white p-3 rounded-circle fs-3 shadow-sm">
+                                    <i class="bi bi-check2-circle"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 3. Giá trị trung bình mỗi đơn (AOV) -->
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="bg-warning text-dark p-3 rounded-3 me-3 fs-3">
-                                    <i class="bi bi-exclamation-triangle"></i>
-                                </div>
+                        <div class="card shadow-sm border-0 h-100 border-start border-4 border-info">
+                            <div class="card-body d-flex align-items-center justify-content-between">
                                 <div>
-                                    <div class="text-muted small">Tồn kho cảnh báo</div>
-                                    <h4 class="fw-bold mb-0">3 sản phẩm</h4>
+                                    <div class="text-muted small text-uppercase fw-semibold">Giá trị TB / đơn</div>
+                                    <h4 class="fw-bold mb-0 text-info mt-1" th:text="${@money.format(report.summary.averageOrderValue)}">0 đ</h4>
+                                    <small class="text-muted">Doanh thu / số đơn xong</small>
+                                </div>
+                                <div class="bg-info text-white p-3 rounded-circle fs-3 shadow-sm">
+                                    <i class="bi bi-calculator"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- 4. Số liệu hôm nay -->
                     <div class="col-12 col-sm-6 col-xl-3">
-                        <div class="card shadow-sm border-0">
-                            <div class="card-body d-flex align-items-center">
-                                <div class="bg-info text-white p-3 rounded-3 me-3 fs-3">
-                                    <i class="bi bi-people"></i>
-                                </div>
+                        <div class="card shadow-sm border-0 h-100 bg-primary-subtle border-start border-4 border-primary">
+                            <div class="card-body d-flex align-items-center justify-content-between">
                                 <div>
-                                    <div class="text-muted small">Khách hàng mới</div>
-                                    <h4 class="fw-bold mb-0">12</h4>
+                                    <div class="text-primary-emphasis small text-uppercase fw-semibold">Hôm nay</div>
+                                    <h5 class="fw-bold mb-0 text-primary mt-1" th:text="${@money.format(report.summary.todayRevenue)}">0 đ</h5>
+                                    <small class="text-muted" th:text="${report.summary.todayCompletedOrderCount} + ' đơn hoàn tất'">0 đơn hoàn tất</small>
+                                </div>
+                                <div class="bg-primary text-white p-3 rounded-circle fs-3 shadow-sm">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Doanh thu POS tại quầy -->
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body d-flex align-items-center justify-content-between py-2">
+                                <div>
+                                    <div class="text-muted small">Doanh thu quầy POS</div>
+                                    <h5 class="fw-bold mb-0 text-dark" th:text="${@money.format(report.summary.posRevenue)}">0 đ</h5>
+                                </div>
+                                <span class="badge text-bg-dark p-2"><i class="bi bi-shop fs-5"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Doanh thu Online -->
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body d-flex align-items-center justify-content-between py-2">
+                                <div>
+                                    <div class="text-muted small">Doanh thu Online</div>
+                                    <h5 class="fw-bold mb-0 text-dark" th:text="${@money.format(report.summary.onlineRevenue)}">0 đ</h5>
+                                </div>
+                                <span class="badge text-bg-secondary p-2"><i class="bi bi-globe fs-5"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Đơn đang xử lý & Doanh thu dự kiến -->
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card shadow-sm border-0 h-100 border-start border-3 border-warning">
+                            <div class="card-body d-flex align-items-center justify-content-between py-2">
+                                <div>
+                                    <div class="text-muted small">Đang xử lý: <strong class="text-warning" th:text="${report.summary.processingOrderCount} + ' đơn'">0 đơn</strong></div>
+                                    <div class="fw-bold text-dark" th:text="'Dự kiến: ' + ${@money.format(report.summary.expectedRevenue)}">Dự kiến: 0 đ</div>
+                                </div>
+                                <span class="badge text-bg-warning p-2"><i class="bi bi-hourglass-split fs-5"></i></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8. Số đơn hủy -->
+                    <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="card shadow-sm border-0 h-100 border-start border-3 border-danger">
+                            <div class="card-body d-flex align-items-center justify-content-between py-2">
+                                <div>
+                                    <div class="text-muted small">Số đơn đã hủy</div>
+                                    <h5 class="fw-bold mb-0 text-danger" th:text="${report.summary.cancelledOrderCount} + ' đơn'">0 đơn</h5>
+                                </div>
+                                <span class="badge text-bg-danger p-2"><i class="bi bi-x-circle fs-5"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHẦN 2: BẢNG DOANH THU THEO NGÀY TRONG KỲ -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="card-title fw-bold mb-0 text-dark">
+                            <i class="bi bi-calendar3 text-primary me-2"></i>Bảng doanh thu theo ngày trong kỳ
+                        </h6>
+                        <span class="badge text-bg-light border small text-muted"
+                              th:text="'Từ ' + ${#temporals.format(report.filterStartDate, 'dd/MM/yyyy')} + ' đến ' + ${#temporals.format(report.filterEndDate, 'dd/MM/yyyy')}">
+                            Khoảng ngày
+                        </span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0 text-nowrap">
+                                <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width: 60px;" class="text-center">STT</th>
+                                    <th>Ngày</th>
+                                    <th class="text-center">Số đơn hoàn thành</th>
+                                    <th class="text-end pe-4">Doanh thu</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(report.dailyRevenues)}">
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>Không có dữ liệu trong khoảng ngày đã chọn.
+                                    </td>
+                                </tr>
+                                <tr th:each="d, stat : ${report.dailyRevenues}">
+                                    <td class="text-center text-muted" th:text="${stat.count}">1</td>
+                                    <td>
+                                        <i class="bi bi-calendar-date me-1 text-muted"></i>
+                                        <strong th:text="${#temporals.format(d.date, 'dd/MM/yyyy')}">01/01/2026</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill"
+                                              th:classappend="${d.orderCount > 0 ? 'text-bg-primary' : 'text-bg-light text-muted border'}"
+                                              th:text="${d.orderCount}">0</span>
+                                    </td>
+                                    <td class="text-end pe-4 fw-semibold"
+                                        th:classappend="${d.revenue.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'text-success' : 'text-muted'}"
+                                        th:text="${@money.format(d.revenue)}">0 đ</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHẦN 3: BẢNG DOANH THU VÀ SỐ ĐƠN THEO CỬA HÀNG (CHỈ ADMIN) -->
+                <div class="card shadow-sm border-0 mb-4" th:if="${isAdmin}">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="card-title fw-bold mb-0 text-dark">
+                            <i class="bi bi-buildings text-primary me-2"></i>Bảng doanh thu và số đơn theo chi nhánh (Chỉ Admin)
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 text-nowrap">
+                                <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px;" class="text-center">STT</th>
+                                    <th>Mã chi nhánh</th>
+                                    <th>Tên chi nhánh</th>
+                                    <th>Phân loại</th>
+                                    <th class="text-center">Số đơn hoàn thành</th>
+                                    <th class="text-end">Doanh thu</th>
+                                    <th class="text-end pe-4">Tỷ trọng</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(report.storeRevenues)}">
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>Chưa có chi nhánh nào phát sinh đơn hàng.
+                                    </td>
+                                </tr>
+                                <tr th:each="st, stat : ${report.storeRevenues}">
+                                    <td class="text-center text-muted" th:text="${stat.count}">1</td>
+                                    <td><code class="fw-bold" th:text="${st.storeCode}">STORE-01</code></td>
+                                    <td class="fw-semibold text-dark" th:text="${st.storeName}">Chi nhánh Lê Lợi</td>
+                                    <td>
+                                        <span class="badge"
+                                              th:classappend="${st.storeType == 'Kho tổng' ? 'text-bg-secondary' : 'text-bg-info text-dark'}"
+                                              th:text="${st.storeType}">Cửa hàng bán lẻ</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge text-bg-primary rounded-pill" th:text="${st.orderCount}">0</span>
+                                    </td>
+                                    <td class="text-end fw-bold text-success" th:text="${@money.format(st.revenue)}">0 đ</td>
+                                    <td class="text-end pe-4">
+                                        <span class="badge text-bg-light border fw-semibold" th:text="${st.percentage} + '%'">0.0%</span>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHẦN 4 & 5: PHƯƠNG THỨC THANH TOÁN & TRẠNG THÁI ĐƠN HÀNG (2 CỘT) -->
+                <div class="row g-4 mb-4">
+                    <!-- Bảng theo Phương thức thanh toán -->
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="card-title fw-bold mb-0 text-dark">
+                                    <i class="bi bi-credit-card text-primary me-2"></i>Thống kê theo phương thức thanh toán
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 text-nowrap">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Phương thức</th>
+                                            <th class="text-center">Số giao dịch</th>
+                                            <th class="text-end">Tổng tiền</th>
+                                            <th class="text-end pe-3">Tỷ lệ</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:if="${#lists.isEmpty(report.paymentMethodRevenues)}">
+                                            <td colspan="4" class="text-center py-4 text-muted">
+                                                <i class="bi bi-inbox fs-4 d-block mb-1"></i>Không có giao dịch thanh toán trong kỳ.
+                                            </td>
+                                        </tr>
+                                        <tr th:each="pm : ${report.paymentMethodRevenues}">
+                                            <td>
+                                                <i class="bi bi-cash-stack me-1 text-primary"></i>
+                                                <span class="fw-semibold" th:text="${pm.methodName}">Tiền mặt</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge text-bg-light border" th:text="${pm.transactionCount}">0</span>
+                                            </td>
+                                            <td class="text-end fw-bold text-success" th:text="${@money.format(pm.totalAmount)}">0 đ</td>
+                                            <td class="text-end pe-3">
+                                                <span class="badge text-bg-light border fw-semibold" th:text="${pm.percentage} + '%'">0.0%</span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bảng số đơn theo Trạng thái -->
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3">
+                                <h6 class="card-title fw-bold mb-0 text-dark">
+                                    <i class="bi bi-pie-chart text-primary me-2"></i>Số lượng đơn theo trạng thái
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 text-nowrap">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Trạng thái</th>
+                                            <th class="text-center">Số đơn</th>
+                                            <th class="text-end">Tổng giá trị</th>
+                                            <th class="text-end pe-3">Tỷ lệ đơn</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="os : ${report.orderStatusCounts}">
+                                            <td>
+                                                <span th:class="${os.badgeClass}" th:text="${os.statusLabel}">Chờ xác nhận</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge rounded-pill"
+                                                      th:classappend="${os.orderCount > 0 ? 'text-bg-primary' : 'text-bg-light text-muted border'}"
+                                                      th:text="${os.orderCount}">0</span>
+                                            </td>
+                                            <td class="text-end fw-semibold text-dark" th:text="${@money.format(os.totalAmount)}">0 đ</td>
+                                            <td class="text-end pe-3">
+                                                <span class="badge text-bg-light border fw-semibold" th:text="${os.percentage} + '%'">0.0%</span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hướng dẫn tiến độ theo Lộ trình 14 ngày -->
-                <div class="card shadow-sm border-0">
+                <!-- PHẦN 6: TOP 10 SẢN PHẨM BÁN CHẠY TRONG KỲ -->
+                <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-white py-3">
-                        <h5 class="card-title fw-bold mb-0"><i class="bi bi-calendar3 me-2"></i>Trạng thái lát cắt hệ thống</h5>
+                        <h6 class="card-title fw-bold mb-0 text-dark">
+                            <i class="bi bi-trophy text-warning me-2"></i>Top 10 sản phẩm bán chạy nhất trong kỳ (Đơn hoàn thành)
+                        </h6>
                     </div>
-                    <div class="card-body">
-                        <div class="alert alert-light border">
-                            <h6 class="fw-bold"><i class="bi bi-flag-fill text-success me-2"></i>Ngày 3A — Hoàn tất nền tảng giao diện web</h6>
-                            <p class="mb-0 text-muted">
-                                Đã thiết lập xong Security 2 chain (API JWT + Web Form Login), layout Thymeleaf Bootstrap 5 + AdminLTE 4,
-                                đồng bộ ddl-auto <code>validate</code> trên 28 bảng schema v2, và các trang khung chuẩn bị cho CRUD Catalog ở phiên Ngày 3B.
-                            </p>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 text-nowrap">
+                                <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px;" class="text-center">Hạng</th>
+                                    <th>Mã SKU</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Màu sắc / Kích cỡ</th>
+                                    <th class="text-center">Số lượng bán</th>
+                                    <th class="text-end pe-4">Tổng doanh thu</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:if="${#lists.isEmpty(report.topSellingProducts)}">
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>Chưa có sản phẩm nào được bán ra trong khoảng ngày này.
+                                    </td>
+                                </tr>
+                                <tr th:each="p, stat : ${report.topSellingProducts}">
+                                    <td class="text-center">
+                                        <span th:if="${stat.count == 1}" class="badge text-bg-warning rounded-circle px-2 py-1"><i class="bi bi-award-fill"></i> 1</span>
+                                        <span th:if="${stat.count == 2}" class="badge text-bg-secondary rounded-circle px-2 py-1">2</span>
+                                        <span th:if="${stat.count == 3}" class="badge text-bg-dark rounded-circle px-2 py-1">3</span>
+                                        <span th:if="${stat.count > 3}" class="badge text-bg-light border rounded-circle px-2 py-1" th:text="${stat.count}">4</span>
+                                    </td>
+                                    <td><code class="fw-bold" th:text="${p.sku}">SKU-001</code></td>
+                                    <td class="fw-semibold text-dark" th:text="${p.productName}">Tên giày mẫu</td>
+                                    <td>
+                                        <span class="badge text-bg-light border me-1" th:text="${p.color}">Màu</span>
+                                        <span class="badge text-bg-light border" th:text="'Size ' + ${p.size}">Size 42</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge text-bg-success rounded-pill px-3" th:text="${p.quantitySold}">0</span>
+                                    </td>
+                                    <td class="text-end pe-4 fw-bold text-success" th:text="${@money.format(p.totalRevenue)}">0 đ</td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
+                </div>
+
+                <!-- PHẦN 7 & 8: CẢNH BÁO TỒN THẤP & ĐƠN ONLINE CHỜ XÁC NHẬN -->
+                <div class="row g-4 mb-4">
+                    <!-- Khối 7: Cảnh báo tồn thấp -->
+                    <div th:class="${isAdmin ? 'col-12 col-xl-7' : 'col-12'}">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="card-title fw-bold mb-0 text-dark">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Cảnh báo tồn kho thấp (Tồn &le; <span th:text="${report.lowStockThreshold}">5</span> đôi)
+                                </h6>
+                                <span class="badge text-bg-danger rounded-pill" th:text="${#lists.size(report.lowStockAlerts)} + ' mặt hàng'">0 mặt hàng</span>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                                    <table class="table table-hover align-middle mb-0 text-nowrap">
+                                        <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th th:if="${isAdmin}">Cửa hàng</th>
+                                            <th>SKU</th>
+                                            <th>Sản phẩm</th>
+                                            <th>Màu / Size</th>
+                                            <th class="text-center">Tồn kho</th>
+                                            <th class="text-center">Định mức</th>
+                                            <th class="text-center pe-3">Trạng thái</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:if="${#lists.isEmpty(report.lowStockAlerts)}">
+                                            <td th:colspan="${isAdmin ? 7 : 6}" class="text-center py-4 text-success">
+                                                <i class="bi bi-check-circle fs-4 d-block mb-1"></i>Tất cả các mặt hàng đều đảm bảo mức tồn an toàn!
+                                            </td>
+                                        </tr>
+                                        <tr th:each="inv : ${report.lowStockAlerts}">
+                                            <td th:if="${isAdmin}" class="small text-muted" th:text="${inv.storeName}">Kho tổng</td>
+                                            <td><code class="fw-bold" th:text="${inv.sku}">SKU-001</code></td>
+                                            <td class="fw-semibold text-dark small" th:text="${inv.productName}">Tên giày</td>
+                                            <td>
+                                                <span class="badge text-bg-light border" th:text="${inv.color}">Đen</span>
+                                                <span class="badge text-bg-light border" th:text="${inv.size}">41</span>
+                                            </td>
+                                            <td class="text-center fw-bold"
+                                                th:classappend="${inv.quantityOnHand <= 0 ? 'text-danger' : 'text-danger'}"
+                                                th:text="${inv.quantityOnHand}">0</td>
+                                            <td class="text-center text-muted small" th:text="${inv.reorderLevel}">5</td>
+                                            <td class="text-center pe-3">
+                                                <span th:if="${inv.outOfStock}" class="badge text-bg-danger">Hết hàng</span>
+                                                <span th:unless="${inv.outOfStock}" class="badge text-bg-warning text-dark">Sắp hết</span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Khối 8: 5 Đơn online chờ xác nhận mới nhất (Chỉ ADMIN) -->
+                    <div class="col-12 col-xl-5" th:if="${isAdmin}">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="card-title fw-bold mb-0 text-dark">
+                                    <i class="bi bi-clock-history text-primary me-2"></i>Đơn trực tuyến chờ xác nhận mới nhất
+                                </h6>
+                                <a th:href="@{/admin/orders(status='PENDING',channel='ONLINE')}" class="btn btn-outline-primary btn-sm py-0 px-2 small">
+                                    Xem tất cả
+                                </a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 text-nowrap">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Mã đơn</th>
+                                            <th>Người nhận</th>
+                                            <th>Thời điểm</th>
+                                            <th class="text-end">Tổng tiền</th>
+                                            <th class="text-center pe-3">Chi tiết</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:if="${#lists.isEmpty(report.pendingOnlineOrders)}">
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                <i class="bi bi-inbox fs-4 d-block mb-1"></i>Không có đơn trực tuyến nào đang chờ xác nhận.
+                                            </td>
+                                        </tr>
+                                        <tr th:each="po : ${report.pendingOnlineOrders}">
+                                            <td>
+                                                <a th:href="@{/admin/orders/{id}(id=${po.orderId})}" class="fw-bold text-decoration-none" th:text="${po.orderCode}">
+                                                    DH2026001
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <div class="fw-semibold small text-dark" th:text="${po.shipName}">Tên khách</div>
+                                                <div class="text-muted small" th:text="${po.shipPhone}">0901234567</div>
+                                            </td>
+                                            <td class="small text-muted" th:text="${#temporals.format(po.placedAt, 'dd/MM HH:mm')}">
+                                                01/01 10:30
+                                            </td>
+                                            <td class="text-end fw-bold text-dark" th:text="${@money.format(po.totalAmount)}">
+                                                0 đ
+                                            </td>
+                                            <td class="text-center pe-3">
+                                                <a th:href="@{/admin/orders/{id}(id=${po.orderId})}" class="btn btn-outline-primary btn-sm py-0 px-2" title="Xử lý đơn">
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GHI CHÚ GIẢI THÍCH CÁCH TÍNH DOANH THU & ĐỊNH NGHĨA SỐ LIỆU (Ở CUỐI TRANG) -->
+                <div class="card shadow-sm border-0 mt-4 mb-3">
+                    <div class="card-body bg-light text-muted small py-3">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="bi bi-info-circle-fill me-1 text-primary"></i>Quy tắc & Định nghĩa số liệu báo cáo doanh thu:
+                        </h6>
+                        <ul class="mb-0 ps-3">
+                            <li class="mb-1">
+                                <strong>DOANH THU THỰC TẾ:</strong> Là tổng số tiền (<code>total_amount</code>) của các đơn hàng có trạng thái <strong>HOÀN TẤT (COMPLETED)</strong> và có thời điểm hoàn tất (<code>completed_at</code>) nằm trong kỳ báo cáo đã chọn. Đơn hàng POS tại quầy được tính hoàn tất ngay khi thu ngân hoàn tất thanh toán; đơn hàng trực tuyến (Shop) được tính hoàn tất khi giao hàng thành công đến tay khách hàng.
+                            </li>
+                            <li class="mb-1">
+                                <strong>ĐƠN HỦY:</strong> Các đơn hàng ở trạng thái <strong>ĐÃ HỦY (CANCELLED)</strong> tuyệt đối không được cộng vào doanh thu thực tế.
+                            </li>
+                            <li class="mb-1">
+                                <strong>DOANH THU DỰ KIẾN:</strong> Các đơn hàng đang trong quá trình xử lý (<strong>Chờ xác nhận, Đã xác nhận, Đang đóng gói, Đang giao hàng</strong>) được tính riêng thành chỉ số Doanh thu dự kiến, căn cứ theo thời điểm đặt hàng (<code>placed_at</code>).
+                            </li>
+                            <li>
+                                <strong>PHẠM VI TRUY CẬP:</strong> Quản trị viên (ADMIN) có toàn quyền xem số liệu toàn chuỗi hoặc lọc theo từng cửa hàng; Quản lý cửa hàng (STORE_MANAGER) chỉ xem được dữ liệu bán hàng POS và tồn kho tại đúng chi nhánh được phân công phụ trách.
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
@@ -143,4 +638,3 @@
 </div>
 </body>
 </html>
-

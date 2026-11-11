@@ -45,6 +45,13 @@ app:
   shipping:
     flat-fee: 30000
     free-threshold: 1000000
+  inventory:
+    low-stock-threshold: 5             # Ngưỡng cảnh báo tồn kho thấp (mặc định 5 đôi)
+  dashboard:
+    low-stock-max-rows: 20             # Số dòng tối đa cho bảng cảnh báo tồn thấp
+    top-products-limit: 10             # Giới hạn top sản phẩm bán chạy
+    pending-orders-limit: 5            # Số đơn online chờ xác nhận mới nhất
+    default-days-range: 30             # Khoảng ngày mặc định cho dashboard
   jwt:
     access-token-expiration: 900000     # 15 phút (milliseconds)
     refresh-token-expiration: 604800000 # 7 ngày (milliseconds)
