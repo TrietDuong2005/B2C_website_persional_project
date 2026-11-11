@@ -111,15 +111,25 @@ class AdminProductDetailPageRenderIntegrationTest {
         assertTrue(html.contains("id=\"imgUrl\""),
                 "Trang phải tiếp tục chứa ô nhập id='imgUrl' để nhập URL ảnh");
 
-        // 5. Kiểm tra các trường gắn biến thể, thứ tự hiển thị, ảnh đại diện
-        assertTrue(html.contains("id=\"imgVariantId\""),
-                "Trang phải chứa trường chọn biến thể id='imgVariantId'");
+        // 5. Kiểm tra ô chọn 'Gắn với' với id mới 'imgTarget' và đầy đủ 3 nhóm tùy chọn theo NGÀY 12C
+        assertTrue(html.contains("Gắn với"),
+                "Trang phải chứa nhãn trường 'Gắn với'");
+        assertTrue(html.contains("id=\"imgTarget\""),
+                "Trang phải chứa trường chọn 'Gắn với' có id='imgTarget'");
+        assertTrue(html.contains("Ảnh chung cho toàn sản phẩm"),
+                "Trang phải chứa tùy chọn 'Ảnh chung cho toàn sản phẩm'");
+        assertTrue(html.contains("label=\"Theo màu\""),
+                "Trang phải chứa nhóm tùy chọn optgroup label='Theo màu'");
+        assertTrue(html.contains("label=\"Biến thể cụ thể\""),
+                "Trang phải chứa nhóm tùy chọn optgroup label='Biến thể cụ thể'");
+
+        // 6. Kiểm tra các trường thứ tự hiển thị, ảnh đại diện
         assertTrue(html.contains("id=\"imgSortOrder\""),
                 "Trang phải chứa trường thứ tự hiển thị id='imgSortOrder'");
         assertTrue(html.contains("id=\"imgIsThumbnail\""),
                 "Trang phải chứa checkbox ảnh đại diện id='imgIsThumbnail'");
 
-        // 6. Kiểm tra trang dựng đầy đủ đến tận cuối cùng (chân trang adminFooter và </html>)
+        // 7. Kiểm tra trang dựng đầy đủ đến tận cuối cùng (chân trang adminFooter và </html>)
         assertTrue(html.contains("app-footer") || html.contains("Retail Chain v2.0"),
                 "Trang phải dựng hoàn chỉnh tới phần footer app-footer");
         assertTrue(html.contains("</html>"),

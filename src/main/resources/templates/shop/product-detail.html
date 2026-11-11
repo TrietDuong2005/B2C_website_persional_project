@@ -37,7 +37,7 @@
                 </div>
 
                 <!-- Thumbnails hình ảnh gallery -->
-                <div class="d-flex gap-2 flex-wrap" th:if="${product.images != null and !product.images.isEmpty()}">
+                <div class="d-flex gap-2 flex-wrap" id="gallery-thumbnails" th:if="${product.images != null and !product.images.isEmpty()}">
                     <div th:each="img : ${product.images}" class="thumbnail-item">
                         <img th:src="@{${img.url}}" th:alt="${product.name}"
                              class="rounded-3 border p-1 bg-white cursor-pointer"
@@ -158,7 +158,10 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     const variantsData = /*[[${product.variants}]]*/ [];
+    const imagesData = /*[[${product.images}]]*/ [];
+    const defaultThumbnailUrl = /*[[${product.thumbnailUrl}]]*/ '/images/placeholder-shoe.svg';
     const initialMinPriceFormatted = /*[[${@money.format(product.minPrice)}]]*/ '0 đ';
+    const productName = /*[[${product.name}]]*/ 'Sản phẩm';
     /*]]>*/
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -181,6 +184,7 @@
         const selectedColorLabel = document.getElementById('selected-color-label');
         const selectedSizeLabel = document.getElementById('selected-size-label');
         const mainProductImage = document.getElementById('main-product-image');
+        const galleryContainer = document.getElementById('gallery-thumbnails');
 
         // Hàm định dạng tiền tệ VNĐ thuần JS
         function formatVnd(amount) {
@@ -195,6 +199,7 @@
         // Biến lưu trạng thái đang chọn
         let selectedColor = availableColors.length > 0 ? availableColors[0] : null;
         let selectedSize = null;
+        let lastRenderedColor = null;
 
         // Chọn biến thể đầu tiên còn hàng nếu có, nếu không chọn biến thể đầu tiên
         const firstInStockVariant = variantsData.find(v => v.availableStock > 0) || variantsData[0];
@@ -203,7 +208,101 @@
             selectedSize = firstInStockVariant.size;
         }
 
+        // Hàm cập nhật bộ ảnh gallery và ảnh chính khi đổi màu sắc
+        // Quy tắc: Khi chọn màu, bộ ảnh đổi sang ảnh của màu đó (kèm ảnh chung);
+        // đổi size trong cùng màu KHÔNG đổi ảnh; màu chưa có ảnh riêng thì hiện ảnh chung.
+        function updateGalleryForColor(colorName) {
+            if (!colorName) return;
+            const normColor = colorName.trim().toLowerCase();
+
+            // 1. Phân loại hình ảnh đã nạp sẵn một lần (không gửi thêm query AJAX)
+            const generalImages = imagesData.filter(img => !img.variantId && (!img.color || img.color.trim() === ''));
+
+            const variantsOfColor = variantsData.filter(v => (v.color || '').trim().toLowerCase() === normColor);
+            const variantIdsOfColor = new Set(variantsOfColor.map(v => v.id));
+
+            const colorSpecificImages = imagesData.filter(img => {
+                if (!img.variantId && img.color && img.color.trim().toLowerCase() === normColor) {
+                    return true;
+                }
+                if (img.variantId && variantIdsOfColor.has(img.variantId)) {
+                    return true;
+                }
+                return false;
+            });
+
+            // 2. Lập danh sách ảnh gallery phù hợp
+            let activeGallery = [];
+            if (colorSpecificImages.length > 0) {
+                // Có ảnh riêng theo màu -> hiển thị ảnh của màu đó (kèm ảnh chung)
+                const seenUrls = new Set();
+                colorSpecificImages.forEach(img => {
+                    if (img.url && !seenUrls.has(img.url)) {
+                        seenUrls.add(img.url);
+                        activeGallery.push(img);
+                    }
+                });
+                generalImages.forEach(img => {
+                    if (img.url && !seenUrls.has(img.url)) {
+                        seenUrls.add(img.url);
+                        activeGallery.push(img);
+                    }
+                });
+            } else {
+                // Màu chưa có ảnh riêng -> hiển thị ảnh chung
+                activeGallery = generalImages;
+            }
+
+            if (activeGallery.length === 0) {
+                activeGallery = imagesData;
+            }
+
+            // 3. Render lại thumbnail gallery
+            if (galleryContainer) {
+                galleryContainer.innerHTML = '';
+                activeGallery.forEach((img, idx) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'thumbnail-item';
+
+                    const thumbImg = document.createElement('img');
+                    thumbImg.src = img.url;
+                    thumbImg.alt = productName;
+                    thumbImg.className = 'rounded-3 border p-1 bg-white cursor-pointer' + (idx === 0 ? ' border-primary' : '');
+                    thumbImg.style.width = '70px';
+                    thumbImg.style.height = '70px';
+                    thumbImg.style.objectFit = 'contain';
+                    thumbImg.style.cursor = 'pointer';
+
+                    thumbImg.addEventListener('click', function () {
+                        if (mainProductImage) {
+                            mainProductImage.src = this.src;
+                        }
+                        galleryContainer.querySelectorAll('img').forEach(el => el.classList.remove('border-primary'));
+                        this.classList.add('border-primary');
+                    });
+
+                    itemDiv.appendChild(thumbImg);
+                    galleryContainer.appendChild(itemDiv);
+                });
+            }
+
+            // 4. Cập nhật ảnh chính sang ảnh đầu tiên của bộ ảnh này
+            if (activeGallery.length > 0 && mainProductImage) {
+                mainProductImage.src = activeGallery[0].url;
+            } else if (mainProductImage && defaultThumbnailUrl) {
+                mainProductImage.src = defaultThumbnailUrl;
+            }
+
+            lastRenderedColor = normColor;
+        }
+
         function updateState() {
+            // Cập nhật bộ ảnh nếu màu thay đổi; nếu cùng màu đổi size thì KHÔNG đổi ảnh
+            const currentNormColor = (selectedColor || '').trim().toLowerCase();
+            if (currentNormColor !== lastRenderedColor) {
+                updateGalleryForColor(selectedColor);
+            }
+
             // Cập nhật nhãn màu và size đang chọn
             if (selectedColorLabel) selectedColorLabel.textContent = selectedColor || '';
             if (selectedSizeLabel) selectedSizeLabel.textContent = selectedSize || '';
@@ -221,7 +320,6 @@
             });
 
             // 2. Cập nhật trạng thái các nút kích cỡ theo màu đang chọn
-            // Tìm tất cả các biến thể thuộc màu đang chọn
             const variantsForColor = variantsData.filter(v => v.color === selectedColor);
             const sizesForColorMap = new Map();
             variantsForColor.forEach(v => {
@@ -284,11 +382,6 @@
                 if (formVariantId) formVariantId.value = currentVariant.id;
                 if (displaySku) displaySku.textContent = currentVariant.sku || '-';
                 if (displayPrice) displayPrice.textContent = formatVnd(currentVariant.price);
-
-                // Cập nhật ảnh chính nếu biến thể có ảnh riêng
-                if (currentVariant.imageUrl && mainProductImage) {
-                    mainProductImage.src = currentVariant.imageUrl;
-                }
 
                 // Cập nhật tình trạng tồn kho theo đúng yêu cầu:
                 // - "Còn hàng" khi N > 5

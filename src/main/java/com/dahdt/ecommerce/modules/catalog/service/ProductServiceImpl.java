@@ -59,24 +59,31 @@ public class ProductServiceImpl implements ProductService {
 
         ProductDetailResponseDTO detailDTO = productMapper.toDetailDto(product);
 
+        // Lấy danh sách hình ảnh sản phẩm một lần cho cả sản phẩm (chống N+1 query)
+        List<ProductImage> images = productImageRepository.findByProductIdOrderBySortOrderAscIdAsc(id);
+        detailDTO.setImages(productImageMapper.toDtoList(images));
+
         // Lấy danh sách biến thể
         List<ProductVariant> variants = productVariantRepository.findByProductIdOrderByIdAsc(id);
         List<ProductVariantResponseDTO> variantDtos = variants.stream()
                 .map(v -> {
                     ProductVariantResponseDTO dto = productVariantMapper.toDto(v);
-                    // Lấy ảnh riêng của biến thể nếu có
-                    List<ProductImage> varImages = productImageRepository.findByVariantIdOrderBySortOrderAscIdAsc(v.getId());
-                    if (!varImages.isEmpty()) {
-                        dto.setImageUrl(varImages.get(0).getUrl());
-                    }
+                    // Dùng phương thức chung resolveImageUrl (1: biến thể, 2: màu, 3: chung, 4: mặc định)
+                    dto.setImageUrl(ProductImageResolver.resolveImageUrl(v, images, product.getThumbnailUrl()));
                     return dto;
                 })
                 .collect(Collectors.toList());
         detailDTO.setVariants(variantDtos);
 
-        // Lấy danh sách hình ảnh sản phẩm
-        List<ProductImage> images = productImageRepository.findByProductIdOrderBySortOrderAscIdAsc(id);
-        detailDTO.setImages(productImageMapper.toDtoList(images));
+        // Danh sách các màu khác nhau không trùng lặp
+        List<String> colors = variants.stream()
+                .map(ProductVariant::getColor)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(c -> !c.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+        detailDTO.setColors(colors);
 
         return detailDTO;
     }

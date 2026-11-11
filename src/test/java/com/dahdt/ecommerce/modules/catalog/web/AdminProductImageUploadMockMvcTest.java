@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -160,6 +162,64 @@ class AdminProductImageUploadMockMvcTest {
         assertEquals("Dung lượng tệp tải lên vượt quá giới hạn tối đa cho phép!",
                 redirectAttributes.getFlashAttributes().get("errorMessage"),
                 "Thông điệp báo lỗi kích thước phải thân thiện tiếng Việt");
+    }
+
+    @Test
+    @DisplayName("Thêm ảnh theo màu qua multipart (target='color:Hồng Phấn'): Gọi service với color và variantId = null")
+    void testUploadImageFileByColorTargetSuccess() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "imageFile", "pink-shoe.jpg", "image/jpeg", SAMPLE_IMAGE_BYTES
+        );
+
+        when(productVariantService.addProductImage(any(ProductImageRequestDTO.class)))
+                .thenReturn(ProductImageResponseDTO.builder().id(105L).url("/uploads/products/pink-shoe.jpg").build());
+
+        mockMvc.perform(multipart("/admin/products/{id}/images/save", 5L)
+                        .file(file)
+                        .param("target", "color:Hồng Phấn")
+                        .param("sortOrder", "1")
+                        .param("isThumbnail", "false"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/products/5"))
+                .andExpect(flash().attribute("successMessage", "Thêm ảnh thành công!"));
+
+        ArgumentCaptor<ProductImageRequestDTO> captor = ArgumentCaptor.forClass(ProductImageRequestDTO.class);
+        verify(productVariantService, times(1)).addProductImage(captor.capture());
+
+        ProductImageRequestDTO captured = captor.getValue();
+        assertEquals("Hồng Phấn", captured.getColor(),
+                "Color gửi sang service phải là 'Hồng Phấn'. Thực tế: " + captured.getColor());
+        assertNull(captured.getVariantId(),
+                "Khi gắn theo màu, variantId phải là null. Thực tế: " + captured.getVariantId());
+    }
+
+    @Test
+    @DisplayName("Thêm ảnh gắn biến thể cụ thể qua multipart (target='variant:101'): Gọi service với variantId = 101 và color = null")
+    void testUploadImageFileByVariantTargetSuccess() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "imageFile", "variant-shoe.jpg", "image/jpeg", SAMPLE_IMAGE_BYTES
+        );
+
+        when(productVariantService.addProductImage(any(ProductImageRequestDTO.class)))
+                .thenReturn(ProductImageResponseDTO.builder().id(106L).url("/uploads/products/var.jpg").build());
+
+        mockMvc.perform(multipart("/admin/products/{id}/images/save", 5L)
+                        .file(file)
+                        .param("target", "variant:101")
+                        .param("sortOrder", "2")
+                        .param("isThumbnail", "false"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/products/5"))
+                .andExpect(flash().attribute("successMessage", "Thêm ảnh thành công!"));
+
+        ArgumentCaptor<ProductImageRequestDTO> captor = ArgumentCaptor.forClass(ProductImageRequestDTO.class);
+        verify(productVariantService, times(1)).addProductImage(captor.capture());
+
+        ProductImageRequestDTO captured = captor.getValue();
+        assertEquals(101L, captured.getVariantId(),
+                "VariantId gửi sang service phải là 101. Thực tế: " + captured.getVariantId());
+        assertNull(captured.getColor(),
+                "Khi gắn theo biến thể, color phải là null. Thực tế: " + captured.getColor());
     }
 }
 

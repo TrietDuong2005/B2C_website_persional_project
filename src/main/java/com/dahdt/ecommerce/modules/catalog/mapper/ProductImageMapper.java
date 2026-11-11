@@ -16,6 +16,7 @@ public interface ProductImageMapper {
 
     @Mapping(source = "product.id", target = "productId")
     @Mapping(source = "variant.id", target = "variantId")
+    @Mapping(source = "variant.sku", target = "variantSku")
     @Mapping(target = "variantName", expression = "java(image.getVariant() != null ? (image.getVariant().getColor() + \" / \" + image.getVariant().getSize()) : null)")
     ProductImageResponseDTO toDto(ProductImage image);
 

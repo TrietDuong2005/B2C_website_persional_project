@@ -179,7 +179,9 @@
                                             <img th:src="${img.url}" class="card-img-top" style="height: 140px; object-fit: cover;" alt="Image"/>
                                             <div class="card-body p-2 small">
                                                 <span th:if="${img.isThumbnail}" class="badge bg-warning text-dark mb-1">Ảnh chính</span>
-                                                <span th:if="${img.variantName != null}" class="badge bg-info-subtle text-info-emphasis mb-1" th:text="${img.variantName}">Màu/Size</span>
+                                                <span th:if="${img.variantId != null}" class="badge bg-info-subtle text-info-emphasis mb-1" th:text="'Biến thể: ' + (${img.variantSku} ?: ${img.variantName})">Biến thể: SKU</span>
+                                                <span th:if="${img.variantId == null and img.color != null and !img.color.isBlank()}" class="badge bg-primary-subtle text-primary-emphasis mb-1" th:text="'Màu: ' + ${img.color}">Màu: Tên màu</span>
+                                                <span th:if="${img.variantId == null and (img.color == null or img.color.isBlank())}" class="badge bg-secondary-subtle text-secondary-emphasis mb-1">Chung</span>
                                                 <div class="text-truncate text-muted small" th:text="${img.url}">URL</div>
                                             </div>
                                             <div class="card-footer bg-white p-2 text-end">
@@ -354,13 +356,20 @@
                                     </div>
 
                                     <div class="mb-2">
-                                        <label for="imgVariantId" class="form-label small fw-semibold">Gắn với biến thể cụ thể</label>
-                                        <select class="form-select form-select-sm" id="imgVariantId" th:field="*{variantId}">
-                                            <option value="">-- Ảnh chung cho toàn sản phẩm --</option>
-                                            <option th:each="v : ${product.variants}" th:value="${v.id}"
-                                                    th:text="${v.sku} + ' (' + ${v.color} + ' - ' + ${v.size} + ')'">
-                                                SKU (Màu - Size)
-                                            </option>
+                                        <label for="imgTarget" class="form-label small fw-semibold">Gắn với</label>
+                                        <select class="form-select form-select-sm" id="imgTarget" name="target">
+                                            <option value="">Ảnh chung cho toàn sản phẩm</option>
+                                            <optgroup label="Theo màu" th:if="${productColors != null and !productColors.isEmpty()}">
+                                                <option th:each="c : ${productColors}" th:value="'color:' + ${c}" th:text="'Màu: ' + ${c}">
+                                                    Màu: Đen
+                                                </option>
+                                            </optgroup>
+                                            <optgroup label="Biến thể cụ thể" th:if="${product.variants != null and !product.variants.isEmpty()}">
+                                                <option th:each="v : ${product.variants}" th:value="'variant:' + ${v.id}"
+                                                        th:text="${v.sku} + ' (' + ${v.color} + ' - ' + ${v.size} + ')'">
+                                                    SKU (Màu - Size)
+                                                </option>
+                                            </optgroup>
                                         </select>
                                     </div>
 

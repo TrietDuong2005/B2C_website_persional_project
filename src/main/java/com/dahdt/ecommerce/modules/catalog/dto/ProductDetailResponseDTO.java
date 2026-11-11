@@ -36,5 +36,8 @@ public class ProductDetailResponseDTO {
 
     @Builder.Default
     private List<ProductImageResponseDTO> images = new ArrayList<>();
+
+    @Builder.Default
+    private List<String> colors = new ArrayList<>();
 }
 

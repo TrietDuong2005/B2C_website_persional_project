@@ -27,10 +27,14 @@ public class ProductImage extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    /** Biến thể cụ thể mà ảnh này đại diện (có thể null nếu là ảnh chụp toàn bộ sản phẩm) */
+    /** Biến thể cụ thể mà ảnh này đại diện (có thể null nếu là ảnh chụp toàn bộ sản phẩm hoặc gắn theo màu) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id")
     private ProductVariant variant;
+
+    /** Màu sắc của sản phẩm mà ảnh này đại diện (NULL nếu là ảnh gắn biến thể cụ thể hoặc ảnh chung cho sản phẩm) */
+    @Column(name = "color", length = 50)
+    private String color;
 
     /** Đường dẫn URL trực tiếp của hình ảnh */
     @Column(name = "url", nullable = false, length = 500)

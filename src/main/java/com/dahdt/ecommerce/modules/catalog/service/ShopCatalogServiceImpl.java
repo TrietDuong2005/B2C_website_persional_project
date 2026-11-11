@@ -143,22 +143,19 @@ public class ShopCatalogServiceImpl implements ShopCatalogService {
         List<ShopProductImageDTO> imageDtos = images.stream().map(img -> ShopProductImageDTO.builder()
                 .id(img.getId())
                 .variantId(img.getVariant() != null ? img.getVariant().getId() : null)
+                .color(img.getColor())
                 .url(img.getUrl())
                 .sortOrder(img.getSortOrder())
                 .thumbnail(img.getIsThumbnail() != null && img.getIsThumbnail())
                 .build()
         ).toList();
 
-        // 5. Chuyển đổi danh sách biến thể sang DTO
+        // 5. Chuyển đổi danh sách biến thể sang DTO (dùng resolveImageUrl chung, chống N+1)
         List<ShopProductVariantDTO> variantDtos = variants.stream().map(v -> {
             int stock = stockMap.getOrDefault(v.getId(), 0);
 
-            // Tìm ảnh gắn riêng cho biến thể này nếu có
-            String varImg = images.stream()
-                    .filter(img -> img.getVariant() != null && img.getVariant().getId().equals(v.getId()))
-                    .map(ProductImage::getUrl)
-                    .findFirst()
-                    .orElse(product.getThumbnailUrl());
+            // Dùng phương thức chung: (1) biến thể; (2) màu; (3) chung; (4) mặc định
+            String varImg = ProductImageResolver.resolveImageUrl(v, images, product.getThumbnailUrl());
 
             return ShopProductVariantDTO.builder()
                     .id(v.getId())

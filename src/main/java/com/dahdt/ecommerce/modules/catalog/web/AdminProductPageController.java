@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 /**
  * Controller phục vụ trang Quản lý Sản phẩm và Biến thể trong phân hệ Admin (/admin/products).
  */
@@ -199,6 +203,16 @@ public class AdminProductPageController {
             model.addAttribute("imageForm", imageForm);
         }
 
+        // Danh sách màu sắc duy nhất cho dropdown "Gắn với"
+        List<String> productColors = product.getVariants().stream()
+                .map(ProductVariantResponseDTO::getColor)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(c -> !c.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+        model.addAttribute("productColors", productColors);
+
         return "admin/catalog/product-detail";
     }
 
@@ -217,6 +231,14 @@ public class AdminProductPageController {
             ProductDetailResponseDTO product = productService.getProductDetail(id);
             model.addAttribute("product", product);
             model.addAttribute("isVariantEdit", variantForm.getId() != null);
+            List<String> productColors = product.getVariants().stream()
+                    .map(ProductVariantResponseDTO::getColor)
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(c -> !c.isEmpty())
+                    .distinct()
+                    .collect(Collectors.toList());
+            model.addAttribute("productColors", productColors);
             if (!model.containsAttribute("imageForm")) {
                 ProductImageRequestDTO imageForm = new ProductImageRequestDTO();
                 imageForm.setProductId(id);
@@ -282,6 +304,24 @@ public class AdminProductPageController {
                             BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
         imageForm.setProductId(id);
+
+        if (imageForm.getTarget() != null && !imageForm.getTarget().isBlank()) {
+            String target = imageForm.getTarget().trim();
+            if (target.startsWith("color:")) {
+                imageForm.setColor(target.substring("color:".length()).trim());
+                imageForm.setVariantId(null);
+            } else if (target.startsWith("variant:")) {
+                try {
+                    imageForm.setVariantId(Long.parseLong(target.substring("variant:".length()).trim()));
+                } catch (NumberFormatException e) {
+                    imageForm.setVariantId(null);
+                }
+                imageForm.setColor(null);
+            } else {
+                imageForm.setVariantId(null);
+                imageForm.setColor(null);
+            }
+        }
 
         boolean hasUrl = imageForm.getUrl() != null && !imageForm.getUrl().trim().isEmpty();
         boolean hasFile = imageForm.getImageFile() != null && !imageForm.getImageFile().isEmpty();

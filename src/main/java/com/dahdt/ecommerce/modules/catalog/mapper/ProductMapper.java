@@ -32,6 +32,7 @@ public interface ProductMapper {
     @Mapping(source = "brand.name", target = "brandName")
     @Mapping(target = "variants", ignore = true)
     @Mapping(target = "images", ignore = true)
+    @Mapping(target = "colors", ignore = true)
     ProductDetailResponseDTO toDetailDto(Product product);
 
     @Mapping(target = "category", ignore = true)

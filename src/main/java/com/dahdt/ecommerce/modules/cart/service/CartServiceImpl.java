@@ -15,6 +15,7 @@ import com.dahdt.ecommerce.modules.catalog.entity.ProductImage;
 import com.dahdt.ecommerce.modules.catalog.entity.ProductVariant;
 import com.dahdt.ecommerce.modules.catalog.repository.ProductImageRepository;
 import com.dahdt.ecommerce.modules.catalog.repository.ProductVariantRepository;
+import com.dahdt.ecommerce.modules.catalog.service.ProductImageResolver;
 import com.dahdt.ecommerce.modules.inventory.fulfillment.OnlineAvailabilityService;
 import com.dahdt.ecommerce.modules.user.entity.User;
 import com.dahdt.ecommerce.modules.user.repository.UserRepository;
@@ -78,17 +79,12 @@ public class CartServiceImpl implements CartService {
             CartItemResponseDTO itemDto = cartMapper.toItemDto(item);
             ProductVariant variant = item.getVariant();
 
-            // Ảnh đại diện món hàng: ưu tiên ảnh riêng của biến thể, nếu không có lấy thumbnail sản phẩm
-            String imgUrl = null;
-            List<ProductImage> varImages = productImageRepository.findByVariantIdOrderBySortOrderAscIdAsc(variant.getId());
-            if (!varImages.isEmpty()) {
-                imgUrl = varImages.get(0).getUrl();
-            } else if (variant.getProduct() != null) {
-                imgUrl = variant.getProduct().getThumbnailUrl();
-            }
-            if (imgUrl == null || imgUrl.isBlank()) {
-                imgUrl = "/images/placeholder-shoe.svg";
-            }
+            // Ảnh đại diện món hàng: dùng phương thức dùng chung resolveImageUrl (1: biến thể, 2: màu, 3: chung, 4: mặc định)
+            List<ProductImage> prodImages = (variant.getProduct() != null && variant.getProduct().getId() != null)
+                    ? productImageRepository.findByProductIdOrderBySortOrderAscIdAsc(variant.getProduct().getId())
+                    : Collections.emptyList();
+            String fallback = (variant.getProduct() != null) ? variant.getProduct().getThumbnailUrl() : null;
+            String imgUrl = ProductImageResolver.resolveImageUrl(variant, prodImages, fallback);
             itemDto.setImageUrl(imgUrl);
 
             // Giá luôn tính theo Entity (lấy từ DB của biến thể)

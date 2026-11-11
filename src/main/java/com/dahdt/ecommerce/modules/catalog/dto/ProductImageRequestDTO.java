@@ -23,6 +23,20 @@ public class ProductImageRequestDTO {
     private Long variantId;
 
     /**
+     * Tên màu sắc của sản phẩm gắn với ảnh (nếu gắn theo màu).
+     */
+    @Size(max = 50, message = "Tên màu sắc tối đa 50 ký tự")
+    private String color;
+
+    /**
+     * Giá trị nhận từ dropdown "Gắn với" trên giao diện Admin:
+     * - "": Ảnh chung cho toàn sản phẩm
+     * - "color:<tên màu>": Gắn với một màu
+     * - "variant:<id>": Gắn với biến thể cụ thể
+     */
+    private String target;
+
+    /**
      * Tệp ảnh tải lên từ máy cá nhân (chấp nhận jpg, jpeg, png, webp).
      */
     private MultipartFile imageFile;

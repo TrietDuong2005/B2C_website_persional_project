@@ -16,6 +16,7 @@ public class ShopProductImageDTO {
 
     private Long id;
     private Long variantId;
+    private String color;
     private String url;
     private Integer sortOrder;
     private boolean thumbnail;

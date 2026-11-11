@@ -21,5 +21,10 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
      * Lấy danh sách ảnh gắn riêng cho biến thể.
      */
     List<ProductImage> findByVariantIdOrderBySortOrderAscIdAsc(Long variantId);
+
+    /**
+     * Lấy danh sách ảnh gắn theo màu sắc của sản phẩm.
+     */
+    List<ProductImage> findByProductIdAndColorOrderBySortOrderAscIdAsc(Long productId, String color);
 }
 

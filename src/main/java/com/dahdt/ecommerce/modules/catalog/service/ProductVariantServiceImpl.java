@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -158,10 +160,37 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         Product product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sản phẩm cha ID: " + dto.getProductId()));
 
+        // Quy tắc NGÀY 12C: Một ảnh chỉ gắn MỘT trong ba loại:
+        // (1) Biến thể cụ thể (variant_id)
+        // (2) Một màu (color)
+        // (3) Chung cho sản phẩm (cả hai đều NULL)
+        String color = (dto.getColor() != null && !dto.getColor().trim().isEmpty()) ? dto.getColor().trim() : null;
+        Long variantId = dto.getVariantId();
+
+        if (variantId != null && color != null) {
+            throw new BadRequestException("Một hình ảnh chỉ được gắn với một trong ba loại: biến thể cụ thể, một màu sắc, hoặc chung cho sản phẩm");
+        }
+
         ProductVariant variant = null;
-        if (dto.getVariantId() != null) {
-            variant = productVariantRepository.findById(dto.getVariantId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy biến thể ID: " + dto.getVariantId()));
+        if (variantId != null) {
+            variant = productVariantRepository.findById(variantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy biến thể ID: " + variantId));
+            if (!variant.getProduct().getId().equals(product.getId())) {
+                throw new BadRequestException("Biến thể ID " + variantId + " không thuộc sản phẩm ID " + product.getId());
+            }
+        }
+
+        String canonicalColor = null;
+        if (color != null) {
+            // So sánh màu không phân biệt hoa thường và khoảng trắng thừa
+            List<ProductVariant> variants = productVariantRepository.findByProductIdOrderByIdAsc(product.getId());
+            Optional<ProductVariant> matchedVariant = variants.stream()
+                    .filter(v -> v.getColor() != null && v.getColor().trim().equalsIgnoreCase(color))
+                    .findFirst();
+            if (matchedVariant.isEmpty()) {
+                throw new BadRequestException("Màu sắc '" + color + "' không tồn tại trong danh sách biến thể của sản phẩm này");
+            }
+            canonicalColor = matchedVariant.get().getColor();
         }
 
         boolean hasUrl = dto.getUrl() != null && !dto.getUrl().trim().isEmpty();
@@ -183,6 +212,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         ProductImage image = ProductImage.builder()
                 .product(product)
                 .variant(variant)
+                .color(canonicalColor)
                 .url(finalUrl)
                 .sortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 0)
                 .isThumbnail(Boolean.TRUE.equals(dto.getIsThumbnail()))
@@ -244,10 +274,11 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     private ProductVariantResponseDTO enrichVariantDto(ProductVariant variant) {
         ProductVariantResponseDTO dto = productVariantMapper.toDto(variant);
-        List<ProductImage> varImages = productImageRepository.findByVariantIdOrderBySortOrderAscIdAsc(variant.getId());
-        if (!varImages.isEmpty()) {
-            dto.setImageUrl(varImages.get(0).getUrl());
-        }
+        List<ProductImage> images = (variant.getProduct() != null && variant.getProduct().getId() != null)
+                ? productImageRepository.findByProductIdOrderBySortOrderAscIdAsc(variant.getProduct().getId())
+                : Collections.emptyList();
+        String fallback = (variant.getProduct() != null) ? variant.getProduct().getThumbnailUrl() : null;
+        dto.setImageUrl(ProductImageResolver.resolveImageUrl(variant, images, fallback));
         return dto;
     }
 }
