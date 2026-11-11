@@ -1,7 +1,7 @@
 # 09. BẢN ĐỒ MÃ NGUỒN HỆ THỐNG "TRIẾT STORE"
 
 > **Tài liệu tham chiếu mã nguồn và kiến trúc hệ thống.**  
-> Mọi thông tin trong tài liệu này được đối chiếu trực tiếp 100% từ mã nguồn Java (`src/main/java`), tệp cấu hình (`application.yml`, `application-dev.yml`), kịch bản CSDL Flyway (`src/main/resources/db/migration`) và mã kiểm thử (`src/test/java`).
+> Mọi thông tin trong tài liệu này được đối chiếu trực tiếp 100% từ mã nguồn Java (`src/main/java`), tệp cấu hình (`application.yml`, `application-dev.yml`), kịch bản CSDL Flyway (`src/main/resources/db/migration`), giao diện Thymeleaf (`src/main/resources/templates`) và mã kiểm thử (`src/test/java`).
 
 ---
 
@@ -12,7 +12,7 @@
    - [2.2. Khu Quản trị (ADMIN, STORE_MANAGER)](#22-khu-quản-trị-admin-store_manager)
    - [2.3. Khu POS (CASHIER, STORE_MANAGER, ADMIN)](#23-khu-pos-cashier-store_manager-admin)
    - [2.4. Khu API Công khai & REST API (Stateless JWT)](#24-khu-api-công-khai--rest-api-stateless-jwt)
-   - [2.5. Trang Đăng nhập & Trang Lỗi (Web Public)](#25-trang-đăng-nhập--trang-lỗi-web-public)
+   - [2.5. Trang Đăng nhập, Trang Lỗi & Phục vụ tệp tải lên (Web Public)](#25-trang-đăng-nhập-trang-lỗi--phục-vụ-tệp-tải-lên-web-public)
 3. [Bản đồ Design Pattern](#3-bản-đồ-design-pattern)
    - [3.1. Strategy Pattern](#31-strategy-pattern)
    - [3.2. Factory Pattern](#32-factory-pattern)
@@ -20,7 +20,7 @@
    - [3.4. State Pattern (Vòng đời đơn hàng)](#34-state-pattern-vòng-đời-đơn-hàng)
 4. [Danh sách Thực thể (Entity) & Bảng CSDL](#4-danh-sách-thực-thể-entity--bảng-csdl)
    - [4.1. Chi tiết 23 Thực thể JPA](#41-chi-tiết-23-thực-thể-jpa)
-   - [4.2. Bảng tổng hợp 28 bảng trong Flyway Migration](#42-bảng-tổng-hợp-28-bảng-trong-flyway-migration)
+   - [4.2. Bảng tổng hợp 28 bảng trong Flyway Migration (V1–V31)](#42-bảng-tổng-hợp-28-bảng-trong-flyway-migration-v1v31)
 5. [Danh sách Service & Quy tắc nghiệp vụ lõi](#5-danh-sách-service--quy-tắc-nghiệp-vụ-lõi)
    - [5.1. Danh sách Service và các phương thức chính](#51-danh-sách-service-và-các-phương-thức-chính)
    - [5.2. Các quy tắc nghiệp vụ nổi bật](#52-các-quy-tắc-nghiệp-vụ-nổi-bật)
@@ -42,10 +42,10 @@ Toàn bộ mã nguồn Java của dự án đặt dưới gói `com.dahdt.ecomme
 |---|:---:|---|
 | `com.dahdt.ecommerce` (Gốc) | 1 | Lớp khởi động ứng dụng Spring Boot (`EcommerceApplication.java`). |
 | `common` | 12 | Các thành phần dùng chung: BaseEntity (audit thời gian), Exception nghiệp vụ, ApiResponse chuẩn, tiện ích MoneyUtil, RedirectUtil, SlugUtil, xử lý trang lỗi và Global Model Attributes. |
-| `config` | 9 | Cấu hình Security (2 SecurityFilterChain), Swagger OpenAPI, DevDataSeeder, DemoDataPlanner, DemoDataSeeder và các thành phần bảo mật JWT (`config.security`). |
+| `config` | 10 | Cấu hình Security (2 SecurityFilterChain), Cấu hình tài nguyên tải lên WebMvcConfig, Swagger OpenAPI, DevDataSeeder, DemoDataPlanner, DemoDataSeeder và các thành phần bảo mật JWT (`config.security`). |
 | `modules/auth` | 9 | Xác thực JWT cho REST API, xác thực Form Login web, đăng ký người dùng mới và quản lý mã phiên. |
 | `modules/cart` | 12 | Quản lý giỏ hàng trực tuyến của khách hàng: thêm biến thể, đổi số lượng, xóa dòng sản phẩm, kiểm tra tồn kho kho tổng. |
-| `modules/catalog` | 49 | Quản lý danh mục 2 cấp, thương hiệu, sản phẩm giày dép cha, biến thể màu sắc/kích cỡ EU, hình ảnh; hiển thị danh sách, tìm kiếm, lọc và chi tiết sản phẩm. |
+| `modules/catalog` | 52 | Quản lý danh mục 2 cấp, thương hiệu, sản phẩm giày dép cha, biến thể màu sắc/kích cỡ EU, hình ảnh (tải tệp lên, ảnh theo màu sắc qua FileStorageService và ProductImageResolver); hiển thị danh sách, tìm kiếm, lọc và chi tiết sản phẩm. |
 | `modules/cms` | 0 | Module khung quản trị nội dung / bài viết (hiện chỉ có `.gitkeep`, chưa triển khai). |
 | `modules/inventory` | 19 | Quản lý tồn kho theo từng chi nhánh có khóa lạc quan (`@Version`), sổ cái giao dịch kho (Audit log), xác định nguồn cung ứng kho tổng (`fulfillment`). |
 | `modules/loyalty` | 0 | Module khung tích điểm khách hàng thân thiết (hiện chỉ có `.gitkeep`, chưa triển khai). |
@@ -60,7 +60,7 @@ Toàn bộ mã nguồn Java của dự án đặt dưới gói `com.dahdt.ecomme
 | `modules/shipping` | 0 | Module khung liên kết đơn vị vận chuyển bên thứ ba (hiện chỉ có `.gitkeep`, chưa triển khai). |
 | `modules/store` | 24 | Quản lý danh sách chi nhánh (cửa hàng/kho bãi), hồ sơ nhân sự theo chi nhánh, kiểm soát phạm vi dữ liệu chi nhánh (`StoreScopeService`) và điều hướng trang POS. |
 | `modules/user` | 18 | Quản lý thông tin tài khoản người dùng, 4 vai trò hệ thống (ADMIN, STORE_MANAGER, CASHIER, CUSTOMER) và sổ địa chỉ giao hàng. |
-| **TỔNG CỘNG** | **253** | **Toàn bộ hệ thống có 253 tệp mã nguồn Java.** |
+| **TỔNG CỘNG** | **257** | **Toàn bộ hệ thống có 257 tệp mã nguồn Java.** |
 
 ---
 
@@ -77,7 +77,7 @@ Bảo mật được cấu hình tập trung trong `SecurityConfig` qua 2 `Secur
 |---|---|---|---|---|
 | `GET` | `/` | `ShopHomePageController` | Công khai (`permitAll`) | Trang chủ Shop: hiển thị banner, danh mục tiêu biểu và 8 sản phẩm mới nhất. |
 | `GET` | `/shop/products` | `ShopProductPageController` | Công khai (`permitAll`) | Danh sách sản phẩm dạng lưới kèm tìm kiếm từ khóa, bộ lọc đa điều kiện và phân trang 12 sản phẩm/trang. |
-| `GET` | `/shop/products/{slug}` | `ShopProductPageController` | Công khai (`permitAll`) | Xem chi tiết sản phẩm theo slug: chọn màu/size, hiển thị giá và tồn khả dụng tại kho tổng. |
+| `GET` | `/shop/products/{slug}` | `ShopProductPageController` | Công khai (`permitAll`) | Xem chi tiết sản phẩm theo slug: chọn màu/size, hiển thị giá và tồn khả dụng tại kho tổng, bộ sưu tập ảnh chuyển theo màu. |
 | `GET` | `/cart` | `ShopCartPageController` | `CUSTOMER` | Xem bảng giỏ hàng cá nhân: danh sách dòng sản phẩm, số lượng, đơn giá, thành tiền và tạm tính. |
 | `POST` | `/cart/add` | `ShopCartPageController` | `CUSTOMER` | Thêm một biến thể sản phẩm vào giỏ hàng hoặc cộng dồn số lượng nếu đã có. |
 | `POST` | `/cart/update` | `ShopCartPageController` | `CUSTOMER` | Cập nhật số lượng của một dòng sản phẩm trong giỏ hàng (kiểm tra quyền sở hữu). |
@@ -112,12 +112,12 @@ Phục vụ quản lý chuỗi, danh mục, kho bãi, nhân sự và đơn hàng
 | `POST` | `/admin/products/save` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Lưu thông tin sản phẩm cha (tạo mới hoặc cập nhật). |
 | `POST` | `/admin/products/{id}/toggle-status` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Bật/tắt trạng thái hiển thị của sản phẩm cha (ACTIVE <-> HIDDEN). |
 | `POST` | `/admin/products/{id}/delete` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Xóa mềm sản phẩm cha bằng cách chuyển trạng thái sang HIDDEN. |
-| `GET` | `/admin/products/{id}` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Trang xem chi tiết sản phẩm cha: quản lý danh sách biến thể (màu/size) và hình ảnh. |
+| `GET` | `/admin/products/{id}` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Trang xem chi tiết sản phẩm cha: quản lý danh sách biến thể (màu/size) và bộ sưu tập ảnh (gắn theo biến thể, theo màu sắc hoặc chung). |
 | `POST` | `/admin/products/{id}/variants/save` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Tạo mới hoặc cập nhật thông tin biến thể sản phẩm (SKU, giá bán, giá vốn, màu, size). |
 | `POST` | `/admin/products/{id}/variants/{variantId}/toggle-status` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Bật hoặc tắt trạng thái kinh doanh của biến thể (ACTIVE <-> INACTIVE). |
 | `POST` | `/admin/products/{id}/variants/{variantId}/delete` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Ngưng kinh doanh biến thể sản phẩm (chuyển trạng thái sang INACTIVE). |
-| `POST` | `/admin/products/{id}/images/save` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Thêm mới đường dẫn hình ảnh cho sản phẩm hoặc gắn vào biến thể cụ thể. |
-| `POST` | `/admin/products/{id}/images/{imageId}/delete` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Xóa bản ghi hình ảnh của sản phẩm. |
+| `POST` | `/admin/products/{id}/images/save` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Thêm ảnh sản phẩm: hỗ trợ tải tệp ảnh từ máy tính (tối đa 2MB, png/jpg/jpeg/webp) hoặc nhập URL; gắn ảnh cho biến thể cụ thể, cho màu sắc (`color:`) hoặc chung cho sản phẩm. |
+| `POST` | `/admin/products/{id}/images/{imageId}/delete` | `AdminProductPageController` | `ADMIN`, `STORE_MANAGER` | Xóa bản ghi hình ảnh của sản phẩm và tự động xóa tệp đĩa vật lý tương ứng nếu lưu trong uploads. |
 | `GET` | `/admin/inventory` | `AdminInventoryPageController` | `ADMIN`, `STORE_MANAGER` | Bảng quản lý tồn kho theo chi nhánh (ADMIN chọn mọi kho, STORE_MANAGER cố định kho mình). |
 | `POST` | `/admin/inventory/import` | `AdminInventoryPageController` | `ADMIN`, `STORE_MANAGER` | Nhập thêm số lượng hàng hóa vào chi nhánh (giao dịch IMPORT) và ghi sổ cái kho. |
 | `POST` | `/admin/inventory/adjust` | `AdminInventoryPageController` | `ADMIN`, `STORE_MANAGER` | Điều chỉnh tồn kho thực tế sau khi kiểm kê (giao dịch ADJUST) và ghi sổ cái kho. |
@@ -163,11 +163,12 @@ Phân hệ REST API stateless dành cho client di động hoặc tích hợp ngo
 | `GET` | `/swagger-ui.html` | `SwaggerConfig` (Springdoc) | Công khai (`permitAll`) | Giao diện Swagger UI tương tác trực tiếp với các endpoint `/api/**`. |
 | `GET` | `/swagger-ui/**` | `SwaggerConfig` (Springdoc) | Công khai (`permitAll`) | Các tài nguyên giao diện tĩnh hỗ trợ trang Swagger UI. |
 
-### 2.5. Trang Đăng nhập & Trang Lỗi (Web Public)
+### 2.5. Trang Đăng nhập, Trang Lỗi & Phục vụ tệp tải lên (Web Public)
 
-| Phương thức | Đường dẫn URL | Lớp Controller | Vai trò được phép (SecurityConfig / PreAuthorize) | Mô tả nghiệp vụ |
+| Phương thức | Đường dẫn URL | Lớp Controller / Cấu hình | Vai trò được phép (SecurityConfig / PreAuthorize) | Mô tả nghiệp vụ |
 |---|---|---|---|---|
 | `GET` | `/login` | `AuthPageController` | Công khai (`permitAll`) | Giao diện form đăng nhập web riêng; tự động chuyển hướng theo vai trò nếu đã đăng nhập. |
+| `GET` | `/uploads/**` | `WebMvcConfig` / ResourceHandler | Công khai (`permitAll` - chỉ GET) | Phục vụ trực tiếp tệp hình ảnh sản phẩm đã tải lên từ thư mục đĩa vật lý `uploads/`. |
 | `GET` | `/error/403` | `ErrorPageController` | Công khai (`permitAll`) | Trang thông báo lỗi 403 Forbidden thân thiện khi truy cập vượt quyền hạn. |
 | `GET` | `/error/404` | `ErrorPageController` | Công khai (`permitAll`) | Trang thông báo lỗi 404 Not Found thân thiện khi không tìm thấy trang hoặc tài nguyên. |
 | `GET` | `/error/500` | `ErrorPageController` | Công khai (`permitAll`) | Trang thông báo lỗi 500 Internal Server Error thân thiện khi máy chủ gặp sự cố. |
@@ -212,7 +213,7 @@ Tách rời các thuật toán xử lý nghiệp vụ có thể thay đổi đ�
 #### C. Chiến lược tính phí vận chuyển (Shipping Fee Strategy)
 - **Interface:** `ShippingFeeCalculator`  
   - *Đường dẫn:* `src/main/java/com/dahdt/ecommerce/modules/order/shipping/ShippingFeeCalculator.java`  
-  - *Phương thức chính:* `calculateShippingFee(BigDecimal subtotal, BigDecimal shipLatitude, BigDecimal shipLongitude, Store sourceStore)`
+  - *Phương thức chính:* `calculateShippingFee(BigDecimal subtotalAfterDiscount)`
 - **Lớp cài đặt cụ thể:**
   1. `FlatRateShippingFeeCalculator` (`src/main/java/com/dahdt/ecommerce/modules/order/shipping/FlatRateShippingFeeCalculator.java`): Tính phí ship đồng giá tiêu chuẩn (mặc định 30.000 đ) và miễn phí vận chuyển cho đơn hàng đạt ngưỡng cấu hình (mặc định từ 1.000.000 đ).
 - **Nơi sử dụng:**
@@ -221,7 +222,7 @@ Tách rời các thuật toán xử lý nghiệp vụ có thể thay đổi đ�
 #### D. Chiến lược chọn nguồn xuất hàng (Fulfillment Source Strategy)
 - **Interface:** `FulfillmentSourceResolver`  
   - *Đường dẫn:* `src/main/java/com/dahdt/ecommerce/modules/inventory/fulfillment/FulfillmentSourceResolver.java`  
-  - *Phương thức chính:* `resolveOnlineFulfillmentStore()`
+  - *Phương thức chính:* `resolveDefaultSource()`
 - **Lớp cài đặt cụ thể:**
   1. `MainWarehouseFulfillmentResolver` (`src/main/java/com/dahdt/ecommerce/modules/inventory/fulfillment/MainWarehouseFulfillmentResolver.java`): Mặc định chọn kho tổng (chi nhánh có `type = WAREHOUSE` và đang `ACTIVE` với ID nhỏ nhất) làm nguồn cung ứng cho đơn hàng online.
 - **Nơi sử dụng:**
@@ -317,7 +318,7 @@ Hệ thống có **23 lớp `@Entity`** tương ứng với các bảng nghiệp
 | `Category` | `categories` | id, name, slug, sortOrder, isActive | `@ManyToOne` parent (Category) | `modules/catalog/entity/Category.java` |
 | `Product` | `products` | id, name, slug, description, thumbnailUrl, status | `@ManyToOne` category, `@ManyToOne` brand, 1-N variants | `modules/catalog/entity/Product.java` |
 | `ProductVariant` | `product_variants` | id, sku, barcode, color, size, price, costPrice, weightGram, status | `@ManyToOne` product | `modules/catalog/entity/ProductVariant.java` |
-| `ProductImage` | `product_images` | id, url, sortOrder, isThumbnail | `@ManyToOne` product, `@ManyToOne` variant | `modules/catalog/entity/ProductImage.java` |
+| `ProductImage` | `product_images` | id, color, url, sortOrder, isThumbnail | `@ManyToOne` product, `@ManyToOne` variant | `modules/catalog/entity/ProductImage.java` |
 | `Store` | `stores` | id, code, name, type (STORE/WAREHOUSE), province, district, ward, detailAddress, latitude, longitude, phone, status | 1-N inventories, 1-N employees | `modules/store/entity/Store.java` |
 | `Employee` | `employees` | id, position (MANAGER/CASHIER/STAFF), status | `@OneToOne` user, `@ManyToOne` store | `modules/store/entity/Employee.java` |
 | `Inventory` | `inventories` | id, quantityOnHand, reorderLevel, version (`@Version`) | `@ManyToOne` variant, `@ManyToOne` store | `modules/inventory/entity/Inventory.java` |
@@ -331,9 +332,9 @@ Hệ thống có **23 lớp `@Entity`** tương ứng với các bảng nghiệp
 | `Voucher` | `vouchers` | id, code, name, discountType, discountValue, minOrderValue, maxDiscountValue, usageLimit, usedCount, startAt, endAt, status | 1-N voucherUsages | `modules/promotion/entity/Voucher.java` |
 | `VoucherUsage` | `voucher_usages` | id, usedAt | `@ManyToOne` voucher, `@ManyToOne` order, `@ManyToOne` user | `modules/promotion/entity/VoucherUsage.java` |
 
-### 4.2. Bảng tổng hợp 28 bảng trong Flyway Migration
+### 4.2. Bảng tổng hợp 28 bảng trong Flyway Migration (V1–V31)
 
-Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL**:
+Các tệp migration từ `V1` đến `V31` quản lý tổng cộng **28 bảng CSDL**:
 
 | STT | Tên bảng CSDL | Tệp Migration Flyway | Mức độ quy định | Trạng thái mã nguồn Java |
 |:---:|---|---|:---:|---|
@@ -348,7 +349,7 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
 | 9 | `brands` | `V9__create_brands_table.sql` | Must v2 | Thực thể `Brand.java` |
 | 10 | `products` | `V10__create_products_table.sql` | Must v2 | Thực thể `Product.java` |
 | 11 | `product_variants` | `V11__create_product_variants_table.sql` | Must v2 | Thực thể `ProductVariant.java` |
-| 12 | `product_images` | `V12__create_product_images_table.sql` | Must v2 | Thực thể `ProductImage.java` |
+| 12 | `product_images` | `V12__create_product_images_table.sql` *(V31 thêm `color`)* | Must v2 | Thực thể `ProductImage.java` |
 | 13 | `stores` | `V13__create_stores_table.sql` | Must v2 | Thực thể `Store.java` |
 | 14 | `employees` | `V14__create_employees_table.sql` | Must v2 | Thực thể `Employee.java` |
 | 15 | `inventories` | `V15__create_inventories_table.sql` | Must v2 | Thực thể `Inventory.java` |
@@ -366,7 +367,7 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
 | 27 | `stock_transfer_items` | `V26__create_stock_transfers_and_items_table.sql` | Should | Đã có schema bảng; chưa có Entity/Service (thuộc danh sách cắt giảm) |
 | 28 | `reviews` | `V27__create_reviews_table.sql` | Could | Đã có schema bảng; chưa có Entity/Service (thuộc danh sách cắt giảm) |
 
-> **Tổng kết:** Đạt 100% 24 bảng Must quy định trong Project Brief v2 (gồm 7 bảng giai đoạn 1 và 17 bảng mới), cộng thêm 4 bảng mức Should/Could đã tạo sẵn schema.
+> **Tổng kết:** Đạt 100% 24 bảng Must quy định trong Project Brief v2 (gồm 7 bảng giai đoạn 1 và 17 bảng mới), cộng thêm 4 bảng mức Should/Could đã tạo sẵn schema. Tệp `V31__add_color_to_product_images_table.sql` bổ sung cột `color NVARCHAR(50) NULL` vào bảng `product_images`.
 
 ---
 
@@ -421,59 +422,66 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
    - `updateVariant(Long variantId, ProductVariantRequestDTO)`: Cập nhật giá bán, giá vốn, màu sắc, kích cỡ và mã vạch của biến thể.
    - `toggleVariantStatus(Long variantId)`: Đảo trạng thái kinh doanh của biến thể (ACTIVE <-> INACTIVE).
    - `deleteVariant(Long variantId)`: Ngưng kinh doanh biến thể bằng cách chuyển trạng thái sang INACTIVE.
-   - `addProductImage(ProductImageRequestDTO)`: Thêm URL ảnh mới cho sản phẩm hoặc biến thể.
-   - `deleteProductImage(Long imageId)`: Xóa bản ghi hình ảnh sản phẩm theo ID.
+   - `addProductImage(ProductImageRequestDTO)`: Thêm ảnh cho sản phẩm hoặc biến thể qua tệp tải lên máy tính hoặc qua URL; gắn ảnh cho biến thể cụ thể, cho màu sắc hoặc chung cho sản phẩm.
+   - `deleteProductImage(Long imageId)`: Xóa bản ghi hình ảnh sản phẩm và xóa tệp vật lý tương ứng nếu lưu trong thư mục upload.
 
-7. **`ShopCatalogService`** (`modules/catalog/service/ShopCatalogService.java` - cài đặt `ShopCatalogServiceImpl.java`)
+7. **`FileStorageService`** (`modules/catalog/service/FileStorageService.java` - cài đặt `FileStorageServiceImpl.java`)
+   - `storeProductImage(MultipartFile file)`: Kiểm tra tính hợp lệ và an toàn của tệp ảnh tải lên (đuôi mở rộng .png/.jpg/.jpeg/.webp, MIME type hình ảnh, dung lượng <= 2MB), sinh tên tệp UUID duy nhất và lưu trữ vào thư mục `uploads/products/`.
+   - `deleteFile(String fileUrl)`: Xóa tệp ảnh vật lý trên đĩa nếu nằm trong thư mục uploads, bỏ qua an toàn với đường dẫn ảnh tĩnh `/images/...` hoặc URL ngoài.
+
+8. **`ProductImageResolver`** (`modules/catalog/service/ProductImageResolver.java` - `@Component`)
+   - `resolveImageUrl(ProductVariant variant)`: Phân giải hình ảnh cho biến thể sản phẩm theo đúng thứ tự ưu tiên 4 bước: (1) ảnh gắn đúng variant_id; (2) ảnh gắn đúng màu sắc (color); (3) ảnh chung sản phẩm hoặc thumbnail cha; (4) ảnh placeholder mặc định `/images/placeholder-shoe.svg`.
+
+9. **`ShopCatalogService`** (`modules/catalog/service/ShopCatalogService.java` - cài đặt `ShopCatalogServiceImpl.java`)
    - `listProducts(ShopProductFilterDTO filter, Pageable)`: Tìm kiếm, lọc đa tiêu chí (danh mục, thương hiệu, giá, màu, size, tồn kho) và phân trang sản phẩm trên Shop.
-   - `getProductDetail(String slug)`: Lấy chi tiết sản phẩm theo slug, kèm biến thể màu/size và số lượng tồn khả dụng tại kho tổng.
+   - `getProductDetail(String slug)`: Lấy chi tiết sản phẩm theo slug, kèm biến thể màu/size, bộ sưu tập ảnh gom nhóm theo màu và số lượng tồn khả dụng tại kho tổng.
    - `latestProducts(int limit)`: Lấy danh sách sản phẩm mới nhất đang kinh doanh để hiển thị ở trang chủ Shop.
    - `getFilterData()`: Lấy dữ liệu danh mục, thương hiệu, màu sắc, kích cỡ để dựng bộ lọc trên trang Shop.
 
-8. **`InventoryService`** (`modules/inventory/service/InventoryService.java` - cài đặt `InventoryServiceImpl.java`)
-   - `getStoreInventory(Long storeId, String keyword, Long categoryId, String stockStatus, Pageable)`: Lấy bảng tồn kho của một chi nhánh có tìm kiếm, lọc và phân trang.
-   - `importStock(InventoryImportRequestDTO, User currentUser)`: Nhập thêm hàng vào chi nhánh (giao dịch `IMPORT`), cộng tồn và ghi sổ cái kho.
-   - `adjustStock(InventoryAdjustRequestDTO, User currentUser)`: Điều chỉnh tồn kho thực tế sau khi kiểm kê (giao dịch `ADJUST`), ghi sổ cái chênh lệch.
-   - `getLedgerEntries(Long storeId, Long variantId, InventoryTransactionType, LocalDateTime from, LocalDateTime to, Pageable)`: Truy vấn lịch sử sổ cái biến động kho theo nhiều tiêu chí lọc và khoảng thời gian.
-   - `deductStock(Long storeId, Long variantId, int quantity, String refType, Long refId, User currentUser)`: Trừ tồn kho chi nhánh khi phát sinh bán hàng, áp dụng khóa lạc quan `@Version` chống bán vượt tồn và ghi sổ cái.
-   - `revertStock(Long storeId, Long variantId, int quantity, String refType, Long refId, User currentUser)`: Hoàn lại tồn kho chi nhánh khi đơn hàng bị hủy và ghi sổ cái với loại giao dịch `CANCEL`.
-   - `countLowStockVariants(Long storeId, int threshold)`: Đếm số lượng biến thể có mức tồn thấp hơn hoặc bằng ngưỡng cảnh báo.
+10. **`InventoryService`** (`modules/inventory/service/InventoryService.java` - cài đặt `InventoryServiceImpl.java`)
+    - `getStoreInventory(Long storeId, String keyword, Long categoryId, String stockStatus, Pageable)`: Lấy bảng tồn kho của một chi nhánh có tìm kiếm, lọc và phân trang.
+    - `importStock(InventoryImportRequestDTO, User currentUser)`: Nhập thêm hàng vào chi nhánh (giao dịch `IMPORT`), cộng tồn và ghi sổ cái kho.
+    - `adjustStock(InventoryAdjustRequestDTO, User currentUser)`: Điều chỉnh tồn kho thực tế sau khi kiểm kê (giao dịch `ADJUST`), ghi sổ cái chênh lệch.
+    - `getLedgerEntries(Long storeId, Long variantId, InventoryTransactionType, LocalDateTime from, LocalDateTime to, Pageable)`: Truy vấn lịch sử sổ cái biến động kho theo nhiều tiêu chí lọc và khoảng thời gian.
+    - `deductStock(Long storeId, Long variantId, int quantity, String refType, Long refId, User currentUser)`: Trừ tồn kho chi nhánh khi phát sinh bán hàng, áp dụng khóa lạc quan `@Version` chống bán vượt tồn và ghi sổ cái.
+    - `revertStock(Long storeId, Long variantId, int quantity, String refType, Long refId, User currentUser)`: Hoàn lại tồn kho chi nhánh khi đơn hàng bị hủy và ghi sổ cái với loại giao dịch `CANCEL`.
+    - `countLowStockVariants(Long storeId, int threshold)`: Đếm số lượng biến thể có mức tồn thấp hơn hoặc bằng ngưỡng cảnh báo.
 
-9. **`OnlineAvailabilityService`** (`modules/inventory/fulfillment/OnlineAvailabilityService.java` - cài đặt `OnlineAvailabilityServiceImpl.java`)
-   - `getAvailableStock(Long variantId)`: Lấy số lượng tồn kho khả dụng của một biến thể tại kho tổng cung ứng trực tuyến.
-   - `getAvailableStockMap(List<Long> variantIds)`: Lấy bảng ánh xạ số lượng tồn kho khả dụng cho danh sách biến thể để tối ưu truy vấn hàng loạt.
-   - `hasSufficientStock(Long variantId, int requestedQty)`: Kiểm tra kho tổng có đủ số lượng đáp ứng cho giỏ hàng hoặc đơn hàng online hay không.
+11. **`OnlineAvailabilityService`** (`modules/inventory/fulfillment/OnlineAvailabilityService.java` - cài đặt `OnlineAvailabilityServiceImpl.java`)
+    - `getAvailableStock(Long variantId)`: Lấy số lượng tồn kho khả dụng của một biến thể tại kho tổng cung ứng trực tuyến.
+    - `getAvailableStockMap(List<Long> variantIds)`: Lấy bảng ánh xạ số lượng tồn kho khả dụng cho danh sách biến thể để tối ưu truy vấn hàng loạt.
+    - `hasSufficientStock(Long variantId, int requestedQty)`: Kiểm tra kho tổng có đủ số lượng đáp ứng cho giỏ hàng hoặc đơn hàng online hay không.
 
-10. **`OrderService`** (`modules/order/service/OrderService.java` - cài đặt `OrderServiceImpl.java`)
+12. **`OrderService`** (`modules/order/service/OrderService.java` - cài đặt `OrderServiceImpl.java`)
     - `previewOrder(Long userId, PlaceOrderCommand)`: Tính toán tạm tính, kiểm tra và áp dụng voucher, tính phí vận chuyển và tổng tiền đơn hàng trực tuyến trước khi đặt.
     - `placeOrder(Long userId, PlaceOrderCommand)`: Tạo đơn hàng trực tuyến qua OrderFactory, áp dụng Strategy thanh toán/giảm giá, phát sự kiện `OrderPlacedEvent` để trừ kho và xóa giỏ hàng trong cùng giao dịch.
 
-11. **`OrderQueryService`** (`modules/order/service/OrderQueryService.java` - cài đặt `OrderQueryServiceImpl.java`)
+13. **`OrderQueryService`** (`modules/order/service/OrderQueryService.java` - cài đặt `OrderQueryServiceImpl.java`)
     - `getCustomerOrders(Long userId, Pageable)`: Lấy danh sách lịch sử đơn hàng của khách hàng theo phân trang.
     - `getCustomerOrderDetail(Long userId, String orderCode)`: Lấy chi tiết đơn hàng của khách hàng theo mã đơn, kiểm tra chặt chẽ quyền sở hữu của khách.
 
-12. **`OrderStatusService`** (`modules/order/service/OrderStatusService.java` - cài đặt `OrderStatusServiceImpl.java`)
+14. **`OrderStatusService`** (`modules/order/service/OrderStatusService.java` - cài đặt `OrderStatusServiceImpl.java`)
     - `getOrdersForAdmin(Long storeId, OrderChannel, OrderStatus, String keyword, Pageable)`: Truy vấn danh sách đơn hàng toàn hệ thống có lọc theo chi nhánh (`StoreScopeService`), kênh bán, trạng thái và từ khóa.
     - `getOrderDetailForAdmin(Long orderId)`: Lấy thông tin chi tiết đầy đủ của đơn hàng, lịch sử trạng thái, sản phẩm snapshot và thông tin thanh toán cho quản trị viên.
     - `changeStatus(Long orderId, OrderStatus targetStatus, Long actorId, String note)`: Chuyển trạng thái đơn hàng theo máy trạng thái (State Pattern), ghi lịch sử biến động và phát sự kiện hoàn kho nếu hủy đơn.
     - `cancelOrder(Long orderId, Long actorId, String reason)`: Hủy đơn hàng và kích hoạt hoàn kho tự động, ngăn chặn hủy lặp lại nếu đơn đã ở trạng thái CANCELLED.
 
-13. **`PosCatalogService`** (`modules/pos/service/PosCatalogService.java` - cài đặt `PosCatalogServiceImpl.java`)
+15. **`PosCatalogService`** (`modules/pos/service/PosCatalogService.java` - cài đặt `PosCatalogServiceImpl.java`)
     - `searchVariantsForPos(Long storeId, String keyword, int limit)`: Tìm kiếm biến thể sản phẩm bán tại quầy theo mã SKU, mã vạch hoặc tên, kèm kiểm tra tồn kho tại cửa hàng hiện tại.
     - `getVariantForPos(Long storeId, Long variantId)`: Lấy thông tin chi tiết một biến thể kèm số lượng tồn kho tại quầy.
 
-14. **`PosSaleService`** (`modules/pos/service/PosSaleService.java` - cài đặt `PosSaleServiceImpl.java`)
+16. **`PosSaleService`** (`modules/pos/service/PosSaleService.java` - cài đặt `PosSaleServiceImpl.java`)
     - `previewSale(Long storeId, PosSalePreviewRequestDTO)`: Tính toán nhanh giá trị giỏ hàng tại quầy POS, áp dụng mã voucher và tính số tiền giảm giá trước khi thanh toán.
     - `checkout(Long storeId, User cashier, PosCheckoutRequestDTO)`: Thực hiện bán hàng và thanh toán trọn gói tại quầy POS trong một giao dịch: tạo đơn qua Factory, thanh toán bằng Strategy, hoàn tất COMPLETED và trừ kho ngay lập tức.
 
-15. **`PosReceiptService`** (`modules/pos/service/PosReceiptService.java` - cài đặt `PosReceiptServiceImpl.java`)
+17. **`PosReceiptService`** (`modules/pos/service/PosReceiptService.java` - cài đặt `PosReceiptServiceImpl.java`)
     - `getReceiptData(String orderCode, User currentUser)`: Lấy dữ liệu chi tiết hóa đơn bán lẻ định dạng in nhiệt 80mm, kiểm tra nhân viên chỉ được xem hóa đơn thuộc chi nhánh của mình.
     - `getRecentPosOrders(Long storeId, Pageable)`: Lấy danh sách các đơn hàng POS vừa thanh toán gần đây tại chi nhánh.
 
-16. **`ReportService`** (`modules/report/service/ReportService.java` - cài đặt `ReportServiceImpl.java`)
-    - `getDashboardData(Long storeId, Integer daysRange)`: Tổng hợp các chỉ số kinh doanh toàn diện (tổng doanh thu, số đơn hoàn tất, giá trị trung bình đơn, doanh thu theo chi nhánh, doanh thu theo kênh bán, biểu đồ theo ngày, top sản phẩm bán chạy, danh sách tồn kho thấp và đơn chờ xử lý).
+18. **`ReportService`** (`modules/report/service/ReportService.java` - cài đặt `ReportServiceImpl.java`)
+    - `getDashboardData(Long storeId, Integer daysRange)`: Tổng hợp các chỉ số kinh doanh toàn diện (tổng doanh thu, số đơn hoàn tất, giá trị trung bình đơn, doanh thu theo chi nhánh, doanh thu theo kênh bán, bảng doanh thu theo ngày, top sản phẩm bán chạy, danh sách tồn kho thấp và đơn chờ xử lý).
 
-17. **`EmployeeService`** (`modules/store/service/EmployeeService.java` - cài đặt `EmployeeServiceImpl.java`)
+19. **`EmployeeService`** (`modules/store/service/EmployeeService.java` - cài đặt `EmployeeServiceImpl.java`)
     - `getEmployeesByStore(Long storeId, Pageable)`: Lấy danh sách nhân viên của một chi nhánh có phân trang.
     - `getAllEmployeesByStore(Long storeId)`: Lấy toàn bộ danh sách nhân viên đang làm việc tại chi nhánh.
     - `getEmployeeById(Long id)`: Lấy thông tin chi tiết một nhân viên theo ID.
@@ -482,7 +490,7 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
     - `lockEmployee(Long id)`: Khóa nhân viên (ngưng hoạt động).
     - `unlockEmployee(Long id)`: Mở khóa hoạt động cho nhân viên.
 
-18. **`StoreScopeService`** (`modules/store/service/StoreScopeService.java` - cài đặt `StoreScopeServiceImpl.java`)
+20. **`StoreScopeService`** (`modules/store/service/StoreScopeService.java` - cài đặt `StoreScopeServiceImpl.java`)
     - `getCurrentUser()`: Lấy thực thể User của người dùng đang đăng nhập trong SecurityContext.
     - `getCurrentEmployee()`: Lấy hồ sơ Employee gắn với tài khoản đang đăng nhập.
     - `isCurrentAdmin()`: Kiểm tra người dùng hiện tại có vai trò `ROLE_ADMIN` hay không.
@@ -491,7 +499,7 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
     - `getAssignedStore()`: Lấy thực thể cửa hàng được phân công cho nhân viên/quản lý hiện tại.
     - `resolveStoreId(Long requestedStoreId)`: Giải quyết ID cửa hàng hợp lệ: STORE_MANAGER bị cố định cửa hàng mình phụ trách (bị chặn nếu chọn ID khác), ADMIN được tự do chọn chi nhánh.
 
-19. **`StoreService`** (`modules/store/service/StoreService.java` - cài đặt `StoreServiceImpl.java`)
+21. **`StoreService`** (`modules/store/service/StoreService.java` - cài đặt `StoreServiceImpl.java`)
     - `getStores(String keyword, Pageable)`: Lấy danh sách chi nhánh và kho bãi có tìm kiếm và phân trang.
     - `getStoreById(Long id)`: Lấy chi tiết thông tin chi nhánh theo ID.
     - `getStoreByCode(String code)`: Lấy thông tin chi nhánh theo mã code định danh.
@@ -501,17 +509,17 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
     - `deactivateStore(Long id)`: Ngưng hoạt động chi nhánh (xóa mềm).
     - `activateStore(Long id)`: Kích hoạt lại chi nhánh ngưng hoạt động.
 
-20. **`AddressService`** (`modules/user/service/AddressService.java`)
+22. **`AddressService`** (`modules/user/service/AddressService.java`)
     - `getMyAddresses(Long userId)`: Lấy danh sách sổ địa chỉ nhận hàng của người dùng.
     - `createAddress(Long userId, AddressRequestDTO)`: Thêm địa chỉ nhận hàng mới cho người dùng.
     - `updateAddress(Long userId, Long addressId, AddressRequestDTO)`: Cập nhật thông tin địa chỉ nhận hàng.
     - `deleteAddress(Long userId, Long addressId)`: Xóa một địa chỉ khỏi sổ địa chỉ người dùng.
 
-21. **`UserService`** (`modules/user/service/UserService.java`)
+23. **`UserService`** (`modules/user/service/UserService.java`)
     - `getUserProfile(Long userId)`: Lấy thông tin hồ sơ cá nhân của người dùng.
     - `updateUserProfile(Long userId, UserProfileRequestDTO)`: Cập nhật thông tin cá nhân của người dùng.
 
-22. **`CustomUserDetailsService`** (`config/security/CustomUserDetailsService.java`)
+24. **`CustomUserDetailsService`** (`config/security/CustomUserDetailsService.java`)
     - `loadUserByUsername(String username)`: Tải thông tin người dùng từ CSDL theo email để Spring Security xác thực phiên đăng nhập hoặc cấp quyền.
 
 ---
@@ -541,6 +549,11 @@ Các tệp migration từ `V1` đến `V30` tạo tổng cộng **28 bảng CSDL
    - Khi đơn đã ở trạng thái `CANCELLED` hoặc `COMPLETED`, máy trạng thái `OrderState` sẽ từ chối mọi yêu cầu chuyển trạng thái hoặc hủy lặp lại, ném ngoại lệ nghiệp vụ `BadRequestException`.
    - Khách hàng chỉ được phép hủy đơn hàng của chính tài khoản mình (`userId` khớp `customer_id`), ngăn chặn việc hủy chéo đơn hàng của người khác.
 
+5. **Quy tắc quản lý tệp và gán ảnh theo màu sắc (CR-06):**
+   - Giới hạn dung lượng tệp ảnh tải lên tối đa là 2MB (`app.upload.max-size-mb: 2`), kiểm tra nghiêm ngặt định dạng tệp thông qua phần mở rộng (`.png`, `.jpg`, `.jpeg`, `.webp`) và MIME type (`image/png`, `image/jpeg`, `image/webp`).
+   - Mỗi hình ảnh chỉ được gắn vào một trong ba cấp đối tượng: (1) biến thể cụ thể (`variant_id`); (2) một màu sắc của sản phẩm (`color`); hoặc (3) dùng chung cho toàn bộ sản phẩm (cả hai đều NULL).
+   - Khi hiển thị, `ProductImageResolver` áp dụng thuật toán 4 bước ưu tiên để luôn hiển thị đúng ảnh của màu hoặc biến thể mà khách hàng đang chọn trên trang Shop.
+
 ---
 
 ## 6. THUỘC TÍNH CẤU HÌNH HỆ THỐNG (TIỀN TỐ APP.*)
@@ -559,6 +572,8 @@ Các thuộc tính cấu hình tự định nghĩa của dự án được tập
 | `app.dashboard.top-products-limit` | `10` | `10` | Số lượng sản phẩm bán chạy nhất hiển thị trên Dashboard. |
 | `app.dashboard.pending-orders-limit` | `5` | `5` | Số lượng đơn hàng trực tuyến chờ xử lý mới nhất hiển thị trên Dashboard. |
 | `app.dashboard.default-days-range` | `30` | `30` | Khoảng thời gian mặc định (số ngày gần nhất) để thống kê doanh thu và báo cáo. |
+| `app.upload.dir` | `"uploads"` | `"uploads"` | Đường dẫn thư mục gốc trên máy chủ dùng để lưu trữ các tệp tải lên (hình ảnh sản phẩm). |
+| `app.upload.max-size-mb` | `2` | `2` | Dung lượng tối đa cho phép của mỗi tệp hình ảnh tải lên (đơn vị: MB). |
 | `app.jwt.secret` | — | `MyDevSecretKeyForJWTSigning...` | Khóa bí mật dùng để ký và giải mã mã thông báo JWT (bắt buộc tối thiểu 256 bits). |
 | `app.jwt.access-token-expiration` | `900000` | `900000` | Thời gian sống của Access Token JWT (15 phút = 900.000 mili-giây). |
 | `app.jwt.refresh-token-expiration` | `604800000` | `604800000` | Thời gian sống của Refresh Token JWT (7 ngày = 604.800.000 mili-giây). |
@@ -571,8 +586,8 @@ Các thuộc tính cấu hình tự định nghĩa của dự án được tập
 
 ### 7.1. Bảng số lượng lớp test và phương thức kiểm thử theo module
 
-- **Tổng số lớp kiểm thử:** **49 lớp test**  
-- **Tổng số phương thức kiểm thử:** **222 phương thức** (gồm 219 phương thức `@Test` thông thường và 3 phương thức `@ParameterizedTest` kiểm thử tham số hóa).
+- **Tổng số lớp kiểm thử:** **56 lớp test**  
+- **Tổng số phương thức kiểm thử:** **253 phương thức** (gồm 250 phương thức `@Test` thông thường và 3 phương thức `@ParameterizedTest` kiểm thử tham số hóa).
 
 | Phân hệ / Module | Số lớp Test | Số phương thức Test | Danh sách các tệp kiểm thử chi tiết |
 |---|:---:|:---:|---|
@@ -580,7 +595,7 @@ Các thuộc tính cấu hình tự định nghĩa của dự án được tập
 | `common` | 2 | 13 | `RedirectUtilTest.java` (8 tests), `SlugUtilTest.java` (5 tests) |
 | `config` | 3 | 12 | `DemoDataSeederIntegrationTest.java` (2 tests), `DemoDataSeederTest.java` (5 tests), `DevDataSeederTest.java` (5 tests) |
 | `modules/cart` | 2 | 11 | `CartTest.java` (4 tests), `CartServiceTest.java` (7 tests) |
-| `modules/catalog` | 4 | 16 | `CategoryServiceTest.java` (4 tests), `ProductServiceTest.java` (5 tests), `ShopCatalogServiceIntegrationTest.java` (4 tests), `ShopCatalogServiceTest.java` (3 tests) |
+| `modules/catalog` | 11 | 47 | `AdminProductDetailPageRenderIntegrationTest.java` (1 test), `AdminProductImageUploadColorSecurityMockMvcTest.java` (3 tests), `AdminProductImageUploadMockMvcTest.java` (8 tests), `CategoryServiceTest.java` (4 tests), `FileStorageServiceTest.java` (10 tests), `ProductDetailPageColorRenderIntegrationTest.java` (2 tests), `ProductImageRepositoryColorIntegrationTest.java` (1 test), `ProductImageResolverTest.java` (6 tests), `ProductServiceTest.java` (5 tests), `ShopCatalogServiceIntegrationTest.java` (4 tests), `ShopCatalogServiceTest.java` (3 tests) |
 | `modules/inventory` | 5 | 18 | `InventoryTest.java` (7 tests), `InventoryTransactionTypeTest.java` (4 tests), `MainWarehouseFulfillmentResolverTest.java` (2 tests), `InventoryServiceTest.java` (4 tests), `InventoryLedgerPageRenderingIntegrationTest.java` (1 test) |
 | `modules/order` | 16 | 70 | `OrderLifecycleIntegrationTest.java` (5 tests), `OrderPlacementIntegrationTest.java` (1 test), `CheckoutFormValidationTest.java` (6 tests), `OrderEntityTest.java` (3 tests), `OrderCancelledListenerTest.java` (2 tests), `OrderPlacedListenerTest.java` (3 tests), `OrderFactoryTest.java` (3 tests), `OrderQueryServiceTest.java` (3 tests), `OrderServiceTest.java` (7 tests), `OrderStatusServiceTest.java` (9 tests), `FlatRateShippingFeeCalculatorTest.java` (4 tests), `OrderStateFactoryTest.java` (2 tests), `OrderStateTest.java` (6 tests), `AdminOrderPageControllerTest.java` (4 tests), `OrderDisplayHelperTest.java` (5 tests), `OrderTemplateRenderingIntegrationTest.java` (7 tests) |
 | `modules/payment` | 1 | 10 | `PaymentStrategyTest.java` (10 tests) |
@@ -589,7 +604,7 @@ Các thuộc tính cấu hình tự định nghĩa của dự án được tập
 | `modules/report` | 4 | 17 | `ReportServiceImplTest.java` (5 tests), `ReportServiceIntegrationTest.java` (3 tests), `AdminDashboardPageControllerTest.java` (4 tests), `AdminDashboardPageIntegrationTest.java` (5 tests) |
 | `modules/store` | 2 | 8 | `EmployeeServiceTest.java` (4 tests), `StoreScopeServiceTest.java` (4 tests) |
 | `modules/user` | 2 | 7 | `AddressMapperTest.java` (2 tests), `RoleDisplayHelperTest.java` (5 tests) |
-| **TỔNG CỘNG** | **49** | **222** | **49 lớp test, 222 phương thức kiểm thử** |
+| **TỔNG CỘNG** | **56** | **253** | **56 lớp test, 253 phương thức kiểm thử** |
 
 ---
 
@@ -598,24 +613,35 @@ Các lớp kiểm thử sử dụng `@SpringBootTest` kết nối trực tiếp 
 
 1. `com/dahdt/ecommerce/EcommerceApplicationTests.java`: Smoke test nạp toàn bộ Spring Context và kiểm tra kết nối CSDL SQL Server.
 2. `com/dahdt/ecommerce/config/DemoDataSeederIntegrationTest.java`: Kiểm tra cơ chế nạp dữ liệu demo mẫu của `DemoDataSeeder` trên CSDL thật, đảm bảo tính idempotent không sinh trùng đơn hàng.
-3. `com/dahdt/ecommerce/modules/catalog/service/ShopCatalogServiceIntegrationTest.java`: Kiểm tra tra cứu, tìm kiếm, lọc đa tiêu chí và phân trang sản phẩm Shop trực tiếp trên các bảng CSDL thật.
-4. `com/dahdt/ecommerce/modules/order/OrderPlacementIntegrationTest.java`: Kiểm tra trọn vẹn luồng tạo đơn hàng online, áp dụng voucher, tính toán tiền và phát sự kiện trừ kho trên CSDL thật.
-5. `com/dahdt/ecommerce/modules/order/OrderLifecycleIntegrationTest.java`: Kiểm thử toàn diện chu trình sống của đơn hàng: chuyển đổi qua các trạng thái (PENDING -> CONFIRMED -> PACKING -> SHIPPING -> COMPLETED), hủy đơn và tự động hoàn kho.
-6. `com/dahdt/ecommerce/modules/pos/PosSaleIntegrationTest.java`: Kiểm tra luồng bán hàng tại quầy POS hoàn tất trong một giao dịch duy nhất trên CSDL thật (tạo đơn COMPLETED, thanh toán, trừ kho chi nhánh).
-7. `com/dahdt/ecommerce/modules/report/service/ReportServiceIntegrationTest.java`: Kiểm tra truy vấn tổng hợp báo cáo doanh thu, top sản phẩm và thống kê đơn hàng từ các bảng dữ liệu thật.
+3. `com/dahdt/ecommerce/modules/catalog/repository/ProductImageRepositoryColorIntegrationTest.java`: Kiểm tra truy vấn hình ảnh theo màu sắc và phân nhóm hình ảnh biến thể trên bảng `product_images` CSDL thật.
+4. `com/dahdt/ecommerce/modules/catalog/service/ShopCatalogServiceIntegrationTest.java`: Kiểm tra tra cứu, tìm kiếm, lọc đa tiêu chí và phân trang sản phẩm Shop trực tiếp trên các bảng CSDL thật.
+5. `com/dahdt/ecommerce/modules/catalog/web/AdminProductDetailPageRenderIntegrationTest.java`: Kiểm tra kết nối CSDL và phân quyền quản trị khi dựng trang chi tiết sản phẩm và quản lý danh sách ảnh.
+6. `com/dahdt/ecommerce/modules/catalog/web/AdminProductImageUploadColorSecurityMockMvcTest.java`: Kiểm tra xác thực phân quyền và lưu dữ liệu ảnh biến thể theo màu vào CSDL thật.
+7. `com/dahdt/ecommerce/modules/catalog/web/ProductDetailPageColorRenderIntegrationTest.java`: Kiểm tra nạp dữ liệu thật và kết xuất bộ sưu tập ảnh theo màu trên giao diện chi tiết sản phẩm Shop.
+8. `com/dahdt/ecommerce/modules/inventory/web/InventoryLedgerPageRenderingIntegrationTest.java`: Dựng trang Sổ cái kho (`/admin/inventory/ledger`) với dữ liệu thật, kiểm tra phân quyền truy cập và render danh sách lịch sử biến động kho.
+9. `com/dahdt/ecommerce/modules/order/OrderPlacementIntegrationTest.java`: Kiểm tra trọn vẹn luồng tạo đơn hàng online, áp dụng voucher, tính toán tiền và phát sự kiện trừ kho trên CSDL thật.
+10. `com/dahdt/ecommerce/modules/order/OrderLifecycleIntegrationTest.java`: Kiểm thử toàn diện chu trình sống của đơn hàng: chuyển đổi qua các trạng thái (PENDING -> CONFIRMED -> PACKING -> SHIPPING -> COMPLETED), hủy đơn và tự động hoàn kho.
+11. `com/dahdt/ecommerce/modules/order/web/OrderTemplateRenderingIntegrationTest.java`: Dựng 5 trang đơn hàng (chi tiết đơn admin, danh sách đơn admin, checkout, thông báo thành công, lịch sử và chi tiết đơn khách) kết nối CSDL thật.
+12. `com/dahdt/ecommerce/modules/pos/PosSaleIntegrationTest.java`: Kiểm tra luồng bán hàng tại quầy POS hoàn tất trong một giao dịch duy nhất trên CSDL thật (tạo đơn COMPLETED, thanh toán, trừ kho chi nhánh).
+13. `com/dahdt/ecommerce/modules/report/service/ReportServiceIntegrationTest.java`: Kiểm tra truy vấn tổng hợp báo cáo doanh thu, top sản phẩm và thống kê đơn hàng từ các bảng dữ liệu thật.
+14. `com/dahdt/ecommerce/modules/report/web/AdminDashboardPageIntegrationTest.java`: Kiểm tra dựng toàn bộ Dashboard quản trị với dữ liệu tổng hợp trực tiếp từ CSDL thật.
 
 ---
 
 ### 7.3. Danh sách Test dựng trang thật (Thymeleaf Rendering Integration Test)
 Các lớp kiểm thử sử dụng `@SpringBootTest` kết hợp `@AutoConfigureMockMvc` và phân quyền Spring Security đầy đủ nhằm kết xuất toàn bộ cây DOM của template Thymeleaf thật, giúp phát hiện triệt để các lỗi truy cập thuộc tính null, sai kiểu hoặc thiếu DTO (tránh hoàn toàn các hạn chế của `standaloneSetup`):
 
-1. `com/dahdt/ecommerce/modules/inventory/web/InventoryLedgerPageRenderingIntegrationTest.java`:  
-   - Dựng trang Sổ cái kho (`/admin/inventory/ledger`), kiểm tra phân quyền truy cập và render danh sách lịch sử biến động kho.
-2. `com/dahdt/ecommerce/modules/order/web/OrderTemplateRenderingIntegrationTest.java`:  
-   - Dựng trang chi tiết đơn hàng quản trị (`/admin/orders/{id}`) cho cả đơn Online và POS.
-   - Dựng trang chi tiết đơn hàng phía khách hàng (`/account/orders/{code}`) và trang lịch sử đơn (`/account/orders`), kiểm tra hiển thị dòng thời gian trạng thái, nút thao tác và thông tin nhận hàng.
-3. `com/dahdt/ecommerce/modules/report/web/AdminDashboardPageIntegrationTest.java`:  
-   - Dựng trang Dashboard quản trị (`/admin/dashboard`), kiểm tra nạp dữ liệu động cho các thẻ chỉ số, bảng doanh thu theo chi nhánh, doanh thu theo kênh bán, bảng top sản phẩm và bảng cảnh báo tồn kho thấp.
+1. `com/dahdt/ecommerce/modules/catalog/web/AdminProductDetailPageRenderIntegrationTest.java`:  
+   - Dựng thật trang quản trị chi tiết sản phẩm (`admin/catalog/product-detail.html`), kiểm tra hiển thị bảng biến thể, danh sách ảnh gom theo màu, modal tải tệp ảnh lên và CSRF token.
+2. `com/dahdt/ecommerce/modules/catalog/web/ProductDetailPageColorRenderIntegrationTest.java`:  
+   - Dựng thật trang chi tiết sản phẩm phía khách hàng (`shop/product-detail.html`), kiểm tra bộ chọn màu sắc, hiển thị ảnh theo màu, thumbnail và hành vi đổi ảnh theo biến thể được chọn.
+3. `com/dahdt/ecommerce/modules/inventory/web/InventoryLedgerPageRenderingIntegrationTest.java`:  
+   - Dựng trang Sổ cái kho (`admin/inventory/ledger-list.html`), kiểm tra phân quyền truy cập và render danh sách lịch sử biến động kho.
+4. `com/dahdt/ecommerce/modules/order/web/OrderTemplateRenderingIntegrationTest.java`:  
+   - Dựng trang chi tiết đơn hàng quản trị (`admin/order/order-detail.html`) cho cả đơn Online và POS ở tất cả các trạng thái vòng đời.
+   - Dựng trang chi tiết đơn hàng phía khách hàng (`shop/order/order-detail.html`), trang lịch sử đơn (`shop/order/order-history.html`), trang checkout (`shop/order/checkout.html`) và trang đặt hàng thành công (`shop/order/checkout-success.html`).
+5. `com/dahdt/ecommerce/modules/report/web/AdminDashboardPageIntegrationTest.java`:  
+   - Dựng trang Dashboard quản trị (`admin/report/dashboard.html`), kiểm tra nạp dữ liệu động cho các thẻ chỉ số, bảng doanh thu theo chi nhánh, doanh thu theo kênh bán, bảng top sản phẩm và bảng cảnh báo tồn kho thấp.
 
 ---
 
@@ -648,13 +674,14 @@ Qua phân tích phụ thuộc tĩnh, phát hiện một số lớp không xuất
 1. **Các Controller và Configuration được nạp tự động bởi Spring Framework (Component Scanning):**
    - *Web & REST Controllers:* `AddressController`, `AdminBrandPageController`, `AdminCategoryPageController`, `AdminEmployeePageController`, `AdminInventoryPageController`, `AdminProductPageController`, `AdminStorePageController`, `AuthController`, `AuthPageController`, `ErrorPageController`, `PosPageController`, `UserController`.  
      *Lý do:* Là các điểm tiếp nhận request đầu vào (Entry points) của ứng dụng, được Spring MVC tự động quét qua `@Controller` / `@RestController` và đăng ký vào bộ điều phối `DispatcherServlet`.
-   - *Cấu hình hệ thống:* `SecurityConfig`, `SwaggerConfig`.  
+   - *Cấu hình hệ thống:* `SecurityConfig`, `WebMvcConfig`, `SwaggerConfig`.  
      *Lý do:* Chứa chú thích `@Configuration`, được Spring Boot nạp tự động khi khởi động ngữ cảnh ứng dụng (ApplicationContext).
    - *Controller Advice dùng chung:* `GlobalModelAttributes`, `ShopModelAttributes`.  
      *Lý do:* Khai báo `@ControllerAdvice`, Spring MVC tự động áp dụng vào tất cả các PageController để cung cấp dữ liệu toàn cục cho template.
 
 2. **Các lớp triển khai Service (`*ServiceImpl`) được tiêm phụ thuộc qua Interface:**
    - `BrandServiceImpl` (triển khai `BrandService`).
+   - `FileStorageServiceImpl` (triển khai `FileStorageService`).
    - `OnlineAvailabilityServiceImpl` (triển khai `OnlineAvailabilityService`).
    - `StoreServiceImpl` (triển khai `StoreService`).  
      *Lý do:* Tuân thủ nguyên lý Dependency Inversion (SOLID), các Controller và Service khác chỉ phụ thuộc và inject Interface, không gọi trực tiếp tên lớp `*ServiceImpl`.
@@ -665,4 +692,3 @@ Qua phân tích phụ thuộc tĩnh, phát hiện một số lớp không xuất
    - `UserProfileRepository` (`modules/user/repository/UserProfileRepository.java`): Thao tác với hồ sơ người dùng hiện được thực hiện thông qua liên kết `@OneToOne` từ `User` (`user.getProfile()`) hoặc `UserRepository`.
 
 *(Báo cáo giữ nguyên hiện trạng mã nguồn, tuyệt đối không xóa bất kỳ lớp nào).*
-

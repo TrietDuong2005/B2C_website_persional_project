@@ -4,7 +4,7 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
 
 ## Công nghệ sử dụng
 - **Backend:** Java 17, Spring Boot 3.x (Spring MVC, Spring Data JPA, Spring Security, Validation)
-- **Cơ sở dữ liệu & Migration:** Microsoft SQL Server, Flyway (`ddl-auto: validate`)
+- **Cơ sở dữ liệu & Migration:** Microsoft SQL Server, Flyway (`ddl-auto: validate`, V1–V31)
 - **Giao diện:** Thymeleaf, Bootstrap 5, Bootstrap Icons (tập trung theme CSS và tên thương hiệu)
 - **Tiện ích & Mapping:** Lombok, MapStruct, springdoc-openapi (Swagger UI)
 - **Kiến trúc & Design Patterns:** Strategy (thanh toán, giảm giá, phí ship, kho xuất), Factory (tạo đơn, mã đơn), Observer (trừ/hoàn kho), State (vòng đời đơn hàng)
@@ -22,7 +22,7 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
    ```bash
    mvn spring-boot:run
    ```
-   Flyway sẽ tự động chạy toàn bộ migration (V1–V30), và `DevDataSeeder` sẽ nạp 5 tài khoản dev mẫu.
+   Flyway sẽ tự động chạy toàn bộ migration (V1–V31), và `DevDataSeeder` sẽ nạp 5 tài khoản dev mẫu.
    Thư mục lưu trữ tệp tải lên (upload) được cấu hình qua `app.upload.dir` (mặc định `uploads/`, giới hạn `app.upload.max-size-mb=2MB`), tự động tạo khi chạy và được bỏ qua trong git.
 
 ## Tài khoản dev thử nghiệm (mật khẩu: `password123`)
@@ -61,17 +61,18 @@ Hệ thống bán lẻ chuỗi cửa hàng giày dép **"Triết Store"** kết 
 
 ## Danh sách chức năng đã hoàn thành
 - **Bảo mật & Phân quyền:** 2 SecurityFilterChain (Session cho Web + JWT cho API), phân quyền 4 vai trò rõ ràng.
-- **Danh mục & Sản phẩm:** CRUD danh mục dạng cây, thương hiệu, sản phẩm giày dép cha, biến thể màu/size EU, hình ảnh.
+- **Danh mục & Sản phẩm:** CRUD danh mục dạng cây, thương hiệu, sản phẩm giày dép cha, biến thể màu/size EU.
+- **Hình ảnh sản phẩm (CR-06):** Tải ảnh trực tiếp từ máy tính (tối đa 2MB, định dạng png/jpg/jpeg/webp) hoặc URL; gắn ảnh theo biến thể cụ thể, theo màu sắc hoặc chung cho sản phẩm; đổi ảnh động theo màu trên Shop.
 - **Quản trị kho & Chi nhánh:** Quản lý điểm bán và nhân sự, tồn kho chi nhánh với khóa lạc quan (`@Version`), sổ cái biến động kho.
 - **Shop trực tuyến:** Trang chủ, xem/tìm kiếm/lọc sản phẩm, giỏ hàng, áp mã voucher, checkout, lịch sử và chi tiết đơn hàng.
 - **Quản lý đơn hàng đa kênh:** Theo dõi đơn Shop và POS, chuyển trạng thái theo State Pattern (PENDING → CONFIRMED → PACKING → SHIPPING → COMPLETED).
 - **Hủy đơn & Hoàn kho:** Khách hủy đơn PENDING, Admin hủy đơn hợp lệ; tự động hoàn lại tồn kho chi nhánh qua Observer Pattern.
 - **Bán hàng tại quầy (POS):** Tra cứu nhanh SKU/barcode, giỏ hàng quầy, áp voucher, tính tiền thừa, thanh toán trọn gói 1 transaction, in hóa đơn 80mm.
-- **Báo cáo & Dashboard:** Thống kê doanh thu theo ngày/chi nhánh/kênh bán, top sản phẩm bán chạy, cảnh báo tồn kho thấp.
+- **Báo cáo & Dashboard:** Thống kê doanh thu theo ngày/chi nhánh/kênh bán, top sản phẩm bán chạy, cảnh báo tồn kho thấp dạng bảng số.
 - **Dữ liệu demo:** Bộ tạo dữ liệu đa kênh phong phú phục vụ kiểm thử và báo cáo (`DemoDataSeeder`).
 
 ## Kiểm thử (Tests)
-Hệ thống có **49 lớp kiểm thử** với tổng cộng **222 phương thức test** (đếm từ mã nguồn, gồm 219 `@Test` và 3 `@ParameterizedTest`), bao gồm các test tích hợp `@SpringBootTest` trên CSDL SQL Server thật và các test dựng trang hoàn chỉnh bằng MockMvc + Thymeleaf.
+Hệ thống có **56 lớp kiểm thử** với tổng cộng **253 phương thức test** (đếm từ mã nguồn, gồm 250 `@Test` và 3 `@ParameterizedTest`), bao gồm các test tích hợp `@SpringBootTest` trên CSDL SQL Server thật và các test dựng trang hoàn chỉnh bằng MockMvc + Thymeleaf.
 > **Lưu ý:** Lệnh `mvn test` yêu cầu CSDL SQL Server đang chạy và kết nối được cấu hình trong `application-dev.yml`.
 ```bash
 mvn test
